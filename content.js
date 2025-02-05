@@ -16,9 +16,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const content = getPageContent();
         analyzeContent(content, request.apiKey).then(result => {
             console.log('Analysis result:', result);
-            sendResponse(result);
+            sendResponse({
+                level: result.level,
+                text: content
+            });
         });
-        return true; // 保持連接開啟
+        return true;
     } else if (request.action === 'chat') {
         const content = getPageContent();
         chatWithAI(content, request.message, request.apiKey, request.history).then(result => {
@@ -113,9 +116,10 @@ async function analyzeContent(content, apiKey) {
             throw new Error(`無效的 CEFR 等級: ${analysisResult.level}`);
         }
 
-        // 直接返回解析後的結果
+        // 修改返回格式
         return {
-            level: analysisResult,
+            level: analysisResult,  // 保持原有的分析結果
+            text: content,          // 添加文本內容
             error: null
         };
     } catch (error) {
