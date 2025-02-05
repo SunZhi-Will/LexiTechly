@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>單字列表</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .word-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .word-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .word-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .word-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: #1a73e8;
+        }
+
+        .word-level {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background-color: #e8f0fe;
+            color: #1a73e8;
+        }
+
+        .word-details {
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 4px;
+        }
+
+        .word-translation {
+            font-size: 14px;
+            color: #3c4043;
+        }
+
+        /* 深色模式 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: #e0e0e0;
+            }
+
+            .filters,
+            .word-card {
+                background-color: #2d2d2d;
+                border-color: #404040;
+            }
+
+            .filter-group label {
+                color: #e0e0e0;
+            }
+
+            .filter-group select,
+            .filter-group input {
+                background-color: #1a1a1a;
+                border-color: #404040;
+                color: #e0e0e0;
+            }
+
+            .word-text {
+                color: #64b5f6;
+            }
+
+            .word-level {
+                background-color: #1a1a1a;
+                color: #64b5f6;
+            }
+
+            .word-details,
+            .word-translation {
+                color: #e0e0e0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>單字列表</h1>
+            <div class="stats">
+                總計: <span id="total-count">0</span> 個單字
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>CEFR 等級</label>
+                <select id="level-filter">
+                    <option value="">全部</option>
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                    <option value="B1">B1</option>
+                    <option value="B2">B2</option>
+                    <option value="C1">C1</option>
+                    <option value="C2">C2</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>搜尋</label>
+                <input type="text" id="search-filter" placeholder="搜尋單字...">
+            </div>
+            <div class="filter-group">
+                <label>排序方式</label>
+                <select id="sort-filter">
+                    <option value="level">依等級</option>
+                    <option value="alphabet">依字母</option>
+                    <option value="latest">最新加入</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="word-grid" class="word-grid">
+            <!-- 單字卡片將由 JavaScript 動態添加 -->
+        </div>
+    </div>
+
+    <script src="vocabulary-page.js"></script>
+</body>
+
+</html>
