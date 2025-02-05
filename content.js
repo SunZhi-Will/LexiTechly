@@ -49,9 +49,9 @@ async function analyzeContent(content, apiKey) {
             {
                 "level": "B2",  // 必須是 A1、A2、B1、B2、C1、C2 其中之一
                 "analysis": {
-                    "vocabulary": "詞彙：簡短的難度說明",  // 20字以內
-                    "grammar": "語法：簡短的結構說明",     // 20字以內
-                    "topic": "主題：簡短的難度說明"        // 20字以內
+                    "vocabulary": "簡短的難度說明",  // 20字以內
+                    "grammar": "簡短的結構說明",     // 20字以內
+                    "topic": "簡短的難度說明"        // 20字以內
                 }
             }
 
@@ -65,67 +65,99 @@ async function analyzeContent(content, apiKey) {
             ${content}
             ---
 
-            請只回傳 JSON 格式的分析結果，不要有其他說明文字。
+            請注意：
+            1. 只回傳 JSON 格式的分析結果，不要有其他說明文字
+            2. 所有說明文字必須使用繁體中文
+            3. 分析內容要簡潔有力，每項不超過20個字
         `;
 
-        const response = await fetch(`${API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    role: "user",
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 1,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 8192,
-                    responseMimeType: "application/json"
+        // 添加重試機制
+        const maxRetries = 3;
+        let retryCount = 0;
+        let lastError;
+
+        while (retryCount < maxRetries) {
+            try {
+                const response = await fetch(`${API_URL}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            role: "user",
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 1,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 8192,
+                            responseMimeType: "application/json"
+                        }
+                    })
+                });
+
+                if (response.status === 429) {
+                    // 如果遇到限制,等待一段時間後重試
+                    const waitTime = Math.pow(2, retryCount) * 1000; // 指數退避
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    retryCount++;
+                    continue;
                 }
-            })
-        });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data);
+
+                if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                    throw new Error('無效的 API 回應格式');
+                }
+
+                const result = data.candidates[0].content.parts[0].text.trim();
+                console.log('Raw result:', result);
+
+                // 解析 JSON 回應
+                const analysisResult = JSON.parse(result);
+                console.log('Parsed result:', analysisResult);
+
+                if (!analysisResult.level || !analysisResult.analysis) {
+                    throw new Error('回應格式不正確');
+                }
+
+                if (!['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(analysisResult.level)) {
+                    throw new Error(`無效的 CEFR 等級: ${analysisResult.level}`);
+                }
+
+                // 修改返回格式
+                return {
+                    level: analysisResult,  // 保持原有的分析結果
+                    text: content,          // 添加文本內容
+                    error: null
+                };
+            } catch (error) {
+                lastError = error;
+                if (retryCount >= maxRetries - 1) {
+                    throw error;
+                }
+                retryCount++;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
         }
 
-        const data = await response.json();
-        console.log('API Response:', data);
+        throw lastError || new Error('達到最大重試次數');
 
-        if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-            throw new Error('無效的 API 回應格式');
-        }
-
-        const result = data.candidates[0].content.parts[0].text.trim();
-        console.log('Raw result:', result);
-
-        // 解析 JSON 回應
-        const analysisResult = JSON.parse(result);
-        console.log('Parsed result:', analysisResult);
-
-        if (!analysisResult.level || !analysisResult.analysis) {
-            throw new Error('回應格式不正確');
-        }
-
-        if (!['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(analysisResult.level)) {
-            throw new Error(`無效的 CEFR 等級: ${analysisResult.level}`);
-        }
-
-        // 修改返回格式
-        return {
-            level: analysisResult,  // 保持原有的分析結果
-            text: content,          // 添加文本內容
-            error: null
-        };
     } catch (error) {
         console.error('分析錯誤:', error);
         return {
-            error: error.message || '無法分析內容'
+            error: error.message === 'HTTP error! status: 429'
+                ? '系統暫時忙碌,請稍後再試'
+                : (error.message || '無法分析內容')
         };
     }
 }
@@ -151,10 +183,13 @@ function checkIfEnglish(text) {
 // 新增 AI 對話函數
 async function chatWithAI(content, message, apiKey, history = []) {
     const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    const maxRetries = 3;
+    let retryCount = 0;
+    let lastError;
 
     const prompt = `
         你現在是一個英語學習助手，請根據以下文本內容回答問題。
-        回答時請使用中文，並使用 Markdown 格式，可以：
+        回答時請使用繁體中文，並使用 Markdown 格式，可以：
         1. 使用 \`code\` 標記重要的英文單字或片語
         2. 使用引用區塊 > 來標記例句
         3. 使用清單列舉重點
@@ -172,57 +207,70 @@ async function chatWithAI(content, message, apiKey, history = []) {
         問題：${message}
 
         請提供清晰且結構化的回答，善用 Markdown 格式來提高可讀性。
+        請確保所有回答都使用繁體中文。
     `;
 
-    try {
-        const response = await fetch(`${API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    role: "user",
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 1024
-                }
-            })
-        });
+    while (retryCount < maxRetries) {
+        try {
+            const response = await fetch(`${API_URL}?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        role: "user",
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 1024
+                    }
+                })
+            });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            if (response.status === 429) {
+                const waitTime = Math.pow(2, retryCount) * 1000;
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                retryCount++;
+                continue;
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Chat API Response:', data);
+
+            if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                throw new Error('無效的 API 回應格式');
+            }
+
+            const reply = data.candidates[0].content.parts[0].text.trim();
+            console.log('Chat reply:', reply);
+
+            if (!reply) {
+                throw new Error('回應內容為空');
+            }
+
+            return {
+                reply: reply,
+                error: null
+            };
+        } catch (error) {
+            lastError = error;
+            if (retryCount >= maxRetries - 1) {
+                throw error;
+            }
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
-
-        const data = await response.json();
-        console.log('Chat API Response:', data);
-
-        if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-            throw new Error('無效的 API 回應格式');
-        }
-
-        const reply = data.candidates[0].content.parts[0].text.trim();
-        console.log('Chat reply:', reply);
-
-        if (!reply) {
-            throw new Error('回應內容為空');
-        }
-
-        return {
-            reply: reply,
-            error: null
-        };
-    } catch (error) {
-        console.error('Chat API 錯誤:', error);
-        return {
-            reply: null,
-            error: error.message || '無法取得回應'
-        };
     }
+
+    throw lastError || new Error('達到最大重試次數');
 } 
