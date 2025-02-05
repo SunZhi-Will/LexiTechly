@@ -34,16 +34,19 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            gap: 8px;
             overflow-y: auto;
         }
 
         .page-header {
-            margin-bottom: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 16px;
+            position: relative;
         }
 
         .page-header h2 {
-            font-size: 16px;
+            margin: 0;
         }
 
         #analyze {
@@ -175,6 +178,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             text-align: center;
+            z-index: 1000;
         }
 
         .loading-spinner {
@@ -580,11 +584,40 @@
             fill: #1a73e8;
         }
 
-        .clear-btn {
+        .clear-chat-btn {
             position: absolute;
             right: 0;
-            top: 50%;
-            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #5f6368;
+            font-size: 13px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .clear-chat-btn:hover {
+            background-color: rgba(26, 115, 232, 0.04);
+            color: #1a73e8;
+        }
+
+        .clear-chat-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .dark-mode .clear-chat-btn {
+            color: #e0e0e0;
+        }
+
+        .dark-mode .clear-chat-btn:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+            color: #64b5f6;
         }
 
         #main-page,
@@ -647,7 +680,6 @@
         }
 
         .settings-section {
-            padding: 12px;
             background-color: #f8f9fa;
             border-radius: 6px;
             border: 1px solid #e0e0e0;
@@ -655,7 +687,7 @@
 
         .settings-section h3 {
             color: #1a73e8;
-            margin: 0 0 16px 0;
+            margin: 0 0 0 0;
             font-size: 16px;
         }
 
@@ -754,6 +786,409 @@
         .chat-button:hover svg {
             fill: #1a73e8;
         }
+
+        /* 深色模式樣式 */
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .dark-mode #main-page {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .dark-mode #settings-page {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .container {
+            background-color: #1a1a1a;
+        }
+
+        .dark-mode .page {
+            background-color: #1a1a1a;
+        }
+
+        .dark-mode h2 {
+            color: #64b5f6;
+        }
+
+        .dark-mode .result {
+            background-color: #2d2d2d;
+        }
+
+        .dark-mode .analysis-section {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        .dark-mode .analysis-section h4 {
+            color: #64b5f6;
+        }
+
+        .dark-mode .detail-text {
+            color: #e0e0e0;
+        }
+
+        .dark-mode .settings-section {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        .dark-mode .api-key-input {
+            background-color: #1a1a1a;
+            border-color: #404040;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .bottom-nav {
+            background-color: #1a1a1a;
+            border-color: #404040;
+        }
+
+        .dark-mode .nav-item {
+            color: #9e9e9e;
+        }
+
+        .dark-mode .nav-item.active {
+            color: #64b5f6;
+        }
+
+        /* 開關按鈕樣式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked+.slider {
+            background-color: #1a73e8;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        .slider.round {
+            border-radius: 24px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0 0;
+        }
+
+        .theme-toggle label {
+            color: #3c4043;
+            font-size: 13px;
+        }
+
+        .dark-mode .theme-toggle label {
+            color: #e0e0e0;
+        }
+
+        /* 設定頁面深色模式文字顏色調整 */
+        .dark-mode .settings-section h3 {
+            color: #64b5f6;
+            /* 使用亮藍色作為標題 */
+        }
+
+        .dark-mode .api-key-section label {
+            color: #e0e0e0;
+            /* 使用較亮的灰色作為標籤文字 */
+        }
+
+        .dark-mode .api-key-input::placeholder {
+            color: #9e9e9e;
+            /* 調整輸入框預設文字顏色 */
+        }
+
+        .dark-mode .help-text {
+            color: #e0e0e0;
+            /* 調整說明文字顏色 */
+        }
+
+        .dark-mode .help-text p {
+            color: #e0e0e0;
+            /* 調整段落文字顏色 */
+        }
+
+        .dark-mode .help-text ol {
+            color: #e0e0e0;
+            /* 調整列表文字顏色 */
+        }
+
+        .dark-mode .help-text li {
+            color: #e0e0e0;
+            /* 調整列表項目文字顏色 */
+        }
+
+        .dark-mode .save-button {
+            background-color: #1a73e8;
+            color: white;
+        }
+
+        .dark-mode .save-button:hover {
+            background-color: #1557b0;
+        }
+
+        /* 聊天介面深色模式 */
+        .dark-mode #chat-page {
+            background-color: #1a1a1a;
+        }
+
+        .dark-mode .chat-messages {
+            background-color: #2d2d2d;
+        }
+
+        .dark-mode .chat-input-container {
+            background-color: #1a1a1a;
+            border-color: #404040;
+        }
+
+        .dark-mode .chat-input {
+            background-color: #2d2d2d;
+            border-color: #404040;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .chat-input::placeholder {
+            color: #9e9e9e;
+        }
+
+        .dark-mode .message-content {
+            color: #e0e0e0;
+        }
+
+        .dark-mode .user-message .message-content {
+            background-color: #1a73e8;
+            color: #ffffff;
+        }
+
+        .dark-mode .ai-message .message-content {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        .dark-mode .message-content pre {
+            background-color: #1a1a1a;
+        }
+
+        .dark-mode .message-content code {
+            background-color: #1a1a1a;
+            color: #64b5f6;
+        }
+
+        .dark-mode .chat-send {
+            background-color: #1a73e8;
+        }
+
+        .dark-mode .chat-send:disabled {
+            background-color: #404040;
+        }
+
+        .dark-mode .chat-send svg {
+            fill: #ffffff;
+        }
+
+        /* 設定頁面樣式優化 */
+        .settings-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .settings-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .section-header {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* API 設定區塊樣式 */
+        .settings-section.collapsible .section-header {
+            cursor: pointer;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .settings-section.collapsible .section-header:hover {
+            background-color: rgba(26, 115, 232, 0.04);
+        }
+
+        .dark-mode .settings-section.collapsible .section-header:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        .settings-section.collapsible .arrow-icon {
+            width: 20px;
+            height: 20px;
+            fill: #5f6368;
+            transition: transform 0.2s ease;
+        }
+
+        .dark-mode .settings-section.collapsible .arrow-icon {
+            fill: #e0e0e0;
+        }
+
+        .settings-section.collapsible.active .arrow-icon {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            padding: 0 16px 16px;
+            display: none;
+        }
+
+        .settings-section.collapsible.active .section-content {
+            display: block;
+        }
+
+        /* 外觀設定區塊樣式調整 */
+        .appearance .section-header {
+            padding: 12px 16px;
+        }
+
+        .appearance .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .appearance .theme-description {
+            font-size: 13px;
+            color: #5f6368;
+            flex: 1;
+        }
+
+        .dark-mode .appearance .theme-description {
+            color: #e0e0e0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .page-header h2 {
+            margin: 0;
+        }
+
+        .clear-chat-btn {
+            position: absolute;
+            right: 0;
+            background: none;
+            border: none;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #5f6368;
+            font-size: 13px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .clear-chat-btn:hover {
+            background-color: rgba(26, 115, 232, 0.04);
+            color: #1a73e8;
+        }
+
+        .clear-chat-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .dark-mode .clear-chat-btn {
+            color: #e0e0e0;
+        }
+
+        .dark-mode .clear-chat-btn:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+            color: #64b5f6;
+        }
+
+        /* 修改 loading 樣式 */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        /* 添加深色模式的 loading 樣式 */
+        .dark-mode .loading {
+            background-color: #2d2d2d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-mode .loading p {
+            color: #e0e0e0;
+        }
+
+        .dark-mode .loading-spinner {
+            border: 2px solid #404040;
+            border-top: 2px solid #64b5f6;
+        }
     </style>
 </head>
 
@@ -802,6 +1237,13 @@
                 <div class="page-content">
                     <div class="page-header">
                         <h2>AI 對話</h2>
+                        <button id="clear-chat" class="clear-chat-btn">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                            清除對話
+                        </button>
                     </div>
 
                     <div class="chat-container">
@@ -825,23 +1267,49 @@
                         <h2>設定</h2>
                     </div>
 
-                    <div class="settings-section">
-                        <h3>API 設定</h3>
-                        <div class="api-key-section">
-                            <label for="api-key">Gemini API Key</label>
-                            <input type="password" id="api-key" class="api-key-input" placeholder="請輸入您的 API Key">
-                            <button id="save-api-key" class="save-button">儲存</button>
+                    <div class="settings-sections">
+                        <!-- API 設定區塊 -->
+                        <div class="settings-section collapsible">
+                            <div class="section-header">
+                                <h3>API 設定</h3>
+                                <svg class="arrow-icon" viewBox="0 0 24 24">
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                            </div>
+                            <div class="section-content" id="api-settings">
+                                <div class="api-key-section">
+                                    <label for="api-key">Gemini API Key</label>
+                                    <input type="password" id="api-key" class="api-key-input"
+                                        placeholder="請輸入您的 API Key">
+                                    <button id="save-api-key" class="save-button">儲存</button>
+                                </div>
+                                <div class="help-text">
+                                    <p>如何取得 API Key：</p>
+                                    <ol>
+                                        <li>前往 <a href="https://makersuite.google.com/app/apikey" target="_blank">Google
+                                                AI Studio</a></li>
+                                        <li>登入您的 Google 帳號</li>
+                                        <li>點擊「Get API key」按鈕</li>
+                                        <li>複製產生的 API Key</li>
+                                    </ol>
+                                </div>
+                            </div>
                         </div>
-                        <div class="help-text">
-                            <p>如何取得 API Key：</p>
-                            <ol>
-                                <li>前往 <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI
-                                        Studio</a>
-                                </li>
-                                <li>登入您的 Google 帳號</li>
-                                <li>點擊「Get API key」按鈕</li>
-                                <li>複製產生的 API Key</li>
-                            </ol>
+
+                        <!-- 外觀設定區塊 -->
+                        <div class="settings-section appearance">
+                            <div class="section-header">
+                                <h3>外觀設定</h3>
+                                <div class="theme-toggle">
+                                    <div class="theme-description">
+                                        深色模式
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="dark-mode">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -35,6 +35,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // 載入深色模式設定
+    const { darkMode } = await chrome.storage.local.get('darkMode');
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-mode').checked = true;
+    }
+
+    // 監聽深色模式切換
+    document.getElementById('dark-mode').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            document.body.classList.add('dark-mode');
+            chrome.storage.local.set({ darkMode: true });
+        } else {
+            document.body.classList.remove('dark-mode');
+            chrome.storage.local.set({ darkMode: false });
+        }
+    });
+
     // 添加底部導航欄事件監聽
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -147,6 +165,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     updateAnalyzeButtonState();
+
+    // 設定區塊的展開/收合功能
+    const apiSettingsSection = document.querySelector('.settings-section.collapsible');
+    const apiSettingsHeader = apiSettingsSection.querySelector('.section-header');
+    const apiSettingsContent = document.getElementById('api-settings');
+
+    // 預設收合狀態
+    if (!apiKey) {
+        // 如果沒有 API Key，預設展開
+        apiSettingsSection.classList.add('active');
+        apiSettingsContent.style.display = 'block';
+    } else {
+        // 如果有 API Key，預設收合
+        apiSettingsSection.classList.remove('active');
+        apiSettingsContent.style.display = 'none';
+    }
+
+    // 點擊事件處理
+    apiSettingsHeader.addEventListener('click', () => {
+        const isActive = apiSettingsSection.classList.toggle('active');
+        apiSettingsContent.style.display = isActive ? 'block' : 'none';
+    });
 });
 
 // 更新分析按鈕狀態
