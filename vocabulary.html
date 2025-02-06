@@ -65,6 +65,9 @@
             padding: 16px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .word-card:hover {
@@ -104,6 +107,204 @@
             color: #3c4043;
         }
 
+        .expand-btn {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.3s ease;
+        }
+
+        .expand-btn.expanded {
+            transform: rotate(180deg);
+        }
+
+        .expand-icon {
+            width: 24px;
+            height: 24px;
+            fill: #5f6368;
+        }
+
+        .word-details-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #1a73e8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .word-chip {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .example-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .example-text {
+            color: #1a73e8;
+            margin-bottom: 4px;
+        }
+
+        .example-translation {
+            font-size: 12px;
+            color: #5f6368;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 24px;
+            background-color: #fde8e8;
+            border-radius: 8px;
+            margin: 16px;
+        }
+
+        .error-message h4 {
+            color: #d32f2f !important;
+            margin-bottom: 8px;
+        }
+
+        .error-message p {
+            color: #5f6368;
+            margin-bottom: 16px;
+        }
+
+        .retry-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .retry-btn:hover {
+            background-color: #1557b0;
+        }
+
+        .word-details-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .word-details-page.active {
+            transform: translateX(0);
+        }
+
+        .details-header {
+            position: sticky;
+            top: 0;
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            z-index: 1;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: #5f6368;
+        }
+
+        .back-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .word-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: #1a73e8;
+            margin-left: 16px;
+        }
+
+        .details-content {
+            padding: 24px;
+        }
+
+        .details-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .details-sections h4 {
+            color: #1a73e8;
+            margin: 0 0 12px 0;
+            font-size: 16px;
+        }
+
+        .word-title-container {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-left: 16px;
+        }
+
+        .word-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: #1a73e8;
+        }
+
+        .word-translation-title {
+            font-size: 16px;
+            color: #5f6368;
+        }
+
         /* 深色模式 */
         @media (prefers-color-scheme: dark) {
             body {
@@ -139,6 +340,81 @@
 
             .word-details,
             .word-translation {
+                color: #e0e0e0;
+            }
+
+            .expand-icon {
+                fill: #e0e0e0;
+            }
+
+            .word-details-section {
+                border-color: #404040;
+            }
+
+            .word-chip {
+                background-color: #1a1a1a;
+                color: #64b5f6;
+            }
+
+            .example-item {
+                background-color: #2d2d2d;
+            }
+
+            .example-text {
+                color: #64b5f6;
+            }
+
+            .example-translation {
+                color: #e0e0e0;
+            }
+
+            .spinner {
+                border-color: #404040;
+                border-top-color: #64b5f6;
+            }
+
+            .word-details-page {
+                background: #1a1a1a;
+            }
+
+            .details-header {
+                background: #1a1a1a;
+                border-color: #404040;
+            }
+
+            .back-btn {
+                color: #e0e0e0;
+            }
+
+            .word-title {
+                color: #64b5f6;
+            }
+
+            .details-sections h4 {
+                color: #64b5f6;
+            }
+
+            .error-message {
+                background-color: #2d2d2d;
+            }
+
+            .error-message p {
+                color: #e0e0e0;
+            }
+
+            .retry-btn {
+                background-color: #64b5f6;
+            }
+
+            .retry-btn:hover {
+                background-color: #1976d2;
+            }
+
+            .word-title {
+                color: #64b5f6;
+            }
+
+            .word-translation-title {
                 color: #e0e0e0;
             }
         }

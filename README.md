@@ -16,6 +16,7 @@
 - 📊 CEFR level analysis of web content
 - 📚 Comprehensive assessment of vocabulary, grammar, and topic complexity
 - 💬 Interactive AI chat for content understanding
+- 📝 Vocabulary list with AI-powered word analysis
 - 🎯 Clean and intuitive user interface
 - 🌙 Dark mode support
 
@@ -49,6 +50,17 @@
 - Access the chat via bottom navigation
 - Type your question
 - Receive AI-powered responses
+
+### 4. Vocabulary Management
+- Access vocabulary list via bottom navigation
+- View collected words from analyzed pages
+- Click on words to see detailed information:
+  - Synonyms and antonyms
+  - Example sentences with translations
+  - Usage explanations
+- Filter words by CEFR level
+- Search words in English or Chinese
+- Sort by level, alphabet, or date added
 
 ## 🛠️ Technical Details
 
