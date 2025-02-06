@@ -245,6 +245,7 @@
             background: white;
             border-bottom: 1px solid #e0e0e0;
             z-index: 1;
+            justify-content: space-between;
         }
 
         .back-btn {
@@ -288,10 +289,11 @@
         }
 
         .word-title-container {
+            flex-grow: 1;
+            margin: 0 16px;
             display: flex;
-            align-items: baseline;
             gap: 12px;
-            margin-left: 16px;
+            align-items: baseline;
         }
 
         .word-title {
@@ -302,6 +304,150 @@
 
         .word-translation-title {
             font-size: 16px;
+            color: #5f6368;
+        }
+
+        .word-chip.clickable {
+            position: relative;
+            padding: 4px 28px 4px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 80px;
+        }
+
+        .word-chip .word-text {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .word-chip .word-translation {
+            font-size: 11px;
+            color: #5f6368;
+            line-height: 1.2;
+        }
+
+        .add-word-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 2px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .word-chip.clickable:hover .add-word-btn {
+            opacity: 1;
+        }
+
+        .add-word-btn svg {
+            fill: #1a73e8;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #323232;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: fadeIn 0.3s;
+        }
+
+        .toast.loading {
+            background-color: #1a73e8;
+        }
+
+        .toast.error {
+            background-color: #d32f2f;
+        }
+
+        .toast .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        .reanalyze-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .reanalyze-btn:hover {
+            background-color: rgba(26, 115, 232, 0.1);
+        }
+
+        .reanalyze-btn svg {
+            fill: currentColor;
+        }
+
+        .reanalyze-btn.loading {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 24px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-spinner p {
+            margin: 0;
             color: #5f6368;
         }
 
@@ -415,6 +561,50 @@
             }
 
             .word-translation-title {
+                color: #e0e0e0;
+            }
+
+            .word-chip.clickable:hover {
+                background-color: #1a1a1a;
+            }
+
+            .add-word-btn svg {
+                fill: #64b5f6;
+            }
+
+            .toast {
+                background-color: #424242;
+            }
+
+            .toast.loading {
+                background-color: #1976d2;
+            }
+
+            .toast.error {
+                background-color: #c62828;
+            }
+
+            .word-chip .word-translation {
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            .reanalyze-btn {
+                color: #64b5f6;
+            }
+
+            .reanalyze-btn:hover {
+                background-color: rgba(100, 181, 246, 0.1);
+            }
+
+            .loading-overlay {
+                background: rgba(26, 26, 26, 0.9);
+            }
+
+            .loading-spinner {
+                background: #2d2d2d;
+            }
+
+            .loading-spinner p {
                 color: #e0e0e0;
             }
         }

@@ -628,4 +628,20 @@ clearVocabularyBtn.textContent = '清除單字列表';
 clearVocabularyBtn.onclick = clearVocabulary;
 
 // 將清除按鈕加入設定頁面
-document.querySelector('.settings-sections').appendChild(clearVocabularyBtn); 
+document.querySelector('.settings-sections').appendChild(clearVocabularyBtn);
+
+// 修改 popup.js 中的清除功能
+document.getElementById('clear-vocabulary').addEventListener('click', async () => {
+    if (confirm('確定要清除所有單字嗎？此操作無法復原。')) {
+        // 清除所有相關資料
+        await chrome.storage.local.remove([
+            'accumulatedVocabulary',
+            'currentPageVocabulary',
+            'wordAnalysisCache'  // 添加這行，確保清除分析快取
+        ]);
+
+        // 更新介面
+        document.getElementById('vocabulary-count').textContent = '0';
+        showToast('單字列表已清除');
+    }
+}); 
