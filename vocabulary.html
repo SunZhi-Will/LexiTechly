@@ -167,6 +167,39 @@
             color: #1a73e8;
             border-radius: 12px;
             font-size: 12px;
+            position: relative;
+            padding-right: 24px;
+        }
+
+        .word-chip.added {
+            padding-right: 8px;
+            opacity: 0.8;
+        }
+
+        .add-icon {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: transparent;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .add-icon svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .word-chip:hover .add-icon {
+            opacity: 1;
         }
 
         .example-item {
@@ -179,6 +212,10 @@
         .example-text {
             color: #1a73e8;
             margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.5;
         }
 
         .example-translation {
@@ -230,10 +267,13 @@
             transform: translateX(100%);
             transition: transform 0.3s ease;
             overflow-y: auto;
+            pointer-events: none;
         }
 
         .word-details-page.active {
             transform: translateX(0);
+            pointer-events: auto;
+            z-index: 1001;
         }
 
         .details-header {
@@ -308,25 +348,21 @@
         }
 
         .word-chip.clickable {
-            position: relative;
-            padding: 4px 28px 4px 8px;
             cursor: pointer;
             transition: all 0.2s;
-            display: inline-flex;
-            flex-direction: column;
-            align-items: flex-start;
-            min-width: 80px;
         }
 
-        .word-chip .word-text {
-            font-weight: 500;
-            margin-bottom: 2px;
+        .word-chip.clickable:hover {
+            background-color: #d4e4fc;
+            transform: translateY(-1px);
         }
 
         .word-chip .word-translation {
             font-size: 11px;
-            color: #5f6368;
-            line-height: 1.2;
+            color: rgba(0, 0, 0, 0.6);
+            margin-left: 4px;
+            padding-left: 4px;
+            border-left: 1px solid rgba(0, 0, 0, 0.2);
         }
 
         .add-word-btn {
@@ -449,6 +485,102 @@
         .loading-spinner p {
             margin: 0;
             color: #5f6368;
+        }
+
+        .speak-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-left: 8px;
+            position: relative;
+            overflow: hidden;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+        }
+
+        .speak-btn svg {
+            fill: currentColor;
+            transition: opacity 0.2s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .speak-btn.loading svg {
+            opacity: 0;
+        }
+
+        .speak-btn.loading::before {
+            content: '';
+            position: absolute;
+            top: 45%;
+            left: 45%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 2;
+        }
+
+        .speak-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: currentColor;
+            opacity: 0.1;
+            border-radius: 50%;
+        }
+
+        .speak-btn.small {
+            padding: 4px;
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+        }
+
+        .speak-btn.small svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .speak-btn.small.loading::before {
+            width: 12px;
+            height: 12px;
+            margin: -6px 0 0 -6px;
+            border-width: 1.5px;
+        }
+
+        .speak-btn svg.play-icon {
+            display: block;
+        }
+
+        .speak-btn svg.stop-icon {
+            display: none;
+        }
+
+        .speak-btn.playing svg.play-icon {
+            display: none;
+        }
+
+        .speak-btn.playing svg.stop-icon {
+            display: block;
+        }
+
+        .speak-btn.playing {
+            background-color: rgba(26, 115, 232, 0.1);
         }
 
         /* 深色模式 */
@@ -586,6 +718,7 @@
 
             .word-chip .word-translation {
                 color: rgba(255, 255, 255, 0.7);
+                border-left-color: rgba(255, 255, 255, 0.2);
             }
 
             .reanalyze-btn {
@@ -606,6 +739,125 @@
 
             .loading-spinner p {
                 color: #e0e0e0;
+            }
+
+            .speak-btn {
+                color: #64b5f6;
+            }
+
+            .speak-btn:hover {
+                background-color: rgba(100, 181, 246, 0.1);
+            }
+
+            .example-text .speak-btn {
+                color: #64b5f6;
+            }
+
+            .example-text .speak-btn:hover {
+                background-color: rgba(100, 181, 246, 0.1);
+            }
+
+            .speak-btn.loading::after {
+                opacity: 0.15;
+            }
+
+            .example-text {
+                color: #64b5f6;
+            }
+
+            .example-text .speak-btn {
+                color: #64b5f6;
+            }
+
+            .example-text .speak-btn:hover {
+                background-color: rgba(100, 181, 246, 0.1);
+            }
+
+            .add-icon {
+                background: transparent;
+            }
+
+            .add-icon svg {
+                fill: currentColor;
+            }
+
+            .word-chip:hover .add-icon {
+                opacity: 1;
+            }
+
+            .speak-btn.playing {
+                background-color: rgba(100, 181, 246, 0.1);
+            }
+        }
+
+        .word-chip.loading {
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .word-chip.loading::after {
+            display: none;
+        }
+
+        .analyzing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .analyzing-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .analyzing-spinner {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .analyzing-spinner .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a73e8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .analyzing-spinner p {
+            margin: 0;
+            color: #1a73e8;
+            font-size: 16px;
+        }
+
+        /* 深色模式 */
+        @media (prefers-color-scheme: dark) {
+            .analyzing-spinner {
+                background: #2d2d2d;
+            }
+
+            .analyzing-spinner p {
+                color: #64b5f6;
+            }
+
+            .analyzing-spinner .spinner {
+                border-color: #404040;
+                border-top-color: #64b5f6;
             }
         }
     </style>
@@ -649,6 +901,13 @@
 
         <div id="word-grid" class="word-grid">
             <!-- 單字卡片將由 JavaScript 動態添加 -->
+        </div>
+    </div>
+
+    <div class="analyzing-overlay">
+        <div class="analyzing-spinner">
+            <div class="spinner"></div>
+            <p>正在分析單字...</p>
         </div>
     </div>
 

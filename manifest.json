@@ -4,9 +4,10 @@
     "version": "1.0",
     "description": "使用 Gemini AI 分析網頁內容的英文程度",
     "permissions": [
+        "storage",
+        "unlimitedStorage",
         "activeTab",
         "scripting",
-        "storage",
         "tabs"
     ],
     "host_permissions": [

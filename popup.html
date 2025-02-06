@@ -1506,17 +1506,17 @@
                         <!-- API 設定區塊 -->
                         <div class="settings-section collapsible">
                             <div class="section-header">
-                                <h3>API 設定</h3>
+                                <h3>GeminiAPI 設定</h3>
                                 <svg class="arrow-icon" viewBox="0 0 24 24">
                                     <path d="M7 10l5 5 5-5z" />
                                 </svg>
                             </div>
-                            <div class="section-content" id="api-settings">
+                            <div class="section-content" id="gemini-api-settings">
                                 <div class="api-key-section">
-                                    <label for="api-key">Gemini API Key</label>
-                                    <input type="password" id="api-key" class="api-key-input"
+                                    <label for="gemini-api-key">Gemini API Key</label>
+                                    <input type="password" id="gemini-api-key" class="api-key-input"
                                         placeholder="請輸入您的 API Key">
-                                    <button id="save-api-key" class="save-button">儲存</button>
+                                    <button id="save-gemini-api-key" class="save-button">儲存</button>
                                 </div>
                                 <div class="help-text">
                                     <p>如何取得 API Key：</p>
@@ -1525,6 +1525,33 @@
                                                 AI Studio</a></li>
                                         <li>登入您的 Google 帳號</li>
                                         <li>點擊「Get API key」按鈕</li>
+                                        <li>複製產生的 API Key</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 語音 API 設定區塊 -->
+                        <div class="settings-section collapsible">
+                            <div class="section-header">
+                                <h3>語音 API 設定</h3>
+                                <svg class="arrow-icon" viewBox="0 0 24 24">
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                            </div>
+                            <div class="section-content" id="speechify-api-settings">
+                                <div class="api-key-section">
+                                    <label for="speechify-api-key">Speechify API Key</label>
+                                    <input type="password" id="speechify-api-key" class="api-key-input"
+                                        placeholder="請輸入您的 API Key">
+                                    <button id="save-speechify-api-key" class="save-button">儲存</button>
+                                </div>
+                                <div class="help-text">
+                                    <p>如何取得 API Key：</p>
+                                    <ol>
+                                        <li>前往 <a href="https://console.sws.speechify.com/tts" target="_blank">Speechify
+                                                API</a></li>
+                                        <li>登入您的帳號</li>
                                         <li>複製產生的 API Key</li>
                                     </ol>
                                 </div>

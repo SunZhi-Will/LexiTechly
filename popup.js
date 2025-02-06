@@ -242,26 +242,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // 監聽 API Key 輸入
-    document.getElementById('api-key').addEventListener('input', updateAnalyzeButtonState);
+    document.getElementById('gemini-api-key').addEventListener('input', updateAnalyzeButtonState);
 
-    // 監聽儲存 API Key 按鈕
-    document.getElementById('save-api-key').addEventListener('click', async () => {
-        const apiKey = document.getElementById('api-key').value;
+    // 監聽儲存 Gemini API Key 按鈕
+    document.getElementById('save-gemini-api-key').addEventListener('click', async () => {
+        const apiKey = document.getElementById('gemini-api-key').value.trim();
         await chrome.storage.local.set({ apiKey });
-
-        const errorDiv = document.getElementById('error-message');
-        errorDiv.style.display = 'block';
-        errorDiv.style.backgroundColor = '#e8f5e9';
-        errorDiv.style.color = '#2e7d32';
-        errorDiv.textContent = 'API Key 已成功儲存！';
-
-        setTimeout(() => {
-            errorDiv.style.display = 'none';
-            // 儲存成功後返回主頁面
-            switchPage('main-page');
-        }, 1500);
-
+        showMessage('Gemini API Key 已儲存');
         updateAnalyzeButtonState();
+    });
+
+    // 監聽儲存 Speechify API Key 按鈕
+    document.getElementById('save-speechify-api-key').addEventListener('click', async () => {
+        const speechifyApiKey = document.getElementById('speechify-api-key').value.trim();
+        await chrome.storage.local.set({ speechifyApiKey });
+        showMessage('Speechify API Key 已儲存');
     });
 
     // 監聽發送訊息按鈕和輸入框
@@ -281,7 +276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 恢復已儲存的狀態
     if (apiKey) {
-        document.getElementById('api-key').value = apiKey;
+        document.getElementById('gemini-api-key').value = apiKey;
         switchPage('main-page');
     } else {
         switchPage('settings-page');
@@ -289,26 +284,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateAnalyzeButtonState();
 
+    // 載入設定
+    chrome.storage.local.get(['apiKey', 'speechifyApiKey'], function (data) {
+        if (data.apiKey) {
+            document.getElementById('gemini-api-key').value = data.apiKey;
+        }
+        if (data.speechifyApiKey) {
+            document.getElementById('speechify-api-key').value = data.speechifyApiKey;
+        }
+    });
+
     // 設定區塊的展開/收合功能
-    const apiSettingsSection = document.querySelector('.settings-section.collapsible');
-    const apiSettingsHeader = apiSettingsSection.querySelector('.section-header');
-    const apiSettingsContent = document.getElementById('api-settings');
+    document.querySelectorAll('.settings-section.collapsible').forEach(section => {
+        const header = section.querySelector('.section-header');
+        const content = section.querySelector('.section-content');
 
-    // 預設收合狀態
-    if (!apiKey) {
-        // 如果沒有 API Key，預設展開
-        apiSettingsSection.classList.add('active');
-        apiSettingsContent.style.display = 'block';
-    } else {
-        // 如果有 API Key，預設收合
-        apiSettingsSection.classList.remove('active');
-        apiSettingsContent.style.display = 'none';
-    }
+        // 預設收合狀態
+        section.classList.remove('active');
+        content.style.display = 'none';
 
-    // 點擊事件處理
-    apiSettingsHeader.addEventListener('click', () => {
-        const isActive = apiSettingsSection.classList.toggle('active');
-        apiSettingsContent.style.display = isActive ? 'block' : 'none';
+        // 點擊事件處理
+        header.addEventListener('click', () => {
+            const isActive = section.classList.toggle('active');
+            content.style.display = isActive ? 'block' : 'none';
+        });
     });
 
     // 從 chrome.storage 讀取儲存的單字列表
@@ -326,7 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 更新分析按鈕狀態
 function updateAnalyzeButtonState() {
-    const apiKey = document.getElementById('api-key').value;
+    const apiKey = document.getElementById('gemini-api-key').value;
     document.getElementById('analyze').disabled = !apiKey;
 }
 
@@ -370,7 +369,7 @@ function switchPage(pageId) {
 
         // 如果從設定頁面切換出去，保存 API Key
         if (currentPageId === 'settings-page') {
-            const apiKey = document.getElementById('api-key').value;
+            const apiKey = document.getElementById('gemini-api-key').value;
             if (apiKey) {
                 chrome.storage.local.set({ apiKey });
             }
@@ -381,7 +380,7 @@ function switchPage(pageId) {
     if (pageId === 'settings-page') {
         chrome.storage.local.get('apiKey', ({ apiKey }) => {
             if (apiKey) {
-                document.getElementById('api-key').value = apiKey;
+                document.getElementById('gemini-api-key').value = apiKey;
             }
         });
     }
