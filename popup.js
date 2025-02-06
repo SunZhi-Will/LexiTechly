@@ -111,8 +111,14 @@ function createWordCard(word) {
     return wordCard;
 }
 
-// 載入已儲存的 API Key
+// 主要的 DOMContentLoaded 事件監聽器
 document.addEventListener('DOMContentLoaded', async () => {
+    // 初始化設定頁面
+    initializeSettingsPage();
+
+    // 初始化清除功能
+    initializeClearDataFeature();
+
     // 載入已儲存的數據
     const { apiKey, savedAnalysis, savedChat, savedUrl } = await chrome.storage.local.get(['apiKey', 'savedAnalysis', 'savedChat', 'savedUrl']);
 
@@ -323,6 +329,102 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     updateVocabularyUI();
 });
+
+// 初始化設定頁面功能
+function initializeSettingsPage() {
+    const settingsPage = document.getElementById('settings-page');
+    if (settingsPage && settingsPage.classList.contains('active')) {
+        updateStorageUsage();
+    }
+
+    // 監聽設定頁面的展開/收合
+    document.querySelectorAll('.settings-section.collapsible').forEach(section => {
+        const header = section.querySelector('.section-header');
+        header.addEventListener('click', () => {
+            if (section.classList.contains('active')) {
+                updateStorageUsage();
+            }
+        });
+    });
+}
+
+// 初始化清除資料功能
+function initializeClearDataFeature() {
+    const clearAllDataBtn = document.getElementById('clear-all-data');
+    const confirmDialog = document.getElementById('confirm-dialog');
+    const cancelClearBtn = document.getElementById('cancel-clear');
+    const confirmClearBtn = document.getElementById('confirm-clear');
+
+    // 綁定清除按鈕事件
+    clearAllDataBtn?.addEventListener('click', () => {
+        confirmDialog.style.display = 'flex';
+    });
+
+    // 綁定取消按鈕事件
+    cancelClearBtn?.addEventListener('click', () => {
+        confirmDialog.style.display = 'none';
+    });
+
+    // 綁定確認清除按鈕事件
+    confirmClearBtn?.addEventListener('click', async () => {
+        try {
+            confirmDialog.style.display = 'none';
+            await clearAllData();
+        } catch (error) {
+            console.error('清除資料失敗:', error);
+            showToast('清除資料失敗: ' + error.message, false, true);
+        }
+    });
+}
+
+// 清除所有資料的函數
+async function clearAllData() {
+    // 先保存 API Keys 和外觀設定
+    const {
+        apiKey,
+        speechifyApiKey,
+        darkMode,
+        theme
+    } = await chrome.storage.local.get([
+        'apiKey',
+        'speechifyApiKey',
+        'darkMode',
+        'theme'
+    ]);
+
+    // 清除所有儲存的資料
+    await chrome.storage.local.clear();
+
+    // 恢復 API Keys 和外觀設定
+    await chrome.storage.local.set({
+        apiKey: apiKey || '',
+        speechifyApiKey: speechifyApiKey || '',
+        darkMode: darkMode || false,
+        theme: theme || 'light'
+    });
+
+    // 清除記憶體中的 Blob URLs
+    if (window.audioCache) {
+        Object.values(window.audioCache).forEach(url => {
+            URL.revokeObjectURL(url);
+        });
+        window.audioCache = {};
+    }
+
+    // 重置所有相關變數
+    accumulatedVocabulary = [];
+    currentPageVocabulary = [];
+    wordAnalysisCache = {};
+    chatHistory = [];
+    lastAnalysisResult = null;
+
+    // 更新介面
+    updateStorageUsage();
+    showToast('所有資料已清除');
+
+    // 切換到設定頁面
+    switchPage('settings-page');
+}
 
 // 更新分析按鈕狀態
 function updateAnalyzeButtonState() {
@@ -626,67 +728,6 @@ function clearVocabulary() {
     });
 }
 
-// 修改清除所有資料的功能
-document.getElementById('clear-all-data').addEventListener('click', async () => {
-    if (confirm('確定要清除所有儲存的資料嗎？此操作將清除：\n\n' +
-        '• 單字列表\n' +
-        '• 分析快取\n' +
-        '• 語音快取\n' +
-        '• 對話記錄\n\n' +
-        '此操作無法復原。')) {
-        try {
-            // 先保存 API Keys 和外觀設定
-            const {
-                apiKey,
-                speechifyApiKey,
-                darkMode,  // 保存深色模式設定
-                theme     // 保存其他主題相關設定
-            } = await chrome.storage.local.get([
-                'apiKey',
-                'speechifyApiKey',
-                'darkMode',
-                'theme'
-            ]);
-
-            // 清除所有儲存的資料
-            await chrome.storage.local.clear();
-
-            // 恢復 API Keys 和外觀設定
-            await chrome.storage.local.set({
-                apiKey: apiKey || '',
-                speechifyApiKey: speechifyApiKey || '',
-                darkMode: darkMode || false,
-                theme: theme || 'light'
-            });
-
-            // 清除記憶體中的 Blob URLs
-            if (window.audioCache) {
-                Object.values(window.audioCache).forEach(url => {
-                    URL.revokeObjectURL(url);
-                });
-                window.audioCache = {};
-            }
-
-            // 重置所有相關變數
-            accumulatedVocabulary = [];
-            currentPageVocabulary = [];
-            wordAnalysisCache = {};
-            chatHistory = [];
-            lastAnalysisResult = null;
-
-            // 更新介面
-            updateStorageUsage();
-            showToast('所有資料已清除');
-
-            // 切換到設定頁面
-            switchPage('settings-page');
-        } catch (error) {
-            console.error('清除資料失敗:', error);
-            showToast('清除資料失敗: ' + error.message, false, true);
-        }
-    }
-});
-
 // 修改計算儲存空間使用狀態的函數
 async function updateStorageUsage() {
     try {
@@ -772,34 +813,6 @@ async function updateStorageUsage() {
         });
     }
 }
-
-// 修改事件監聽方式
-document.addEventListener('DOMContentLoaded', () => {
-    // 如果一開始就在設定頁面，立即更新
-    const settingsPage = document.getElementById('settings-page');
-    if (settingsPage && settingsPage.classList.contains('active')) {
-        updateStorageUsage();
-    }
-
-    // 監聽設定頁面的展開/收合
-    document.querySelectorAll('.settings-section.collapsible').forEach(section => {
-        const header = section.querySelector('.section-header');
-        header.addEventListener('click', () => {
-            // 當展開時更新儲存空間使用狀態
-            if (section.classList.contains('active')) {
-                updateStorageUsage();
-            }
-        });
-    });
-});
-
-// 監聽儲存變化
-chrome.storage.onChanged.addListener(() => {
-    const settingsPage = document.getElementById('settings-page');
-    if (settingsPage && settingsPage.classList.contains('active')) {
-        updateStorageUsage();
-    }
-});
 
 // 添加 Toast 提示功能
 function showToast(message, isLoading = false, isError = false) {

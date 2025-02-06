@@ -1480,6 +1480,104 @@
                 color: #e0e0e0;
             }
         }
+
+        /* 確認對話框樣式 */
+        .confirm-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .confirm-dialog {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 80%;
+            max-width: 320px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .confirm-dialog h3 {
+            margin: 0 0 16px 0;
+            color: #d32f2f;
+            font-size: 18px;
+        }
+
+        .confirm-dialog-content {
+            margin-bottom: 20px;
+            color: #5f6368;
+            font-size: 14px;
+        }
+
+        .confirm-dialog-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+            color: #3c4043;
+        }
+
+        .confirm-dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .confirm-dialog-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .confirm-dialog-btn.cancel {
+            background: #f1f3f4;
+            color: #3c4043;
+        }
+
+        .confirm-dialog-btn.confirm {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .confirm-dialog-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* 深色模式 */
+        @media (prefers-color-scheme: dark) {
+            .confirm-dialog {
+                background: #2d2d2d;
+            }
+
+            .confirm-dialog h3 {
+                color: #ff5252;
+            }
+
+            .confirm-dialog-content {
+                color: #e0e0e0;
+            }
+
+            .confirm-dialog-content ul {
+                color: #ffffff;
+            }
+
+            .confirm-dialog-btn.cancel {
+                background: #404040;
+                color: #e0e0e0;
+            }
+
+            .confirm-dialog-btn.confirm {
+                background: #ff5252;
+            }
+        }
     </style>
 </head>
 
@@ -1697,6 +1795,27 @@
 
     <div class="error" id="error-message"></div>
     <script src="popup.js"></script>
+
+    <!-- 確認對話框 -->
+    <div class="confirm-dialog-overlay" id="confirm-dialog">
+        <div class="confirm-dialog">
+            <h3>確認清除資料</h3>
+            <div class="confirm-dialog-content">
+                此操作將清除以下資料：
+                <ul>
+                    <li>單字列表</li>
+                    <li>分析快取</li>
+                    <li>語音快取</li>
+                    <li>對話記錄</li>
+                </ul>
+                <strong style="color: #d32f2f;">此操作無法復原！</strong>
+            </div>
+            <div class="confirm-dialog-buttons">
+                <button class="confirm-dialog-btn cancel" id="cancel-clear">取消</button>
+                <button class="confirm-dialog-btn confirm" id="confirm-clear">確認清除</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
