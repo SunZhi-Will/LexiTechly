@@ -16,40 +16,37 @@
 - 📊 CEFR level analysis of web content
 - 📚 Comprehensive assessment of vocabulary, grammar, and topic complexity
 - 💬 Interactive AI chat for content understanding
-- 📝 Vocabulary list with AI-powered word analysis
-- 🎯 Clean and intuitive user interface
-- 🌙 Dark mode support
+- 📝 Vocabulary List with AI Analysis
+- 🎯 Clean and Intuitive Interface
+- 🌙 Dark Mode Support
+- 🔊 Word and Sentence Pronunciation (using Speechify API)
+- 💾 Unlimited Local Storage
 
 ## 🚀 Installation
 
 1. Download and extract the project ZIP file
-2. Open Chrome browser and navigate to `chrome://extensions/`
+2. Open Chrome browser and go to `chrome://extensions/`
 3. Enable `Developer mode` in the top right
 4. Click `Load unpacked`
 5. Select the extracted folder
 
-## 📖 Usage
+## 📖 How to Use
 
-### 1. Obtain Gemini API Key
+### 1. Get Gemini API Key
 - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 - Sign in with your Google account
-- Click "Get API key"
-- Copy the generated API Key
+- Click "Get API key" button
+- Copy the generated API key
 
-### 2. Configure API Key
+### 2. Set Up API Key
 - Click the extension icon
-- Navigate to settings
-- Enter and save your API Key
+- Go to settings
+- Enter and save your API key
 
 ### 3. Analyze Content
 - Click the extension icon on any English webpage
 - Select "Analyze Current Page"
 - Review the analysis results
-
-### 4. AI Chat
-- Access the chat via bottom navigation
-- Type your question
-- Receive AI-powered responses
 
 ### 4. Vocabulary Management
 - Access vocabulary list via bottom navigation
@@ -61,6 +58,11 @@
 - Filter words by CEFR level
 - Search words in English or Chinese
 - Sort by level, alphabet, or date added
+
+### 5. AI Chat
+- Access the chat via bottom navigation
+- Type your question
+- Receive AI-powered responses
 
 ## 🛠️ Technical Details
 
