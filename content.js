@@ -14,12 +14,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (request.action === 'analyze') {
         const content = getPageContent();
+
+        // 檢查是否為英文內容
+        if (!checkIfEnglish(content)) {
+            sendResponse({
+                error: '此頁面似乎不是英文內容。請選擇英文文章進行分析。',
+                level: null,
+                text: null
+            });
+            return true;
+        }
+
         analyzeContent(content, request.apiKey).then(result => {
             console.log('Analysis result:', result);
-            sendResponse({
-                level: result.level,
-                text: content
-            });
+            sendResponse(result);
         });
         return true;
     } else if (request.action === 'chat') {
@@ -32,16 +40,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 async function analyzeContent(content, apiKey) {
-    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-
     try {
         // 檢查文本是否為英文
-        const isEnglish = checkIfEnglish(content);
-        if (!isEnglish) {
+        if (!checkIfEnglish(content)) {
             return {
-                error: '此頁面似乎不是英文內容。請選擇英文文章進行分析。'
+                error: '此頁面似乎不是英文內容。請選擇英文文章進行分析。',
+                level: null,
+                text: null
             };
         }
+
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        const maxRetries = 3;
+        let retryCount = 0;
+        let lastError;
 
         const prompt = `
             你是一個英文程度分析專家。請分析以下英文文本的難度等級。
@@ -70,11 +82,6 @@ async function analyzeContent(content, apiKey) {
             2. 所有說明文字必須使用繁體中文
             3. 分析內容要簡潔有力，每項不超過20個字
         `;
-
-        // 添加重試機制
-        const maxRetries = 3;
-        let retryCount = 0;
-        let lastError;
 
         while (retryCount < maxRetries) {
             try {
@@ -122,24 +129,55 @@ async function analyzeContent(content, apiKey) {
                 const result = data.candidates[0].content.parts[0].text.trim();
                 console.log('Raw result:', result);
 
-                // 解析 JSON 回應
-                const analysisResult = JSON.parse(result);
-                console.log('Parsed result:', analysisResult);
+                // 解析 JSON 回應並進行格式驗證
+                let analysisResult;
+                try {
+                    analysisResult = JSON.parse(result);
+                    console.log('Parsed result:', analysisResult);
 
-                if (!analysisResult.level || !analysisResult.analysis) {
-                    throw new Error('回應格式不正確');
+                    // 驗證結果格式
+                    if (!analysisResult || typeof analysisResult !== 'object') {
+                        throw new Error('分析結果必須是一個物件');
+                    }
+
+                    if (!analysisResult.level || typeof analysisResult.level !== 'string') {
+                        throw new Error('分析結果缺少有效的 level 屬性');
+                    }
+
+                    if (!analysisResult.analysis || typeof analysisResult.analysis !== 'object') {
+                        throw new Error('分析結果缺少有效的 analysis 屬性');
+                    }
+
+                    const requiredFields = ['vocabulary', 'grammar', 'topic'];
+                    for (const field of requiredFields) {
+                        if (!analysisResult.analysis[field] || typeof analysisResult.analysis[field] !== 'string') {
+                            throw new Error(`分析結果缺少有效的 ${field} 屬性`);
+                        }
+                    }
+
+                    if (!['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(analysisResult.level)) {
+                        throw new Error(`無效的 CEFR 等級: ${analysisResult.level}`);
+                    }
+
+                    // 確保回傳格式正確
+                    return {
+                        level: {
+                            level: analysisResult.level,
+                            analysis: {
+                                vocabulary: analysisResult.analysis.vocabulary,
+                                grammar: analysisResult.analysis.grammar,
+                                topic: analysisResult.analysis.topic
+                            }
+                        },
+                        text: content,
+                        error: null
+                    };
+
+                } catch (parseError) {
+                    console.error('JSON 解析錯誤:', parseError);
+                    console.error('原始回應:', result);
+                    throw new Error('無法解析 API 回應: ' + parseError.message);
                 }
-
-                if (!['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(analysisResult.level)) {
-                    throw new Error(`無效的 CEFR 等級: ${analysisResult.level}`);
-                }
-
-                // 修改返回格式
-                return {
-                    level: analysisResult,  // 保持原有的分析結果
-                    text: content,          // 添加文本內容
-                    error: null
-                };
             } catch (error) {
                 lastError = error;
                 if (retryCount >= maxRetries - 1) {
@@ -157,27 +195,43 @@ async function analyzeContent(content, apiKey) {
         return {
             error: error.message === 'HTTP error! status: 429'
                 ? '系統暫時忙碌,請稍後再試'
-                : (error.message || '無法分析內容')
+                : error.message === 'NOT_ENGLISH'
+                    ? '此頁面似乎不是英文內容。請選擇英文文章進行分析。'
+                    : (error.message || '無法分析內容'),
+            level: null,
+            text: null
         };
     }
 }
 
-// 檢查文本是否為英文
+// 改進檢查英文內容的函數
 function checkIfEnglish(text) {
-    // 移除標點符號和數字
+    if (!text || typeof text !== 'string') {
+        return false;
+    }
+
+    // 移除標點符號、數字和特殊字符
     const cleanText = text.replace(/[0-9\.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
 
-    // 取得前 100 個單詞進行檢查
-    const words = cleanText.split(/\s+/).slice(0, 100);
+    // 取得前 200 個單詞進行檢查（增加樣本量）
+    const words = cleanText.split(/\s+/).slice(0, 200);
+
+    if (words.length < 10) { // 如果文本太短
+        return false;
+    }
 
     // 計算英文單詞的比例
     const englishWords = words.filter(word => {
-        // 檢查是否主要由英文字母組成
-        return /^[a-zA-Z]+$/.test(word);
+        // 檢查是否主要由英文字母組成，且長度至少為 1
+        return word.length > 0 && /^[a-zA-Z]+$/.test(word);
     });
 
-    // 如果英文單詞比例低於 60%，判定為非英文內容
-    return (englishWords.length / words.length) > 0.6;
+    // 計算英文單詞的比例
+    const englishRatio = englishWords.length / words.length;
+    console.log('English ratio:', englishRatio);
+
+    // 如果英文單詞比例低於 50%，判定為非英文內容
+    return englishRatio > 0.5;
 }
 
 // 新增 AI 對話函數

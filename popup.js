@@ -214,7 +214,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 try {
+                    // 修正這裡：response.level 就是分析結果
                     const analysisResult = response.level;
+                    if (!analysisResult || !analysisResult.level) {
+                        showError('分析結果格式錯誤');
+                        return;
+                    }
+
                     // 儲存分析結果
                     lastAnalysisResult = analysisResult;
                     // 顯示結果
@@ -400,10 +406,19 @@ function switchPage(pageId) {
 
 // 修改分析結果處理
 function displayAnalysisResult(analysisResult) {
+    // 檢查 analysisResult 是否存在且包含必要的屬性
+    if (!analysisResult || !analysisResult.level) {
+        console.error('無效的分析結果:', analysisResult);
+        showError('無效的分析結果');
+        return;
+    }
+
+    // 更新顯示
     document.getElementById('level').textContent = analysisResult.level;
     document.getElementById('vocabulary').textContent = analysisResult.analysis.vocabulary;
     document.getElementById('grammar').textContent = analysisResult.analysis.grammar;
     document.getElementById('topic').textContent = analysisResult.analysis.topic;
+
     // 儲存分析結果和當前 URL
     chrome.storage.local.set({
         savedAnalysis: analysisResult,
