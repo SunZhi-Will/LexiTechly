@@ -21,6 +21,7 @@
 - 🌙 Dark Mode Support
 - 🔊 Word and Sentence Pronunciation (using Speechify API)
 - 💾 Unlimited Local Storage
+- �� Storage Management
 
 ## 🚀 Installation
 
@@ -63,6 +64,19 @@
 - Access the chat via bottom navigation
 - Type your question
 - Receive AI-powered responses
+
+### Storage Management
+
+- View storage usage details:
+  - Total used space
+  - Space used by vocabulary list
+  - Space used by analysis cache
+  - Space used by audio cache
+  - Space used by chat history
+- Clear all stored data with one click
+  - Preserves API keys and appearance settings
+  - Shows confirmation dialog before clearing
+  - Displays clear visual feedback
 
 ## 🛠️ Technical Details
 
