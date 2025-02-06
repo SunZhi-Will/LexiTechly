@@ -565,6 +565,12 @@ async function analyzeWordDetails(word, apiKey) {
     `;
 
     try {
+        // 獲取 Speechify API Key
+        const { speechifyApiKey } = await chrome.storage.local.get('speechifyApiKey');
+        if (!speechifyApiKey) {
+            throw new Error('請先設定語音 API Key');
+        }
+
         // 同時發送 AI 分析和語音生成的請求
         const [analysisResponse, speechResponse] = await Promise.all([
             // AI 分析請求
@@ -592,7 +598,7 @@ async function analyzeWordDetails(word, apiKey) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${speechifyApiKey}`  // 使用新的 API Key
+                    'Authorization': `Bearer ${speechifyApiKey}`
                 },
                 body: JSON.stringify({
                     voice_id: 'henry',

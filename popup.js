@@ -4,6 +4,7 @@ let chatHistory = [];
 let currentTabUrl = '';
 let accumulatedVocabulary = []; // 累積的單字
 let currentPageVocabulary = []; // 當前頁面的單字
+let wordAnalysisCache = {};
 
 // 將函數移到外部
 function updateVocabularyUI(isLoading = false) {
@@ -397,6 +398,11 @@ function switchPage(pageId) {
     });
     document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add('active');
 
+    // 如果切換到設定頁面，立即更新儲存空間使用狀態
+    if (pageId === 'settings-page') {
+        updateStorageUsage();
+    }
+
     // 如果切換回主頁面且有分析結果，顯示分析結果
     if (pageId === 'main-page' && lastAnalysisResult) {
         displayAnalysisResult(lastAnalysisResult);
@@ -620,27 +626,238 @@ function clearVocabulary() {
     });
 }
 
-// 添加清除單字列表的功能
-const clearVocabularyBtn = document.createElement('button');
-clearVocabularyBtn.className = 'save-button';
-clearVocabularyBtn.textContent = '清除單字列表';
-clearVocabularyBtn.onclick = clearVocabulary;
+// 修改清除所有資料的功能
+document.getElementById('clear-all-data').addEventListener('click', async () => {
+    if (confirm('確定要清除所有儲存的資料嗎？此操作將清除：\n\n' +
+        '• 單字列表\n' +
+        '• 分析快取\n' +
+        '• 語音快取\n' +
+        '• 對話記錄\n\n' +
+        '此操作無法復原。')) {
+        try {
+            // 先保存 API Keys 和外觀設定
+            const {
+                apiKey,
+                speechifyApiKey,
+                darkMode,  // 保存深色模式設定
+                theme     // 保存其他主題相關設定
+            } = await chrome.storage.local.get([
+                'apiKey',
+                'speechifyApiKey',
+                'darkMode',
+                'theme'
+            ]);
 
-// 將清除按鈕加入設定頁面
-document.querySelector('.settings-sections').appendChild(clearVocabularyBtn);
+            // 清除所有儲存的資料
+            await chrome.storage.local.clear();
 
-// 修改 popup.js 中的清除功能
-document.getElementById('clear-vocabulary').addEventListener('click', async () => {
-    if (confirm('確定要清除所有單字嗎？此操作無法復原。')) {
-        // 清除所有相關資料
-        await chrome.storage.local.remove([
-            'accumulatedVocabulary',
-            'currentPageVocabulary',
-            'wordAnalysisCache'  // 添加這行，確保清除分析快取
-        ]);
+            // 恢復 API Keys 和外觀設定
+            await chrome.storage.local.set({
+                apiKey: apiKey || '',
+                speechifyApiKey: speechifyApiKey || '',
+                darkMode: darkMode || false,
+                theme: theme || 'light'
+            });
 
-        // 更新介面
-        document.getElementById('vocabulary-count').textContent = '0';
-        showToast('單字列表已清除');
+            // 清除記憶體中的 Blob URLs
+            if (window.audioCache) {
+                Object.values(window.audioCache).forEach(url => {
+                    URL.revokeObjectURL(url);
+                });
+                window.audioCache = {};
+            }
+
+            // 重置所有相關變數
+            accumulatedVocabulary = [];
+            currentPageVocabulary = [];
+            wordAnalysisCache = {};
+            chatHistory = [];
+            lastAnalysisResult = null;
+
+            // 更新介面
+            updateStorageUsage();
+            showToast('所有資料已清除');
+
+            // 切換到設定頁面
+            switchPage('settings-page');
+        } catch (error) {
+            console.error('清除資料失敗:', error);
+            showToast('清除資料失敗: ' + error.message, false, true);
+        }
     }
-}); 
+});
+
+// 修改計算儲存空間使用狀態的函數
+async function updateStorageUsage() {
+    try {
+        const storageUsedElement = document.getElementById('storage-used');
+        const storageFreeElement = document.getElementById('storage-free');
+        const storageTotalElement = document.getElementById('storage-total');
+        const storageBarElement = document.getElementById('storage-used-bar');
+
+        if (!storageUsedElement || !storageFreeElement || !storageTotalElement || !storageBarElement) {
+            console.warn('找不到儲存空間顯示元素');
+            return;
+        }
+
+        // 獲取所有儲存的資料
+        const {
+            accumulatedVocabulary = [],
+            currentPageVocabulary = [],
+            wordAnalysisCache = {},
+            audioCache = {},
+            savedAnalysis = {},
+            savedChat = []
+        } = await chrome.storage.local.get(null);
+
+        // 計算各類型資料的大小
+        const getSize = (data) => new TextEncoder().encode(JSON.stringify(data)).length;
+
+        const sizes = {
+            vocabulary: getSize(accumulatedVocabulary) + getSize(currentPageVocabulary),
+            analysis: getSize(wordAnalysisCache) + getSize(savedAnalysis),
+            audio: getSize(audioCache),
+            chat: getSize(savedChat)
+        };
+
+        const totalUsage = Object.values(sizes).reduce((a, b) => a + b, 0);
+        const totalStorage = chrome.storage.local.QUOTA_BYTES || (100 * 1024 * 1024); // 預設 100MB
+        const freeStorage = totalStorage - totalUsage;
+
+        // 格式化容量顯示
+        function formatSize(bytes) {
+            if (bytes > 1024 * 1024) {
+                return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+            } else if (bytes > 1024) {
+                return `${(bytes / 1024).toFixed(2)} KB`;
+            }
+            return `${bytes} bytes`;
+        }
+
+        // 更新顯示
+        storageUsedElement.innerHTML = `
+            ${formatSize(totalUsage)}
+            <br>
+            <small style="color: #666; font-size: 0.9em;">
+                單字列表: ${formatSize(sizes.vocabulary)}<br>
+                分析快取: ${formatSize(sizes.analysis)}<br>
+                語音快取: ${formatSize(sizes.audio)}<br>
+                對話記錄: ${formatSize(sizes.chat)}
+            </small>
+        `;
+        storageFreeElement.textContent = formatSize(freeStorage);
+        storageTotalElement.textContent = formatSize(totalStorage);
+
+        // 更新進度條
+        const percentage = (totalUsage / totalStorage) * 100;
+        storageBarElement.style.width = `${Math.min(percentage, 100)}%`;
+
+        // 根據使用量變更顏色
+        if (percentage > 90) {
+            storageBarElement.style.backgroundColor = '#f44336'; // 紅色
+        } else if (percentage > 70) {
+            storageBarElement.style.backgroundColor = '#ff9800'; // 橙色
+        } else {
+            storageBarElement.style.backgroundColor = '#1a73e8'; // 藍色
+        }
+
+    } catch (error) {
+        console.error('計算儲存空間使用量失敗:', error);
+        const elements = ['storage-used', 'storage-free', 'storage-total'];
+        elements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = '計算失敗';
+            }
+        });
+    }
+}
+
+// 修改事件監聽方式
+document.addEventListener('DOMContentLoaded', () => {
+    // 如果一開始就在設定頁面，立即更新
+    const settingsPage = document.getElementById('settings-page');
+    if (settingsPage && settingsPage.classList.contains('active')) {
+        updateStorageUsage();
+    }
+
+    // 監聽設定頁面的展開/收合
+    document.querySelectorAll('.settings-section.collapsible').forEach(section => {
+        const header = section.querySelector('.section-header');
+        header.addEventListener('click', () => {
+            // 當展開時更新儲存空間使用狀態
+            if (section.classList.contains('active')) {
+                updateStorageUsage();
+            }
+        });
+    });
+});
+
+// 監聽儲存變化
+chrome.storage.onChanged.addListener(() => {
+    const settingsPage = document.getElementById('settings-page');
+    if (settingsPage && settingsPage.classList.contains('active')) {
+        updateStorageUsage();
+    }
+});
+
+// 添加 Toast 提示功能
+function showToast(message, isLoading = false, isError = false) {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        document.body.appendChild(toast);
+
+        // 添加 Toast 樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            #toast {
+                position: fixed;
+                bottom: 60px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #323232;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 4px;
+                font-size: 14px;
+                z-index: 10000;
+                display: none;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                transition: opacity 0.3s ease;
+            }
+            #toast.error {
+                background-color: #d32f2f;
+            }
+            #toast.loading {
+                background-color: #1976d2;
+            }
+            #toast .spinner {
+                width: 16px;
+                height: 16px;
+                border: 2px solid #fff;
+                border-top-color: transparent;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    toast.className = 'toast' + (isLoading ? ' loading' : '') + (isError ? ' error' : '');
+    toast.innerHTML = `
+        ${isLoading ? '<div class="spinner"></div>' : ''}
+        <span>${message}</span>
+    `;
+
+    toast.style.display = 'flex';
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, isLoading ? 0 : 3000);
+} 

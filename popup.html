@@ -1034,7 +1034,7 @@
         .settings-sections {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 4px;
         }
 
         .settings-section {
@@ -1424,6 +1424,62 @@
             padding: 16px 16px 16px 12px;
             /* 右側留出滾動條的空間 */
         }
+
+        .storage-info {
+            margin: 0 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+        }
+
+        .storage-info h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        .storage-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .storage-used {
+            height: 100%;
+            background: #1a73e8;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .storage-text {
+            font-size: 12px;
+            color: #5f6368;
+        }
+
+        /* 深色模式 */
+        @media (prefers-color-scheme: dark) {
+            .storage-info {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .storage-info h4 {
+                color: #e0e0e0;
+            }
+
+            .storage-bar {
+                background: #404040;
+            }
+
+            .storage-used {
+                background: #64b5f6;
+            }
+
+            .storage-text {
+                color: #e0e0e0;
+            }
+        }
     </style>
 </head>
 
@@ -1572,6 +1628,21 @@
                                     </label>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="storage-info">
+                            <h4>儲存空間使用狀態</h4>
+                            <div class="storage-bar">
+                                <div class="storage-used" id="storage-used-bar"></div>
+                            </div>
+                            <div class="storage-text">
+                                <div>已使用：<span id="storage-used">計算中...</span></div>
+                                <div>未使用：<span id="storage-free">計算中...</span></div>
+                                <div>總容量：<span id="storage-total">計算中...</span></div>
+                            </div>
+                            <button id="clear-all-data" class="save-button" style="margin-top: 10px;">
+                                清除所有儲存資料
+                            </button>
                         </div>
                     </div>
                 </div>
