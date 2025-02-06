@@ -36,6 +36,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse(result);
         });
         return true;
+    } else if (request.action === 'analyzeVocabulary') {
+        const content = getPageContent();
+        analyzePageVocabulary(content, request.apiKey).then(result => {
+            sendResponse(result);
+        });
+        return true;
     }
 });
 
@@ -327,4 +333,112 @@ async function chatWithAI(content, message, apiKey, history = []) {
     }
 
     throw lastError || new Error('達到最大重試次數');
+}
+
+async function analyzePageVocabulary(text, apiKey) {
+    try {
+        const prompt = `
+            分析以下英文文本，提取重要單字（最多20個）。
+            對每個單字提供：
+            1. CEFR 等級 (A1-C2)
+            2. 簡單英文例句（使用該單字的簡短句子）
+            3. 單字中文翻譯
+            
+            回傳格式必須是以下 JSON：
+            {
+                "words": [
+                    {
+                        "text": "單字",
+                        "level": "CEFR等級",
+                        "example": "包含該單字的簡單英文例句",
+                        "translation": "單字中文翻譯"
+                    }
+                ]
+            }
+            
+            要求：
+            1. 例句要簡單易懂
+            2. 例句要能體現單字的常見用法
+            3. 例句長度控制在 15 個單詞以內
+            4. 單字中文翻譯要準確簡潔
+            
+            文本：
+            ${text}
+            
+            請直接返回 JSON 格式，不要有其他說明文字。
+        `;
+
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+            const text = data.candidates[0].content.parts[0].text;
+            let wordsData;
+            try {
+                wordsData = JSON.parse(text);
+            } catch (e) {
+                const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/({[\s\S]*})/);
+                if (jsonMatch) {
+                    wordsData = JSON.parse(jsonMatch[1].trim());
+                } else {
+                    throw new Error('無法解析 JSON 格式');
+                }
+            }
+
+            if (wordsData && wordsData.words) {
+                // 將新單字分類為當前頁面單字
+                const newWords = wordsData.words.map(word => ({
+                    text: word.text,
+                    level: word.level,
+                    example: word.example,
+                    translation: word.translation
+                }));
+
+                return {
+                    words: newWords,
+                    error: null
+                };
+            }
+        }
+        throw new Error('無效的 API 回應格式');
+    } catch (error) {
+        console.error('分析單字時發生錯誤:', error);
+        return {
+            words: [],
+            error: error.message
+        };
+    }
+}
+
+// 修改建立單字卡片的輔助函數
+function createWordCard(word) {
+    const wordCard = document.createElement('div');
+    wordCard.className = 'word-card';
+    wordCard.innerHTML = `
+        <div class="word-header">
+            <div class="word-text">${word.text}</div>
+            <div class="word-level">${word.level || 'N/A'}</div>
+        </div>
+        <div class="word-example">${word.example || '暫無例句'}</div>
+        <div class="word-translation">${word.translation || '暫無翻譯'}</div>
+    `;
+    return wordCard;
 } 

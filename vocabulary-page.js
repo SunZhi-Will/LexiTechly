@@ -29,7 +29,7 @@ function updateWordDisplay(words) {
                 <div class="word-text">${word.text}</div>
                 <div class="word-level">${word.level || 'N/A'}</div>
             </div>
-            <div class="word-details">${word.definition || '暫無釋義'}</div>
+            <div class="word-details">${word.example || '暫無例句'}</div>
             <div class="word-translation">${word.translation || '暫無翻譯'}</div>
         `;
         grid.appendChild(card);

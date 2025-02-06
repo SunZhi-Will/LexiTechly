@@ -104,7 +104,7 @@ function createWordCard(word) {
             <div class="word-text">${word.text}</div>
             <div class="word-level">${word.level || 'N/A'}</div>
         </div>
-        <div class="word-details">${word.definition || '暫無釋義'}</div>
+        <div class="word-details">${word.example || '暫無例句'}</div>
         <div class="word-translation">${word.translation || '暫無翻譯'}</div>
     `;
     return wordCard;
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     // 分析文本中的單字，傳入 apiKey
                     if (response.text) {
-                        await analyzePageVocabulary(response.text, apiKey);
+                        await analyzeVocabulary(response.text, apiKey);
                     }
                 } catch (error) {
                     console.error('解析錯誤:', error);
@@ -552,107 +552,61 @@ chrome.tabs.onActivated.addListener(async () => {
     }
 });
 
-// 修改分析頁面單字的函數
-async function analyzePageVocabulary(text, apiKey) {
+// 在需要分析單字的地方
+async function analyzeVocabulary(text, apiKey) {
     try {
         updateVocabularyUI(true);
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-        const prompt = `
-            分析以下英文文本，提取重要單字（最多20個）。
-            對每個單字提供：
-            1. CEFR 等級 (A1-C2)
-            2. 英文定義（簡短）
-            3. 中文翻譯
-            
-            回傳格式必須是以下 JSON：
-            {
-                "words": [
-                    {
-                        "text": "單字",
-                        "level": "CEFR等級",
-                        "definition": "英文定義",
-                        "translation": "中文翻譯"
-                    }
-                ]
-            }
-            
-            文本：
-            ${text}
-            
-            請直接返回 JSON 格式，不要有其他說明文字。
-        `;
-
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }]
-            })
+        const response = await new Promise((resolve) => {
+            chrome.tabs.sendMessage(tab.id, {
+                action: 'analyzeVocabulary',
+                apiKey: apiKey
+            }, resolve);
         });
 
-        const data = await response.json();
+        if (response.error) {
+            throw new Error(response.error);
+        }
 
-        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-            const text = data.candidates[0].content.parts[0].text;
-            let wordsData;
-            try {
-                wordsData = JSON.parse(text);
-            } catch (e) {
-                const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/({[\s\S]*})/);
-                if (jsonMatch) {
-                    wordsData = JSON.parse(jsonMatch[1].trim());
+        if (response.words) {
+            // 將新單字分類為當前頁面單字和累積單字
+            currentPageVocabulary = []; // 清空當前頁面單字
+
+            response.words.forEach(newWord => {
+                // 檢查單字是否已在累積列表中
+                const existingWordIndex = accumulatedVocabulary.findIndex(w =>
+                    w.text.toLowerCase() === newWord.text.toLowerCase()
+                );
+
+                if (existingWordIndex === -1) {
+                    // 如果單字不在累積列表中，加入當前頁面單字列表
+                    currentPageVocabulary.push(newWord);
                 } else {
-                    throw new Error('無法解析 JSON 格式');
+                    // 如果單字已在累積列表中，加入累積列表的版本到當前頁面單字列表
+                    currentPageVocabulary.push(accumulatedVocabulary[existingWordIndex]);
                 }
-            }
+            });
 
-            if (wordsData && wordsData.words) {
-                // 將新單字分類為當前頁面單字和累積單字
-                const newWords = wordsData.words;
-                currentPageVocabulary = []; // 清空當前頁面單字
+            // 將當前頁面的新單字加入累積列表
+            currentPageVocabulary.forEach(word => {
+                const existingWordIndex = accumulatedVocabulary.findIndex(w =>
+                    w.text.toLowerCase() === word.text.toLowerCase()
+                );
+                if (existingWordIndex === -1) {
+                    accumulatedVocabulary.push(word);
+                }
+            });
 
-                newWords.forEach(newWord => {
-                    // 檢查單字是否已在累積列表中
-                    const existingWordIndex = accumulatedVocabulary.findIndex(w =>
-                        w.text.toLowerCase() === newWord.text.toLowerCase()
-                    );
-
-                    if (existingWordIndex === -1) {
-                        // 如果單字不在累積列表中，加入當前頁面單字列表
-                        currentPageVocabulary.push(newWord);
-                    } else {
-                        // 如果單字已在累積列表中，加入累積列表的版本到當前頁面單字列表
-                        currentPageVocabulary.push(accumulatedVocabulary[existingWordIndex]);
-                    }
-                });
-
-                // 將當前頁面的新單字加入累積列表
-                currentPageVocabulary.forEach(word => {
-                    const existingWordIndex = accumulatedVocabulary.findIndex(w =>
-                        w.text.toLowerCase() === word.text.toLowerCase()
-                    );
-                    if (existingWordIndex === -1) {
-                        accumulatedVocabulary.push(word);
-                    }
-                });
-
-                // 儲存更新後的單字列表
-                await chrome.storage.local.set({
-                    accumulatedVocabulary: accumulatedVocabulary,
-                    currentPageVocabulary: currentPageVocabulary
-                });
-            }
+            // 儲存更新後的單字列表
+            await chrome.storage.local.set({
+                accumulatedVocabulary: accumulatedVocabulary,
+                currentPageVocabulary: currentPageVocabulary
+            });
         }
     } catch (error) {
         console.error('分析單字時發生錯誤:', error);
-        showError('分析單字時發生錯誤');
+        showError(error.message);
     } finally {
         updateVocabularyUI(false);
     }
