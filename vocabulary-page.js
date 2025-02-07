@@ -664,49 +664,45 @@ async function analyzeWordDetails(word, apiKey) {
     }
 }
 
-// 篩選和排序
+// 修改搜尋功能
 function filterAndSortWords(words, filters) {
-    let filtered = [...words];
+    let filteredWords = [...words];
 
     // 等級篩選
-    if (filters.level) {
-        filtered = filtered.filter(word => word.level === filters.level);
+    if (filters.level && filters.level !== 'all') {
+        filteredWords = filteredWords.filter(word => word.level === filters.level);
     }
 
     // 搜尋篩選
     if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        filtered = filtered.filter(word =>
-            word.text.toLowerCase().includes(searchLower) ||
-            word.translation.toLowerCase().includes(searchLower)
+        const searchTerm = filters.search.toLowerCase();
+        filteredWords = filteredWords.filter(word =>
+            word.text.toLowerCase().includes(searchTerm) ||
+            (word.translation && word.translation.toLowerCase().includes(searchTerm))
         );
     }
 
     // 排序
-    switch (filters.sort) {
-        case 'level':
-            filtered.sort((a, b) => (a.level || 'Z').localeCompare(b.level || 'Z'));
-            break;
-        case 'alphabet':
-            filtered.sort((a, b) => a.text.localeCompare(b.text));
-            break;
-        case 'latest':
-            // 使用時間戳記排序，如果沒有時間戳記則放到最後
-            filtered.sort((a, b) => {
-                if (!a.addedTime && !b.addedTime) return 0;
-                if (!a.addedTime) return 1;
-                if (!b.addedTime) return -1;
-                return b.addedTime - a.addedTime;  // 降序排列，最新的在前面
-            });
-            break;
+    if (filters.sort) {
+        switch (filters.sort) {
+            case 'level':
+                filteredWords.sort((a, b) => (a.level || '').localeCompare(b.level || ''));
+                break;
+            case 'alphabet':
+                filteredWords.sort((a, b) => a.text.localeCompare(b.text));
+                break;
+            case 'time':
+                filteredWords.sort((a, b) => (b.addedTime || 0) - (a.addedTime || 0));
+                break;
+        }
     }
 
-    return filtered;
+    return filteredWords;
 }
 
 // 修改初始化頁面函數
 async function initializePage() {
-    let words = await loadVocabulary();
+    let allWords = await loadVocabulary();  // 保存完整的單字列表
     const filters = {
         level: '',
         search: '',
@@ -714,33 +710,41 @@ async function initializePage() {
     };
 
     // 初始顯示
-    updateWordDisplay(filterAndSortWords(words, filters));
+    updateWordDisplay(filterAndSortWords(allWords, filters));
 
     // 監聽篩選器變化
     document.getElementById('level-filter').addEventListener('change', e => {
         filters.level = e.target.value;
-        // 使用最新的 accumulatedVocabulary
-        updateWordDisplay(filterAndSortWords(accumulatedVocabulary, filters));
+        // 使用完整的單字列表進行篩選
+        updateWordDisplay(filterAndSortWords(allWords, filters));
     });
 
-    document.getElementById('search-filter').addEventListener('input', e => {
-        filters.search = e.target.value;
-        // 使用最新的 accumulatedVocabulary
-        updateWordDisplay(filterAndSortWords(accumulatedVocabulary, filters));
+    // 修改搜尋事件監聽器
+    document.getElementById('search-filter').addEventListener('input', (e) => {
+        const searchTerm = e.target.value;
+        const levelFilter = document.getElementById('level-filter').value;
+        const sortFilter = document.getElementById('sort-filter').value;
+
+        // 每次都從完整的單字列表中進行搜尋
+        updateWordDisplay(filterAndSortWords(allWords, {
+            level: levelFilter,
+            search: searchTerm,
+            sort: sortFilter
+        }));
     });
 
     document.getElementById('sort-filter').addEventListener('change', e => {
         filters.sort = e.target.value;
-        // 使用最新的 accumulatedVocabulary
-        updateWordDisplay(filterAndSortWords(accumulatedVocabulary, filters));
+        // 使用完整的單字列表進行篩選
+        updateWordDisplay(filterAndSortWords(allWords, filters));
     });
 
     // 監聽 storage 變化
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'local' && changes.accumulatedVocabulary) {
-            // 當 storage 中的單字列表更新時，重新載入並顯示
-            words = changes.accumulatedVocabulary.newValue || [];
-            updateWordDisplay(filterAndSortWords(words, filters));
+            // 更新完整的單字列表
+            allWords = changes.accumulatedVocabulary.newValue || [];
+            updateWordDisplay(filterAndSortWords(allWords, filters));
         }
     });
 }
