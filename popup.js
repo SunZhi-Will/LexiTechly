@@ -5,6 +5,10 @@ let currentTabUrl = '';
 let accumulatedVocabulary = []; // 累積的單字
 let currentPageVocabulary = []; // 當前頁面的單字
 let wordAnalysisCache = {};
+let audioCache = {};
+let currentAudio = null;
+let lastPlayedText = null;
+let lastPlayedSpeed = 'normal';
 
 // 將函數移到外部
 function updateVocabularyUI(isLoading = false) {
@@ -346,14 +350,109 @@ function initializeSettingsPage() {
             }
         });
     });
+
+    // 添加儲存空間限制設定功能
+    const storageLimitInput = document.getElementById('storage-limit');
+    const saveStorageLimitBtn = document.getElementById('save-storage-limit');
+    const clearStorageLimitBtn = document.getElementById('clear-storage-limit');
+
+    // 載入已儲存的容量限制
+    chrome.storage.local.get('storageLimit', ({ storageLimit }) => {
+        if (storageLimit) {
+            storageLimitInput.value = storageLimit;
+        }
+    });
+
+    // 修改儲存容量限制的邏輯
+    saveStorageLimitBtn?.addEventListener('click', async () => {
+        const limit = parseInt(storageLimitInput.value);
+        if (!storageLimitInput.value.trim()) {
+            // 如果輸入框為空，視為取消限制
+            await chrome.storage.local.remove('storageLimit');
+            showToast('已取消儲存空間限制');
+            updateStorageUsage();
+        } else if (limit && limit > 0) {
+            // 設定新的容量限制
+            await chrome.storage.local.set({ storageLimit: limit });
+            showToast('已設定儲存空間上限');
+            updateStorageUsage();
+        } else {
+            showToast('請輸入有效的容量數值', false, true);
+        }
+    });
+
+    // 修改輸入框的事件處理
+    storageLimitInput?.addEventListener('input', (e) => {
+        // 移除開頭的 0
+        if (e.target.value.startsWith('0')) {
+            e.target.value = e.target.value.replace(/^0+/, '');
+        }
+        // 只允許輸入正整數
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
 }
 
 // 初始化清除資料功能
 function initializeClearDataFeature() {
     const clearAllDataBtn = document.getElementById('clear-all-data');
+    const clearAudioBtn = document.getElementById('clear-audio');
     const confirmDialog = document.getElementById('confirm-dialog');
+    const confirmAudioDialog = document.getElementById('confirm-audio-dialog');
     const cancelClearBtn = document.getElementById('cancel-clear');
     const confirmClearBtn = document.getElementById('confirm-clear');
+    const cancelAudioClearBtn = document.getElementById('cancel-audio-clear');
+    const confirmAudioClearBtn = document.getElementById('confirm-audio-clear');
+
+    // 清除語音快取按鈕
+    clearAudioBtn?.addEventListener('click', () => {
+        confirmAudioDialog.style.display = 'flex';
+    });
+
+    // 取消清除語音快取
+    cancelAudioClearBtn?.addEventListener('click', () => {
+        confirmAudioDialog.style.display = 'none';
+    });
+
+    // 確認清除語音快取
+    confirmAudioClearBtn?.addEventListener('click', async () => {
+        try {
+            // 隱藏對話框
+            confirmAudioDialog.style.display = 'none';
+
+            // 清除記憶體中的 Blob URLs
+            if (window.audioCache) {
+                Object.values(window.audioCache).forEach(url => {
+                    URL.revokeObjectURL(url);
+                });
+                window.audioCache = {};
+            }
+
+            // 清除儲存的語音快取
+            const { audioCache: savedAudioCache } = await chrome.storage.local.get('audioCache');
+            if (savedAudioCache) {
+                // 清除所有已儲存的 base64 音訊資料
+                for (const text in savedAudioCache) {
+                    delete savedAudioCache[text];
+                }
+            }
+
+            // 清除儲存空間中的語音快取
+            await chrome.storage.local.remove('audioCache');
+
+            // 重置全域變數
+            audioCache = {};
+            currentAudio = null;
+            lastPlayedText = null;
+            lastPlayedSpeed = 'normal';
+
+            // 更新介面
+            updateStorageUsage();
+            showToast('語音快取已清除');
+        } catch (error) {
+            console.error('清除語音快取失敗:', error);
+            showToast('清除語音快取失敗: ' + error.message, false, true);
+        }
+    });
 
     // 綁定清除按鈕事件
     clearAllDataBtn?.addEventListener('click', () => {
@@ -735,20 +834,23 @@ async function updateStorageUsage() {
         const storageFreeElement = document.getElementById('storage-free');
         const storageTotalElement = document.getElementById('storage-total');
         const storageBarElement = document.getElementById('storage-used-bar');
+        const storageLimitInput = document.getElementById('storage-limit');
+        const storageStatusElement = document.getElementById('storage-status');
 
         if (!storageUsedElement || !storageFreeElement || !storageTotalElement || !storageBarElement) {
             console.warn('找不到儲存空間顯示元素');
             return;
         }
 
-        // 獲取所有儲存的資料
+        // 獲取所有儲存的資料和設定
         const {
             accumulatedVocabulary = [],
             currentPageVocabulary = [],
             wordAnalysisCache = {},
             audioCache = {},
             savedAnalysis = {},
-            savedChat = []
+            savedChat = [],
+            storageLimit
         } = await chrome.storage.local.get(null);
 
         // 計算各類型資料的大小
@@ -762,11 +864,25 @@ async function updateStorageUsage() {
         };
 
         const totalUsage = Object.values(sizes).reduce((a, b) => a + b, 0);
-        const totalStorage = chrome.storage.local.QUOTA_BYTES || (100 * 1024 * 1024); // 預設 100MB
-        const freeStorage = totalStorage - totalUsage;
+        const totalStorage = storageLimit ? (storageLimit * 1024 * 1024) : Infinity;
+        const freeStorage = totalStorage === Infinity ? Infinity : totalStorage - totalUsage;
+
+        // 更新容量限制輸入框和狀態
+        if (storageLimit) {
+            storageLimitInput.value = storageLimit;
+            storageStatusElement.textContent = `已限制 ${storageLimit} MB`;
+            storageStatusElement.style.color = totalUsage > 0 ? (totalUsage > 90 ? '#d32f2f' : '#ff9800') : '#1a73e8';
+        } else {
+            storageLimitInput.value = '';
+            storageStatusElement.textContent = '無限制';
+            storageStatusElement.style.color = '#1a73e8';
+        }
 
         // 格式化容量顯示
         function formatSize(bytes) {
+            if (bytes === Infinity) {
+                return '無限制';
+            }
             if (bytes > 1024 * 1024) {
                 return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
             } else if (bytes > 1024) {
@@ -777,24 +893,40 @@ async function updateStorageUsage() {
 
         // 更新顯示
         storageUsedElement.innerHTML = `
-            ${formatSize(totalUsage)}
-            <br>
-            <small style="color: #666; font-size: 0.9em;">
-                單字列表: ${formatSize(sizes.vocabulary)}<br>
-                分析快取: ${formatSize(sizes.analysis)}<br>
-                語音快取: ${formatSize(sizes.audio)}<br>
-                對話記錄: ${formatSize(sizes.chat)}
-            </small>
+            <div style="font-weight: 500; margin-bottom: 4px;">${formatSize(totalUsage)}</div>
+            <div style="color: #5f6368; font-size: 0.9em;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span>單字列表:</span>
+                    <span>${formatSize(sizes.vocabulary)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span>分析快取:</span>
+                    <span>${formatSize(sizes.analysis)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span>語音快取:</span>
+                    <span>${formatSize(sizes.audio)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>對話記錄:</span>
+                    <span>${formatSize(sizes.chat)}</span>
+                </div>
+            </div>
         `;
         storageFreeElement.textContent = formatSize(freeStorage);
         storageTotalElement.textContent = formatSize(totalStorage);
 
         // 更新進度條
-        const percentage = (totalUsage / totalStorage) * 100;
+        const percentage = totalStorage === Infinity ?
+            (totalUsage > 0 ? 10 : 0) : // 無限制時，只要有使用就顯示 10%
+            (totalUsage / totalStorage) * 100;
+
         storageBarElement.style.width = `${Math.min(percentage, 100)}%`;
 
         // 根據使用量變更顏色
-        if (percentage > 90) {
+        if (totalStorage === Infinity) {
+            storageBarElement.style.backgroundColor = '#1a73e8'; // 藍色
+        } else if (percentage > 90) {
             storageBarElement.style.backgroundColor = '#f44336'; // 紅色
         } else if (percentage > 70) {
             storageBarElement.style.backgroundColor = '#ff9800'; // 橙色
@@ -804,7 +936,7 @@ async function updateStorageUsage() {
 
     } catch (error) {
         console.error('計算儲存空間使用量失敗:', error);
-        const elements = ['storage-used', 'storage-free', 'storage-total'];
+        const elements = ['storage-used', 'storage-free', 'storage-total', 'storage-status'];
         elements.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
