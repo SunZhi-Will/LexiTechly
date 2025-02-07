@@ -1005,4 +1005,106 @@ function showToast(message, isLoading = false, isError = false) {
     setTimeout(() => {
         toast.style.display = 'none';
     }, isLoading ? 0 : 3000);
+}
+
+// 檢查儲存空間是否超過限制
+async function checkStorageLimit(newDataSize = 0) {
+    try {
+        const { storageLimit } = await chrome.storage.local.get('storageLimit');
+        if (!storageLimit) return true; // 無限制
+
+        const {
+            accumulatedVocabulary = [],
+            currentPageVocabulary = [],
+            wordAnalysisCache = {},
+            audioCache = {},
+            savedAnalysis = {},
+            savedChat = []
+        } = await chrome.storage.local.get(null);
+
+        // 計算當前使用量
+        const getSize = (data) => new TextEncoder().encode(JSON.stringify(data)).length;
+        const currentUsage = getSize(accumulatedVocabulary) +
+            getSize(currentPageVocabulary) +
+            getSize(wordAnalysisCache) +
+            getSize(audioCache) +
+            getSize(savedAnalysis) +
+            getSize(savedChat);
+
+        // 檢查是否超過限制
+        const limitBytes = storageLimit * 1024 * 1024;
+        if ((currentUsage + newDataSize) > limitBytes) {
+            showToast('已達到儲存空間上限，請清理空間或調整限制', false, true);
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('檢查儲存空間失敗:', error);
+        return false;
+    }
+}
+
+// 修改儲存資料的函數
+async function saveData(key, data) {
+    try {
+        const dataSize = new TextEncoder().encode(JSON.stringify(data)).length;
+        if (await checkStorageLimit(dataSize)) {
+            await chrome.storage.local.set({ [key]: data });
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('儲存資料失敗:', error);
+        return false;
+    }
+}
+
+// 修改音訊快取儲存
+async function cacheAudio(text, audioData) {
+    try {
+        const dataSize = new TextEncoder().encode(audioData).length;
+        if (await checkStorageLimit(dataSize)) {
+            const { audioCache = {} } = await chrome.storage.local.get('audioCache');
+            audioCache[text] = audioData;
+            await chrome.storage.local.set({ audioCache });
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('快取音訊失敗:', error);
+        return false;
+    }
+}
+
+// 修改單字列表儲存
+async function saveVocabulary(vocabulary) {
+    const success = await saveData('accumulatedVocabulary', vocabulary);
+    if (!success) {
+        showToast('儲存空間不足，單字將僅保存於暫存', false, true);
+        // 只更新記憶體中的資料
+        accumulatedVocabulary = vocabulary;
+    }
+    return success;
+}
+
+// 修改分析結果儲存
+async function saveAnalysis(analysis) {
+    const success = await saveData('savedAnalysis', analysis);
+    if (!success) {
+        showToast('儲存空間不足，分析結果將僅保存於暫存', false, true);
+        // 只更新記憶體中的資料
+        lastAnalysisResult = analysis;
+    }
+    return success;
+}
+
+// 修改對話記錄儲存
+async function saveChat(messages) {
+    const success = await saveData('savedChat', messages);
+    if (!success) {
+        showToast('儲存空間不足，對話將僅保存於暫存', false, true);
+        // 只更新記憶體中的資料
+        chatHistory = messages;
+    }
+    return success;
 } 

@@ -2,7 +2,7 @@
 
 # LexiTechly
 
-🔍 智慧型英文內容分析擴充功能
+🔍 智慧英文內容分析擴充功能
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-green.svg)](https://chrome.google.com/webstore)

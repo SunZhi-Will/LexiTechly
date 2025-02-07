@@ -72,8 +72,87 @@ async function loadVocabulary() {
     return allWords;
 }
 
+// 檢查儲存空間是否超過限制
+async function checkStorageLimit(newDataSize = 0) {
+    try {
+        const { storageLimit } = await chrome.storage.local.get('storageLimit');
+        if (!storageLimit) return true; // 無限制
+
+        const {
+            accumulatedVocabulary = [],
+            currentPageVocabulary = [],
+            wordAnalysisCache = {},
+            audioCache = {},
+            savedAnalysis = {},
+            savedChat = []
+        } = await chrome.storage.local.get(null);
+
+        // 計算當前使用量
+        const getSize = (data) => new TextEncoder().encode(JSON.stringify(data)).length;
+        const currentUsage = getSize(accumulatedVocabulary) +
+            getSize(currentPageVocabulary) +
+            getSize(wordAnalysisCache) +
+            getSize(audioCache) +
+            getSize(savedAnalysis) +
+            getSize(savedChat);
+
+        // 檢查是否超過限制
+        const limitBytes = storageLimit * 1024 * 1024;
+        if ((currentUsage + newDataSize) > limitBytes) {
+            showToast('已達到儲存空間上限，請清理空間或調整限制', false, true);
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('檢查儲存空間失敗:', error);
+        return false;
+    }
+}
+
+// 修改儲存資料的函數
+async function saveData(key, data) {
+    try {
+        const dataSize = new TextEncoder().encode(JSON.stringify(data)).length;
+        if (await checkStorageLimit(dataSize)) {
+            await chrome.storage.local.set({ [key]: data });
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('儲存資料失敗:', error);
+        return false;
+    }
+}
+
+// 修改單字列表儲存函數
+async function saveVocabulary(words) {
+    const success = await saveData('accumulatedVocabulary', words);
+    if (!success) {
+        showToast('儲存空間不足，無法添加新單字', false, true);
+        return false;  // 返回 false 表示儲存失敗
+    }
+    return true;  // 返回 true 表示儲存成功
+}
+
 // 修改更新單字顯示函數
-function updateWordDisplay(words) {
+async function updateWordDisplay(words) {
+    // 檢查是否需要儲存
+    if (words !== accumulatedVocabulary) {
+        const dataSize = new TextEncoder().encode(JSON.stringify(words)).length;
+        if (await checkStorageLimit(dataSize)) {
+            const saveSuccess = await saveVocabulary(words);
+            if (!saveSuccess) {
+                // 如果儲存失敗，保持使用原有的單字列表
+                updateWordDisplay(accumulatedVocabulary);
+                return;
+            }
+        } else {
+            // 如果超出容量限制，保持使用原有的單字列表
+            updateWordDisplay(accumulatedVocabulary);
+            return;
+        }
+    }
+
     // 更新全域變數
     accumulatedVocabulary = words;
 
@@ -343,6 +422,29 @@ function getSpeakButtonHTML(size = 'normal') {
     `;
 }
 
+// 修改音訊快取儲存函數
+async function cacheAudioData(text, audioData) {
+    try {
+        // 計算新增音訊後的大小
+        const { audioCache: savedCache = {} } = await chrome.storage.local.get('audioCache');
+        const newCache = { ...savedCache, [text]: audioData };
+        const dataSize = new TextEncoder().encode(JSON.stringify(newCache)).length;
+
+        // 檢查儲存空間
+        if (!(await checkStorageLimit(dataSize))) {
+            console.warn('儲存空間不足，無法快取語音');
+            return false;
+        }
+
+        // 儲存音訊資料
+        await chrome.storage.local.set({ audioCache: newCache });
+        return true;
+    } catch (error) {
+        console.error('快取音訊失敗:', error);
+        return false;
+    }
+}
+
 // 修改語音功能
 async function speakWord(text, button) {
     try {
@@ -428,33 +530,10 @@ async function speakWord(text, button) {
                 audioCache[text] = audioUrl;
                 currentAudio = new Audio(audioUrl);
 
-                // 分批儲存音訊資料
-                try {
-                    const { audioCache: savedCache = {} } = await chrome.storage.local.get('audioCache');
-
-                    // 如果快取太大，移除舊的資料（改為 100MB 限制）
-                    const currentSize = JSON.stringify(savedCache).length;
-                    const MAX_CACHE_SIZE = 100 * 1024 * 1024; // 100MB 限制
-
-                    if (currentSize > MAX_CACHE_SIZE) {
-                        const keys = Object.keys(savedCache);
-                        // 移除最舊的 30% 的資料
-                        const removeCount = Math.ceil(keys.length * 0.3);
-                        for (let i = 0; i < removeCount; i++) {
-                            delete savedCache[keys[i]];
-                        }
-                    }
-
-                    // 限制單個音訊資料的大小（改為 2MB）
-                    if (data.audio_data.length > 2 * 1024 * 1024) {
-                        console.warn('音訊資料太大，跳過快取');
-                        return;
-                    }
-
-                    savedCache[text] = data.audio_data;
-                    await chrome.storage.local.set({ audioCache: savedCache });
-                } catch (storageError) {
-                    console.warn('音訊快取儲存失敗，但不影響使用:', storageError);
+                // 嘗試儲存音訊資料
+                const cacheSuccess = await cacheAudioData(text, data.audio_data);
+                if (!cacheSuccess) {
+                    showToast('儲存空間不足，語音將不會被快取', false, true);
                 }
             }
 
@@ -479,18 +558,7 @@ async function speakWord(text, button) {
             await currentAudio.play();
 
         } catch (apiError) {
-            if (apiError.message.includes('QUOTA_BYTES')) {
-                // 如果是儲存空間問題，清除快取但繼續使用
-                console.warn('快取空間不足，清除舊資料');
-                await chrome.storage.local.remove('audioCache');
-                // 不要中斷播放
-                if (currentAudio) {
-                    await currentAudio.play();
-                    return;
-                }
-            }
             console.warn('Speechify API 失敗，使用備用語音:', apiError);
-            button.classList.remove('playing');  // 確保切換前重置狀態
             await fallbackSpeak(text, button, speed);
         } finally {
             if (button) {
@@ -641,16 +709,17 @@ async function analyzeWordDetails(word, apiKey) {
                     ? speechData.audio_data
                     : JSON.stringify(speechData.audio_data);
 
-                // 儲存語音資料
-                const audioCache = (await chrome.storage.local.get('audioCache')).audioCache || {};
-                audioCache[word] = audioDataString;  // 確保儲存的是字串
-                await chrome.storage.local.set({ audioCache });
-
-                // 創建當前頁面使用的 Blob URL
-                const audioBlob = await fetch(`data:audio/mp3;base64,${audioDataString}`).then(r => r.blob());
-                const audioUrl = URL.createObjectURL(audioBlob);
-                window.audioCache = window.audioCache || {};
-                window.audioCache[word] = audioUrl;
+                // 檢查儲存空間並儲存語音資料
+                const saveSuccess = await cacheAudioData(word, audioDataString);
+                if (!saveSuccess) {
+                    console.warn('儲存空間不足，語音將不會被快取');
+                } else {
+                    // 只有在成功儲存後才創建 Blob URL
+                    const audioBlob = await fetch(`data:audio/mp3;base64,${audioDataString}`).then(r => r.blob());
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    window.audioCache = window.audioCache || {};
+                    window.audioCache[word] = audioUrl;
+                }
             } catch (error) {
                 console.warn('音訊資料處理失敗:', error);
             }
@@ -780,27 +849,6 @@ function clearVocabulary() {
         }));
         showToast('單字列表已清除');
     });
-}
-
-// 添加 Toast 提示功能
-function showToast(message, isLoading = false, isError = false) {
-    let toast = document.getElementById('toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast';
-        document.body.appendChild(toast);
-    }
-
-    toast.className = 'toast' + (isLoading ? ' loading' : '') + (isError ? ' error' : '');
-    toast.innerHTML = `
-        ${isLoading ? '<div class="spinner"></div>' : ''}
-        <span>${message}</span>
-    `;
-
-    toast.style.display = 'flex';
-    setTimeout(() => {
-        toast.style.display = 'none';
-    }, isLoading ? 0 : 3000);
 }
 
 // 修改備用語音功能
@@ -963,9 +1011,9 @@ function addSpeakButtonListeners(detailsPage, word) {
     });
 
     // 添加相似詞和反義詞的點擊事件
-    detailsPage.querySelectorAll('.word-chip.clickable').forEach(chip => {
-        chip.addEventListener('click', () => handleWordChipClick(chip, word));
-    });
+    // detailsPage.querySelectorAll('.word-chip.clickable').forEach(chip => {
+    //     chip.addEventListener('click', () => handleWordChipClick(chip, word));
+    // });
 }
 
 // 修改點擊事件處理函數
@@ -973,12 +1021,9 @@ async function handleWordChipClick(chip, currentWord) {
     const wordText = chip.dataset.word;
     const type = chip.dataset.type;
 
-    // 如果按鈕已經在載入中，直接返回
-    if (chip.classList.contains('loading')) {
-        return;
-    }
-
     try {
+        const overlay = document.querySelector('.analyzing-overlay');
+        overlay.classList.add('active');
         // 檢查單字是否已存在
         const existingWord = accumulatedVocabulary.find(w =>
             w.text.toLowerCase() === wordText.toLowerCase()
@@ -1002,19 +1047,11 @@ async function handleWordChipClick(chip, currentWord) {
 
                 // 觸發新卡片的點擊
                 existingCard.click();
-                existingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // existingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 showToast('單字已在列表中');
             }
             return;
         }
-
-        // 添加載入狀態
-        chip.classList.add('loading');
-        chip.style.pointerEvents = 'none';
-
-        // 顯示載入遮罩
-        const overlay = document.querySelector('.analyzing-overlay');
-        overlay.classList.add('active');
 
         // 取得 API Key
         const { apiKey } = await chrome.storage.local.get('apiKey');
@@ -1032,43 +1069,67 @@ async function handleWordChipClick(chip, currentWord) {
             await chrome.storage.local.set({ wordAnalysisCache });
         }
 
-        // 添加新單字
+        // 建立新單字物件，包含翻譯和例句
         const newWord = {
             text: wordText,
             level: currentWord.level,
             addedTime: Date.now(),
-            translation: details.translation,
-            example: details.examples[0]?.text
+            translation: details.translation || '',
+            example: details.examples?.[0]?.text || ''
         };
 
+        // 檢查儲存空間是否足夠
+        const newVocabulary = [...accumulatedVocabulary, newWord];
+        const dataSize = new TextEncoder().encode(JSON.stringify(newVocabulary)).length;
+
+        if (!(await checkStorageLimit(dataSize))) {
+            showToast('儲存空間不足，無法添加新單字', false, true);
+            return;
+        }
+
         // 更新全域變數和儲存
-        accumulatedVocabulary.push(newWord);
-        await chrome.storage.local.set({ accumulatedVocabulary });
+        accumulatedVocabulary = newVocabulary;  // 直接更新全域變數
+        const saveSuccess = await chrome.storage.local.set({ accumulatedVocabulary: newVocabulary });
+        // if (!saveSuccess) {
+        //     showToast('儲存空間不足，無法添加新單字', false, true);
+        //     accumulatedVocabulary = accumulatedVocabulary.slice(0, -1);  // 回復全域變數
+        //     return;
+        // }
+
+        // 關閉所有已開啟的詳細資訊頁面
+        document.querySelectorAll('.word-details-page.active').forEach(page => {
+            page.style.transition = 'none';
+            page.classList.remove('active');
+            page.offsetHeight;
+            page.style.transition = '';
+        });
 
         // 更新顯示
-        updateWordDisplay(filterAndSortWords(accumulatedVocabulary, {
-            level: document.getElementById('level-filter').value,
-            search: document.getElementById('search-filter').value,
-            sort: document.getElementById('sort-filter').value
-        }));
+        updateWordDisplay(accumulatedVocabulary);
 
-        // 找到新添加的卡片並觸發點擊
+        // 找到新添加的卡片和詳細頁面
         setTimeout(() => {
             const cards = document.querySelectorAll('.word-card');
             const newCard = Array.from(cards).find(card =>
-                card.querySelector('.word-text').textContent === wordText
+                card.querySelector('.word-text').textContent.toLowerCase() === wordText.toLowerCase()
             );
-            if (newCard) {
-                // 關閉所有已開啟的詳細資訊頁面
-                document.querySelectorAll('.word-details-page.active').forEach(page => {
-                    page.style.transition = 'none';  // 移除過渡效果
-                    page.classList.remove('active');
-                    page.offsetHeight;  // 強制重繪
-                    page.style.transition = '';  // 恢復過渡效果
-                });
 
-                newCard.click();
-                newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (newCard) {
+                // 滾動到新卡片位置
+                // newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // 找到對應的詳細頁面並展開
+                const detailsPages = document.querySelectorAll('.word-details-page');
+                const newDetailsPage = Array.from(detailsPages).find(page =>
+                    page.querySelector('.word-title').textContent.toLowerCase() === wordText.toLowerCase()
+                );
+
+                if (newDetailsPage) {
+                    // 立即更新詳細頁面內容
+                    updateDetailsContent(newDetailsPage, details, newWord);
+                    newDetailsPage.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
             }
         }, 100);
 
@@ -1101,4 +1162,46 @@ function updateDetailsContent(detailsPage, details, word) {
     detailsPage.querySelectorAll('.word-chip.clickable').forEach(chip => {
         chip.addEventListener('click', () => handleWordChipClick(chip, word));
     });
+}
+
+// 添加 Toast 提示功能
+function showToast(message, isLoading = false, isError = false) {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        document.body.appendChild(toast);
+
+        // 添加 Toast 樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            #toast {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #323232;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 4px;
+                font-size: 14px;
+                z-index: 10000;
+                display: none;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+            #toast.error {
+                background-color: #d32f2f;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    toast.className = 'toast' + (isError ? ' error' : '');
+    toast.textContent = message;
+    toast.style.display = 'flex';
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3000);
 } 
