@@ -137,7 +137,7 @@ async function saveVocabulary(words) {
 // 修改更新單字顯示函數
 async function updateWordDisplay(words) {
     // 檢查是否需要儲存
-    if (words !== accumulatedVocabulary) {
+    if (words !== accumulatedVocabulary && !words.isFiltered) {  // 添加 isFiltered 檢查
         const dataSize = new TextEncoder().encode(JSON.stringify(words)).length;
         if (await checkStorageLimit(dataSize)) {
             const saveSuccess = await saveVocabulary(words);
@@ -153,8 +153,10 @@ async function updateWordDisplay(words) {
         }
     }
 
-    // 更新全域變數
-    accumulatedVocabulary = words;
+    // 只在非過濾情況下更新全域變數
+    if (!words.isFiltered) {
+        accumulatedVocabulary = words;
+    }
 
     const grid = document.getElementById('word-grid');
     grid.innerHTML = '';
@@ -755,7 +757,15 @@ function filterAndSortWords(words, filters) {
     if (filters.sort) {
         switch (filters.sort) {
             case 'level':
-                filteredWords.sort((a, b) => (a.level || '').localeCompare(b.level || ''));
+                const levelOrder = { 'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4, 'C1': 5, 'C2': 6 };
+                filteredWords.sort((a, b) => {
+                    const levelA = levelOrder[a.level] || 0;
+                    const levelB = levelOrder[b.level] || 0;
+                    if (levelA !== levelB) {
+                        return levelA - levelB;
+                    }
+                    return a.text.localeCompare(b.text);
+                });
                 break;
             case 'alphabet':
                 filteredWords.sort((a, b) => a.text.localeCompare(b.text));
@@ -766,6 +776,8 @@ function filterAndSortWords(words, filters) {
         }
     }
 
+    // 標記這是過濾後的結果
+    filteredWords.isFiltered = true;
     return filteredWords;
 }
 
@@ -775,8 +787,11 @@ async function initializePage() {
     const filters = {
         level: '',
         search: '',
-        sort: 'level'
+        sort: 'level'  // 修改預設排序為 'time'
     };
+
+    // 設定排序選擇器的預設值
+    document.getElementById('sort-filter').value = 'level';
 
     // 初始顯示
     updateWordDisplay(filterAndSortWords(allWords, filters));
@@ -790,16 +805,11 @@ async function initializePage() {
 
     // 修改搜尋事件監聽器
     document.getElementById('search-filter').addEventListener('input', (e) => {
-        const searchTerm = e.target.value;
-        const levelFilter = document.getElementById('level-filter').value;
-        const sortFilter = document.getElementById('sort-filter').value;
+        // 更新 filters 物件中的搜尋條件
+        filters.search = e.target.value;
 
-        // 每次都從完整的單字列表中進行搜尋
-        updateWordDisplay(filterAndSortWords(allWords, {
-            level: levelFilter,
-            search: searchTerm,
-            sort: sortFilter
-        }));
+        // 使用更新後的 filters 進行篩選
+        updateWordDisplay(filterAndSortWords(allWords, filters));
     });
 
     document.getElementById('sort-filter').addEventListener('change', e => {
@@ -1069,11 +1079,11 @@ async function handleWordChipClick(chip, currentWord) {
             await chrome.storage.local.set({ wordAnalysisCache });
         }
 
-        // 建立新單字物件，包含翻譯和例句
+        // 建立新單字物件，包含翻譯、例句和時間戳記
         const newWord = {
             text: wordText,
             level: currentWord.level,
-            addedTime: Date.now(),
+            addedTime: Date.now(),  // 添加時間戳記
             translation: details.translation || '',
             example: details.examples?.[0]?.text || ''
         };
@@ -1104,8 +1114,8 @@ async function handleWordChipClick(chip, currentWord) {
             page.style.transition = '';
         });
 
-        // 更新顯示
-        updateWordDisplay(accumulatedVocabulary);
+        // 更新顯示（會自動按時間排序，因為預設排序是 'time'）
+        updateWordDisplay(filterAndSortWords(accumulatedVocabulary, { sort: 'time' }));
 
         // 找到新添加的卡片和詳細頁面
         setTimeout(() => {

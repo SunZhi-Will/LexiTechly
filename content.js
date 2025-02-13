@@ -404,12 +404,14 @@ async function analyzePageVocabulary(text, apiKey) {
             }
 
             if (wordsData && wordsData.words) {
-                // 將新單字分類為當前頁面單字
+                // 將新單字分類為當前頁面單字，並加入時間戳記
+                const currentTime = Date.now();
                 const newWords = wordsData.words.map(word => ({
                     text: word.text,
                     level: word.level,
                     example: word.example,
-                    translation: word.translation
+                    translation: word.translation,
+                    addedTime: currentTime  // 添加時間戳記
                 }));
 
                 return {
