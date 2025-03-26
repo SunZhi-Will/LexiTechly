@@ -169,11 +169,8 @@ async function updateWordDisplay(words) {
         // 修改基本資訊區塊
         card.innerHTML = `
             <div class="word-header">
-                <div class="word-text">
-                    ${word.text}
-                    ${word.phonetic ? `<span class="word-phonetic">${word.phonetic}</span>` : ''}
-                </div>
-                <div class="word-level">${word.level || 'N/A'}</div>
+                <span class="word-text">${word.text}</span>
+                <span class="word-level">${word.level || 'N/A'}</span>
             </div>
             <div class="word-details">${word.example || ''}</div>
             <div class="word-translation">${word.translation || ''}</div>
@@ -1068,9 +1065,25 @@ function addSpeakButtonListeners(detailsPage, word) {
     });
 
     // 添加相似詞和反義詞的點擊事件
-    // detailsPage.querySelectorAll('.word-chip.clickable').forEach(chip => {
-    //     chip.addEventListener('click', () => handleWordChipClick(chip, word));
-    // });
+    detailsPage.querySelectorAll('.word-chip.clickable').forEach(chip => {
+        // 移除舊的事件監聽器
+        const oldClickHandler = chip.clickHandler;
+        if (oldClickHandler) {
+            chip.removeEventListener('click', oldClickHandler);
+        }
+
+        // 創建新的事件處理函數
+        const newClickHandler = (e) => {
+            e.stopPropagation();
+            handleWordChipClick(chip, word);
+        };
+
+        // 儲存事件處理函數的引用
+        chip.clickHandler = newClickHandler;
+
+        // 添加新的事件監聽器
+        chip.addEventListener('click', newClickHandler);
+    });
 }
 
 // 修改點擊事件處理函數
@@ -1093,15 +1106,8 @@ async function handleWordChipClick(chip, currentWord) {
                 card.querySelector('.word-text').textContent.toLowerCase() === wordText.toLowerCase()
             );
 
-            if (existingCard) {
-                // 關閉所有已開啟的詳細資訊頁面
-                document.querySelectorAll('.word-details-page.active').forEach(page => {
-                    page.style.transition = 'none';  // 移除過渡效果
-                    page.classList.remove('active');
-                    page.offsetHeight;  // 強制重繪
-                    page.style.transition = '';  // 恢復過渡效果
-                });
 
+            if (existingCard) {
                 // 觸發新卡片的點擊
                 existingCard.click();
                 showToast('單字已在列表中');
@@ -1148,14 +1154,6 @@ async function handleWordChipClick(chip, currentWord) {
         accumulatedVocabulary = newVocabulary;  // 直接更新全域變數
         await chrome.storage.local.set({ accumulatedVocabulary: newVocabulary });
 
-        // 關閉所有已開啟的詳細資訊頁面
-        document.querySelectorAll('.word-details-page.active').forEach(page => {
-            page.style.transition = 'none';
-            page.classList.remove('active');
-            page.offsetHeight;
-            page.style.transition = '';
-        });
-
         // 獲取當前的排序和篩選設置
         const currentSort = document.getElementById('sort-filter').value;
         const currentLevel = document.getElementById('level-filter').value;
@@ -1168,28 +1166,36 @@ async function handleWordChipClick(chip, currentWord) {
             search: currentSearch
         }));
 
-        // 找到新添加的卡片和詳細頁面
-        setTimeout(() => {
-            const cards = document.querySelectorAll('.word-card');
-            const newCard = Array.from(cards).find(card =>
-                card.querySelector('.word-text').textContent.toLowerCase() === wordText.toLowerCase()
+        // 等待 DOM 更新完成
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // 找到新添加的卡片
+        const cards = document.querySelectorAll('.word-card');
+        const newCard = Array.from(cards).find(card =>
+            card.querySelector('.word-text').textContent.toLowerCase() === wordText.toLowerCase()
+        );
+
+        if (newCard) {
+            // 找到對應的詳細頁面
+            const detailsPages = document.querySelectorAll('.word-details-page');
+            const newDetailsPage = Array.from(detailsPages).find(page =>
+                page.querySelector('.word-title').textContent.toLowerCase() === wordText.toLowerCase()
             );
 
-            if (newCard) {
-                // 找到對應的詳細頁面並展開
-                const detailsPages = document.querySelectorAll('.word-details-page');
-                const newDetailsPage = Array.from(detailsPages).find(page =>
-                    page.querySelector('.word-title').textContent.toLowerCase() === wordText.toLowerCase()
-                );
+            if (newDetailsPage) {
+                // 更新詳細頁面內容
+                updateDetailsContent(newDetailsPage, details, newWord);
 
-                if (newDetailsPage) {
-                    // 立即更新詳細頁面內容
-                    updateDetailsContent(newDetailsPage, details, newWord);
-                    newDetailsPage.classList.add('active');
-                    document.body.style.overflow = 'hidden';
+                // 設定新頁面的 z-index 比當前頁面高
+                const currentDetailsPage = document.querySelector('.word-details-page.active');
+                if (currentDetailsPage) {
+                    currentDetailsPage.style.zIndex = '1000';
                 }
+                newDetailsPage.style.zIndex = '1002';
+                newDetailsPage.classList.add('active');
+                document.body.style.overflow = 'hidden';
             }
-        }, 100);
+        }
 
         showToast(`已添加 ${type === 'synonym' ? '相似詞' : '反義詞'}: ${wordText}`);
 
@@ -1220,14 +1226,37 @@ function updateDetailsContent(detailsPage, details, word) {
 
     // 添加相似詞和反義詞的點擊事件
     detailsPage.querySelectorAll('.word-chip.clickable').forEach(chip => {
-        chip.addEventListener('click', () => handleWordChipClick(chip, word));
+        // 移除舊的事件監聽器
+        const oldClickHandler = chip.clickHandler;
+        if (oldClickHandler) {
+            chip.removeEventListener('click', oldClickHandler);
+        }
+
+        // 創建新的事件處理函數
+        const newClickHandler = (e) => {
+            e.stopPropagation();
+            handleWordChipClick(chip, word);
+        };
+
+        // 儲存事件處理函數的引用
+        chip.clickHandler = newClickHandler;
+
+        // 添加新的事件監聽器
+        chip.addEventListener('click', newClickHandler);
     });
 
     // 添加顯示關聯圖按鈕的事件監聽
     const showGraphBtn = detailsPage.querySelector('.show-graph-btn');
     const graphContainer = detailsPage.querySelector('.relationship-graph-container');
 
-    showGraphBtn.addEventListener('click', () => {
+    // 移除舊的事件監聽器
+    const oldShowGraphHandler = showGraphBtn.showGraphHandler;
+    if (oldShowGraphHandler) {
+        showGraphBtn.removeEventListener('click', oldShowGraphHandler);
+    }
+
+    // 創建新的事件處理函數
+    const newShowGraphHandler = () => {
         graphContainer.style.display = 'flex';
         // 使用 setTimeout 確保 display: flex 已經生效
         setTimeout(() => {
@@ -1235,23 +1264,56 @@ function updateDetailsContent(detailsPage, details, word) {
         }, 10);
         // 創建關聯圖
         createRelationshipGraph(detailsPage.querySelector('#word-relationship-graph'), word, details);
-    });
+    };
+
+    // 儲存事件處理函數的引用
+    showGraphBtn.showGraphHandler = newShowGraphHandler;
+
+    // 添加新的事件監聽器
+    showGraphBtn.addEventListener('click', newShowGraphHandler);
 
     // 添加關閉按鈕的事件監聽
     const closeGraphBtn = detailsPage.querySelector('.close-graph-btn');
-    closeGraphBtn.addEventListener('click', () => {
+
+    // 移除舊的事件監聽器
+    const oldCloseGraphHandler = closeGraphBtn.closeGraphHandler;
+    if (oldCloseGraphHandler) {
+        closeGraphBtn.removeEventListener('click', oldCloseGraphHandler);
+    }
+
+    // 創建新的事件處理函數
+    const newCloseGraphHandler = () => {
         graphContainer.classList.remove('active');
         setTimeout(() => {
             graphContainer.style.display = 'none';
         }, 300); // 等待淡出動畫完成
-    });
+    };
+
+    // 儲存事件處理函數的引用
+    closeGraphBtn.closeGraphHandler = newCloseGraphHandler;
+
+    // 添加新的事件監聽器
+    closeGraphBtn.addEventListener('click', newCloseGraphHandler);
 
     // 點擊背景時關閉
-    graphContainer.addEventListener('click', (e) => {
+    // 移除舊的事件監聽器
+    const oldBackgroundClickHandler = graphContainer.backgroundClickHandler;
+    if (oldBackgroundClickHandler) {
+        graphContainer.removeEventListener('click', oldBackgroundClickHandler);
+    }
+
+    // 創建新的事件處理函數
+    const newBackgroundClickHandler = (e) => {
         if (e.target === graphContainer) {
             closeGraphBtn.click();
         }
-    });
+    };
+
+    // 儲存事件處理函數的引用
+    graphContainer.backgroundClickHandler = newBackgroundClickHandler;
+
+    // 添加新的事件監聽器
+    graphContainer.addEventListener('click', newBackgroundClickHandler);
 }
 
 // 添加 Toast 提示功能
