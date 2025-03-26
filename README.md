@@ -4,7 +4,7 @@
 
 🔍 An intelligent Chrome extension for English content analysis
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-green.svg)](https://chrome.google.com/webstore)
 
 [English](README.md) | [中文](README_ZH.md)
@@ -21,7 +21,7 @@
 - 🌙 Dark Mode Support
 - 🔊 Word and Sentence Pronunciation (using Speechify API)
 - 💾 Unlimited Local Storage
-- �� Storage Management
+-  Storage Management
 
 ## 🚀 Installation
 
@@ -93,7 +93,7 @@
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under a Commercial License. All rights reserved. See the [LICENSE](LICENSE) file for details.
 
 ---
 

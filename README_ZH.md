@@ -4,7 +4,7 @@
 
 🔍 智慧英文內容分析擴充功能
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-green.svg)](https://chrome.google.com/webstore)
 
 [English](README.md) | [中文](README_ZH.md)
@@ -93,7 +93,7 @@
 
 ## 📄 授權條款
 
-本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 檔案
+本專案採用商業授權條款 - 版權所有，詳見 [LICENSE](LICENSE) 檔案
 
 ---
 
