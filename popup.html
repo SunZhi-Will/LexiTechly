@@ -1220,9 +1220,15 @@
         }
 
         .word-text {
-            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .word-text-main {
             font-weight: 500;
             color: #1a73e8;
+            font-size: 18px;
         }
 
         .word-level {
@@ -1242,6 +1248,18 @@
             margin-top: 4px;
             font-size: 13px;
             color: #3c4043;
+        }
+
+        .word-phonetic {
+            font-size: 14px;
+            color: #1a73e8;
+            opacity: 0.85;
+            transition: opacity 0.2s;
+            line-height: 1.2;
+        }
+
+        .word-card:hover .word-phonetic {
+            opacity: 1;
         }
 
         /* 深色模式樣式 */
@@ -1269,6 +1287,14 @@
 
         .dark-mode .word-translation {
             color: #e0e0e0;
+        }
+
+        .dark-mode .word-phonetic {
+            color: #64b5f6;
+        }
+
+        .dark-mode .word-text-main {
+            color: #64b5f6;
         }
 
         .loading-card {
@@ -1613,6 +1639,40 @@
         .storage-text {
             font-size: 12px;
             color: var(--secondary-text);
+        }
+
+        /* 單字卡片樣式 */
+        .word-phonetic {
+            font-size: 14px;
+            color: #1a73e8;
+            opacity: 0.85;
+            transition: opacity 0.2s;
+            line-height: 1.2;
+        }
+
+        .word-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .word-text-main {
+            font-weight: 500;
+            color: #1a73e8;
+            font-size: 18px;
+        }
+
+        .word-card:hover .word-phonetic {
+            opacity: 1;
+        }
+
+        /* 深色模式下的音標樣式 */
+        .dark-mode .word-phonetic {
+            color: #64b5f6;
+        }
+
+        .dark-mode .word-text-main {
+            color: #64b5f6;
         }
     </style>
 </head>

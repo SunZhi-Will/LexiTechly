@@ -340,15 +340,17 @@ async function analyzePageVocabulary(text, apiKey) {
         const prompt = `
             分析以下英文文本，提取重要單字（最多20個）。
             對每個單字提供：
-            1. CEFR 等級 (A1-C2)
-            2. 簡單英文例句（使用該單字的簡短句子）
-            3. 單字中文翻譯
+            1. KK音標（包含重音符號）
+            2. CEFR 等級 (A1-C2)
+            3. 簡單英文例句（使用該單字的簡短句子）
+            4. 單字中文翻譯
             
             回傳格式必須是以下 JSON：
             {
                 "words": [
                     {
                         "text": "單字",
+                        "phonetic": "KK音標",
                         "level": "CEFR等級",
                         "example": "包含該單字的簡單英文例句",
                         "translation": "單字中文翻譯"
@@ -357,10 +359,12 @@ async function analyzePageVocabulary(text, apiKey) {
             }
             
             要求：
-            1. 例句要簡單易懂
-            2. 例句要能體現單字的常見用法
-            3. 例句長度控制在 15 個單詞以內
-            4. 單字中文翻譯要準確簡潔
+            1. 音標必須使用KK音標系統，包含重音符號
+            2. 音標格式範例：[ˋhæpɪ]
+            3. 例句要簡單易懂
+            4. 例句要能體現單字的常見用法
+            5. 例句長度控制在 15 個單詞以內
+            6. 單字中文翻譯要準確簡潔
             
             文本：
             ${text}
@@ -404,14 +408,14 @@ async function analyzePageVocabulary(text, apiKey) {
             }
 
             if (wordsData && wordsData.words) {
-                // 將新單字分類為當前頁面單字，並加入時間戳記
                 const currentTime = Date.now();
                 const newWords = wordsData.words.map(word => ({
                     text: word.text,
+                    phonetic: word.phonetic || '',
                     level: word.level,
                     example: word.example,
                     translation: word.translation,
-                    addedTime: currentTime  // 添加時間戳記
+                    addedTime: currentTime
                 }));
 
                 return {

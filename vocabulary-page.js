@@ -6,6 +6,7 @@ let audioCache = {};  // 新增語音快取
 let currentAudio = null;  // 添加全域變數來追蹤當前播放的音訊
 let lastPlayedText = null;
 let lastPlayedSpeed = 'normal';  // 追蹤上次播放的速度
+let relationshipGraph = null;  // 添加關聯圖實例
 
 // 從 chrome.storage 讀取單字資料
 async function loadVocabulary() {
@@ -162,21 +163,23 @@ async function updateWordDisplay(words) {
     grid.innerHTML = '';
 
     words.forEach(word => {
-        // 建立主卡片
         const card = document.createElement('div');
         card.className = 'word-card';
 
-        // 基本資訊區塊
+        // 修改基本資訊區塊
         card.innerHTML = `
             <div class="word-header">
-                <div class="word-text">${word.text}</div>
+                <div class="word-text">
+                    ${word.text}
+                    ${word.phonetic ? `<span class="word-phonetic">${word.phonetic}</span>` : ''}
+                </div>
                 <div class="word-level">${word.level || 'N/A'}</div>
             </div>
             <div class="word-details">${word.example || ''}</div>
             <div class="word-translation">${word.translation || ''}</div>
         `;
 
-        // 建立詳細資訊頁面
+        // 修改詳細資訊頁面標題部分
         const detailsPage = document.createElement('div');
         detailsPage.className = 'word-details-page';
         detailsPage.innerHTML = `
@@ -189,6 +192,7 @@ async function updateWordDisplay(words) {
                 </button>
                 <div class="word-title-container">
                     <div class="word-title">${word.text}</div>
+                    ${word.phonetic ? `<span class="word-phonetic">${word.phonetic}</span>` : ''}
                     <div class="word-translation-title">${word.translation || '暫無翻譯'}</div>
                     <button class="speak-btn" title="播放發音">
                         ${getSpeakButtonHTML()}
@@ -208,6 +212,30 @@ async function updateWordDisplay(words) {
                     </div>
                 </div>
                 <div class="details-sections">
+                    <div class="relationship-graph-section">
+                        <div class="graph-header">
+                            <h4>單字關聯圖</h4>
+                            <button class="show-graph-btn">
+                                <svg viewBox="0 0 24 24" width="20" height="20">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                                </svg>
+                                顯示關聯圖
+                            </button>
+                        </div>
+                        <div class="relationship-graph-container">
+                            <div class="relationship-graph-content">
+                                <div class="relationship-graph-header">
+                                    <div class="relationship-graph-title">單字關聯圖</div>
+                                    <button class="close-graph-btn">
+                                        <svg viewBox="0 0 24 24" width="24" height="24">
+                                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div id="word-relationship-graph"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="synonyms-section">
                         <h4>相似詞</h4>
                         <div class="synonyms-content">尚未分析</div>
@@ -298,6 +326,30 @@ async function updateWordDisplay(words) {
                             await chrome.storage.local.set({ wordAnalysisCache });
                             // 重新初始化內容
                             detailsPage.querySelector('.details-sections').innerHTML = `
+                                <div class="relationship-graph-section">
+                                    <div class="graph-header">
+                                        <h4>單字關聯圖</h4>
+                                        <button class="show-graph-btn">
+                                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                                            </svg>
+                                            顯示關聯圖
+                                        </button>
+                                    </div>
+                                    <div class="relationship-graph-container">
+                                        <div class="relationship-graph-content">
+                                            <div class="relationship-graph-header">
+                                                <div class="relationship-graph-title">單字關聯圖</div>
+                                                <button class="close-graph-btn">
+                                                    <svg viewBox="0 0 24 24" width="24" height="24">
+                                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div id="word-relationship-graph"></div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="synonyms-section">
                                     <h4>相似詞</h4>
                                     <div class="synonyms-content">尚未分析</div>
@@ -602,13 +654,15 @@ async function analyzeWordDetails(word, apiKey) {
 
     const prompt = `
         分析英文單字 "${word}" 並提供以下資訊：
-        1. 相似詞（最多5個，包含中文翻譯）
-        2. 反義詞（最多5個，包含中文翻譯）
-        3. 例句（3個，包含中文翻譯）
-        4. 用法說明（中文說明，100字以內）
+        1. 音標（使用KK音標，需包含重音符號）
+        2. 相似詞（最多5個，包含中文翻譯）
+        3. 反義詞（最多5個，包含中文翻譯）
+        4. 例句（3個，包含中文翻譯）
+        5. 用法說明（中文說明，100字以內）
 
         請直接回傳 JSON 格式，不要加入任何其他標記或說明。格式如下：
         {
+            "phonetic": "音標",
             "synonyms": [
                 {"text": "相似詞1", "translation": "中文翻譯1"},
                 {"text": "相似詞2", "translation": "中文翻譯2"}
@@ -625,13 +679,6 @@ async function analyzeWordDetails(word, apiKey) {
             "usage": "用法說明（中文）",
             "translation": "單字的中文翻譯（簡潔準確）"
         }
-
-        注意：
-        1. 請確保回應是有效的 JSON 格式
-        2. 不要加入 markdown 標記或其他格式
-        3. 不要加入任何額外的說明文字
-        4. translation 欄位請提供最常用、最準確的中文翻譯
-        5. synonyms 和 antonyms 中的每個單字都要包含中文翻譯
     `;
 
     try {
@@ -1057,7 +1104,6 @@ async function handleWordChipClick(chip, currentWord) {
 
                 // 觸發新卡片的點擊
                 existingCard.click();
-                // existingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 showToast('單字已在列表中');
             }
             return;
@@ -1083,9 +1129,10 @@ async function handleWordChipClick(chip, currentWord) {
         const newWord = {
             text: wordText,
             level: currentWord.level,
-            addedTime: Date.now(),  // 添加時間戳記
+            addedTime: Date.now(),
             translation: details.translation || '',
-            example: details.examples?.[0]?.text || ''
+            example: details.examples?.[0]?.text || '',
+            phonetic: details.phonetic || ''  // 添加KK音標
         };
 
         // 檢查儲存空間是否足夠
@@ -1099,12 +1146,7 @@ async function handleWordChipClick(chip, currentWord) {
 
         // 更新全域變數和儲存
         accumulatedVocabulary = newVocabulary;  // 直接更新全域變數
-        const saveSuccess = await chrome.storage.local.set({ accumulatedVocabulary: newVocabulary });
-        // if (!saveSuccess) {
-        //     showToast('儲存空間不足，無法添加新單字', false, true);
-        //     accumulatedVocabulary = accumulatedVocabulary.slice(0, -1);  // 回復全域變數
-        //     return;
-        // }
+        await chrome.storage.local.set({ accumulatedVocabulary: newVocabulary });
 
         // 關閉所有已開啟的詳細資訊頁面
         document.querySelectorAll('.word-details-page.active').forEach(page => {
@@ -1114,8 +1156,17 @@ async function handleWordChipClick(chip, currentWord) {
             page.style.transition = '';
         });
 
-        // 更新顯示（會自動按時間排序，因為預設排序是 'time'）
-        updateWordDisplay(filterAndSortWords(accumulatedVocabulary, { sort: 'time' }));
+        // 獲取當前的排序和篩選設置
+        const currentSort = document.getElementById('sort-filter').value;
+        const currentLevel = document.getElementById('level-filter').value;
+        const currentSearch = document.getElementById('search-filter').value;
+
+        // 使用當前的排序和篩選設置更新顯示
+        updateWordDisplay(filterAndSortWords(accumulatedVocabulary, {
+            sort: currentSort,
+            level: currentLevel,
+            search: currentSearch
+        }));
 
         // 找到新添加的卡片和詳細頁面
         setTimeout(() => {
@@ -1125,9 +1176,6 @@ async function handleWordChipClick(chip, currentWord) {
             );
 
             if (newCard) {
-                // 滾動到新卡片位置
-                // newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
                 // 找到對應的詳細頁面並展開
                 const detailsPages = document.querySelectorAll('.word-details-page');
                 const newDetailsPage = Array.from(detailsPages).find(page =>
@@ -1155,6 +1203,8 @@ async function handleWordChipClick(chip, currentWord) {
         // 隱藏載入遮罩
         const overlay = document.querySelector('.analyzing-overlay');
         overlay.classList.remove('active');
+        // 確保 body 的 overflow 屬性被正確設置
+        document.body.style.overflow = '';
     }
 }
 
@@ -1171,6 +1221,36 @@ function updateDetailsContent(detailsPage, details, word) {
     // 添加相似詞和反義詞的點擊事件
     detailsPage.querySelectorAll('.word-chip.clickable').forEach(chip => {
         chip.addEventListener('click', () => handleWordChipClick(chip, word));
+    });
+
+    // 添加顯示關聯圖按鈕的事件監聽
+    const showGraphBtn = detailsPage.querySelector('.show-graph-btn');
+    const graphContainer = detailsPage.querySelector('.relationship-graph-container');
+
+    showGraphBtn.addEventListener('click', () => {
+        graphContainer.style.display = 'flex';
+        // 使用 setTimeout 確保 display: flex 已經生效
+        setTimeout(() => {
+            graphContainer.classList.add('active');
+        }, 10);
+        // 創建關聯圖
+        createRelationshipGraph(detailsPage.querySelector('#word-relationship-graph'), word, details);
+    });
+
+    // 添加關閉按鈕的事件監聽
+    const closeGraphBtn = detailsPage.querySelector('.close-graph-btn');
+    closeGraphBtn.addEventListener('click', () => {
+        graphContainer.classList.remove('active');
+        setTimeout(() => {
+            graphContainer.style.display = 'none';
+        }, 300); // 等待淡出動畫完成
+    });
+
+    // 點擊背景時關閉
+    graphContainer.addEventListener('click', (e) => {
+        if (e.target === graphContainer) {
+            closeGraphBtn.click();
+        }
     });
 }
 
@@ -1214,4 +1294,295 @@ function showToast(message, isLoading = false, isError = false) {
     setTimeout(() => {
         toast.style.display = 'none';
     }, 3000);
+}
+
+// 添加關聯圖相關函數
+function createRelationshipGraph(container, word, details) {
+    // 等待 D3.js 載入完成
+    if (typeof d3 === 'undefined') {
+        // 如果 D3.js 尚未載入，等待它載入完成
+        const checkD3 = setInterval(() => {
+            if (typeof d3 !== 'undefined') {
+                clearInterval(checkD3);
+                createGraph();
+            }
+        }, 100);
+
+        // 設定超時，避免無限等待
+        setTimeout(() => {
+            if (typeof d3 === 'undefined') {
+                clearInterval(checkD3);
+                container.innerHTML = '<div class="error-message">圖表載入失敗：D3.js 載入超時</div>';
+            }
+        }, 5000);
+
+        return;
+    }
+
+    createGraph();
+
+    function createGraph() {
+        try {
+            // 清除現有的圖表
+            d3.select(container).selectAll("*").remove();
+
+            // 準備數據
+            const nodes = [];
+            const links = [];
+            const processedWords = new Set(); // 用於追蹤已處理的單字
+            const processedLinks = new Set(); // 用於追蹤已處理的關聯
+
+            // 添加中心節點（當前單字）
+            nodes.push({
+                id: word.text,
+                type: 'center',
+                translation: word.translation,
+                level: 0,
+                analyzed: true
+            });
+            processedWords.add(word.text.toLowerCase());
+
+            // 添加關聯單字
+            function addRelatedWords(currentWord, relatedWords, type, level) {
+                relatedWords.forEach(related => {
+                    const wordText = related.text.toLowerCase();
+                    if (!processedWords.has(wordText)) {
+                        // 檢查單字是否已分析
+                        const isAnalyzed = wordAnalysisCache[related.text] !== undefined;
+
+                        // 添加節點
+                        nodes.push({
+                            id: related.text,
+                            type: type,
+                            translation: related.translation,
+                            level: level,
+                            analyzed: isAnalyzed
+                        });
+                        processedWords.add(wordText);
+
+                        // 檢查是否已存在關聯
+                        const linkKey = [currentWord.toLowerCase(), wordText].sort().join('|');
+                        if (!processedLinks.has(linkKey)) {
+                            // 添加連接
+                            links.push({
+                                source: currentWord,
+                                target: related.text,
+                                type: type,
+                                analyzed: isAnalyzed
+                            });
+                            processedLinks.add(linkKey);
+                        }
+                    }
+                });
+            }
+
+            // 添加第一層關聯
+            addRelatedWords(word.text, details.synonyms, 'synonym', 1);
+            addRelatedWords(word.text, details.antonyms, 'antonym', 1);
+
+            // 添加第二層關聯
+            for (const firstLevelWord of [...details.synonyms, ...details.antonyms]) {
+                const firstLevelDetails = wordAnalysisCache[firstLevelWord.text];
+                if (firstLevelDetails) {
+                    addRelatedWords(firstLevelWord.text, firstLevelDetails.synonyms, 'synonym', 2);
+                    addRelatedWords(firstLevelWord.text, firstLevelDetails.antonyms, 'antonym', 2);
+                }
+            }
+
+            // 添加第三層關聯
+            for (const secondLevelWord of nodes.filter(n => n.level === 2)) {
+                const secondLevelDetails = wordAnalysisCache[secondLevelWord.id];
+                if (secondLevelDetails) {
+                    addRelatedWords(secondLevelWord.id, secondLevelDetails.synonyms, 'synonym', 3);
+                    addRelatedWords(secondLevelWord.id, secondLevelDetails.antonyms, 'antonym', 3);
+                }
+            }
+
+            // 設置圖表尺寸
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const radius = Math.min(width, height) / 2;
+
+            // 創建 SVG
+            const svg = d3.select(container)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width / 2},${height / 2})`);
+
+            // 添加縮放功能
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 4])
+                .on("zoom", (event) => {
+                    svg.attr("transform", event.transform);
+                });
+
+            // 將縮放功能應用到容器
+            d3.select(container)
+                .call(zoom);
+
+            // 創建力導向圖
+            const simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(d => {
+                    // 根據層級調整節點間距
+                    return 100 + (d.source.level + d.target.level) * 20;
+                }))
+                .force("charge", d3.forceManyBody().strength(d => {
+                    // 根據層級調整排斥力
+                    return -400 - d.level * 80;
+                }))
+                .force("center", d3.forceCenter(0, 0))
+                .force("collision", d3.forceCollide().radius(d => {
+                    // 根據層級調整碰撞半徑
+                    return 30 + d.level * 8;
+                }))
+                .force("x", d3.forceX(0).strength(0.05))
+                .force("y", d3.forceY(0).strength(0.05));
+
+            // 設定初始位置為圓形分布
+            nodes.forEach((node, i) => {
+                if (node.type === 'center') {
+                    node.x = 0;
+                    node.y = 0;
+                } else {
+                    const angle = (i * 2 * Math.PI) / (nodes.length - 1);
+                    const radius = 100 + node.level * 50;
+                    node.x = radius * Math.cos(angle);
+                    node.y = radius * Math.sin(angle);
+                }
+            });
+
+            // 繪製連接線
+            const link = svg.append("g")
+                .selectAll("line")
+                .data(links)
+                .enter()
+                .append("line")
+                .attr("class", "link")
+                .attr("stroke", d => {
+                    if (d.analyzed) {
+                        return d.type === 'synonym' ? "#64b5f6" : "#ff8a80";
+                    }
+                    return "#ff6b6b";
+                })
+                .attr("stroke-opacity", 0.4)
+                .attr("stroke-width", 1.5);
+
+            // 創建節點組
+            const node = svg.append("g")
+                .selectAll("g")
+                .data(nodes)
+                .enter()
+                .append("g")
+                .attr("class", "node")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+
+            // 添加節點圓圈
+            node.append("circle")
+                .attr("r", d => {
+                    // 根據層級調整節點大小
+                    return d.type === 'center' ? 35 : 30 - d.level * 2;
+                })
+                .attr("fill", d => {
+                    if (d.type === 'center') return "#1a73e8";
+                    if (d.analyzed) {
+                        if (d.type === 'synonym') {
+                            return d.level === 1 ? "#64b5f6" :
+                                d.level === 2 ? "#90caf9" :
+                                    d.level === 3 ? "#bbdefb" :
+                                        "#e3f2fd";
+                        }
+                        return d.level === 1 ? "#ef5350" :
+                            d.level === 2 ? "#ff8a80" :
+                                d.level === 3 ? "#ffab91" :
+                                    "#ffccbc";
+                    }
+                    return "#ff6b6b";
+                });
+
+            // 添加節點文字
+            node.append("text")
+                .attr("dy", -4)  // 改為負值，使文字往上移動
+                .attr("text-anchor", "middle")
+                .text(d => d.id)
+                .style("fill", "#fff")
+                .style("font-size", d => {
+                    // 根據文字長度動態調整字體大小
+                    const maxLength = d.type === 'center' ? 12 : 10;
+                    const textLength = d.id.length;
+                    const baseSize = d.type === 'center' ? 12 : 10;
+                    return Math.min(baseSize, maxLength * (baseSize / textLength)) + "px";
+                });
+
+            // 添加翻譯文字
+            node.append("text")
+                .attr("dy", d => d.type === 'center' ? 15 : 12)  // 調整翻譯文字的位置
+                .attr("text-anchor", "middle")
+                .text(d => d.translation)
+                .style("fill", "#fff")  // 改為白色
+                .style("font-size", d => {
+                    // 根據文字長度動態調整字體大小
+                    const maxLength = d.type === 'center' ? 12 : 10;
+                    const textLength = d.translation.length;
+                    const baseSize = d.type === 'center' ? 12 : 10;
+                    return Math.min(baseSize, maxLength * (baseSize / textLength)) + "px";
+                })
+                .style("font-weight", "500")  // 添加字重
+                .style("text-shadow", "0 1px 2px rgba(0,0,0,0.5)");  // 添加文字陰影
+
+            // 更新力導向圖
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+
+            // 拖曳相關函數
+            function dragstarted(event) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
+            }
+
+            function dragged(event) {
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+            }
+
+            function dragended(event) {
+                if (!event.active) simulation.alphaTarget(0);
+                event.subject.fx = null;
+                event.subject.fy = null;
+            }
+
+            // 保存圖表實例
+            relationshipGraph = {
+                svg,
+                simulation,
+                nodes,
+                links,
+                zoom
+            };
+
+            // 設定初始縮放
+            const initialScale = 0.7;
+            const initialTransform = d3.zoomIdentity
+                .translate(width / 2, height / 2)
+                .scale(initialScale);
+            d3.select(container).call(zoom.transform, initialTransform);
+
+        } catch (error) {
+            console.error('建立關聯圖時發生錯誤:', error);
+            container.innerHTML = `<div class="error-message">圖表載入失敗：${error.message}</div>`;
+        }
+    }
 } 

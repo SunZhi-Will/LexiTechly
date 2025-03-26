@@ -100,13 +100,16 @@ function updateVocabularyUI(isLoading = false) {
     }
 }
 
-// 新增建立單字卡片的輔助函數
+// 修改建立單字卡片的輔助函數
 function createWordCard(word) {
     const wordCard = document.createElement('div');
     wordCard.className = 'word-card';
     wordCard.innerHTML = `
         <div class="word-header">
-            <div class="word-text">${word.text}</div>
+            <div class="word-text">
+                <span class="word-text-main">${word.text}</span>
+                ${word.phonetic ? `<span class="word-phonetic">/${word.phonetic}/</span>` : ''}
+            </div>
             <div class="word-level">${word.level || 'N/A'}</div>
         </div>
         <div class="word-details">${word.example || '暫無例句'}</div>
