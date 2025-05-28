@@ -22,6 +22,11 @@
   - Synonyms and antonyms analysis
   - Multiple example sentences with translations
   - Detailed usage explanations
+- 🔍 **Immersive Reading Mode**
+  - Floating logo in top-right corner for one-click mode toggle
+  - Hover over any word for 3 seconds to see detailed information
+  - Word highlighting effects for visual learning experience
+  - Beautiful word cards showing: translation, part of speech, CEFR level, examples
 - 🎯 Modern User Interface
   - Beautiful Toast notification system
   - Custom confirmation dialogs
@@ -208,6 +213,31 @@ dist/
   - Clear chat history
   - Clear analysis results
   - Clear all data (preserve settings)
+
+### 7. Immersive Reading Mode 🔍
+- **啟用閱讀模式**：
+  - 在任何英文網頁上尋找右上角的半透明 LexiTechly logo
+  - **🆕 可拖拽移動**: logo 現在支援拖拽功能，你可以將它移動到任何你喜歡的位置
+  - 點擊 logo 可切換閱讀模式（logo 會變色以顯示狀態）
+  - logo 位置會自動儲存，下次訪問時會保持在相同位置
+- **即時單字查詢**：
+  - 啟用閱讀模式後，將滑鼠懸停在任何英文單字上
+  - 單字資訊會在 3 秒後自動顯示
+  - 單字會以選擇效果高亮顯示，提供視覺回饋
+- **精美資訊卡片**：
+  - 單字標題配有 CEFR 等級標章
+  - 繁體中文翻譯
+  - 詞性資訊
+  - 實用例句配中文翻譯
+- **便捷操作**：
+  - 點擊頁面其他地方可關閉資訊卡片
+  - 再次點擊 logo 可停用閱讀模式
+
+#### ✨ 新功能亮點
+- **半透明毛玻璃效果**: logo 採用現代化的半透明設計，不會遮擋網頁內容
+- **智能拖拽系統**: 支援自由拖拽移動，位置會自動記憶
+- **優雅的視覺回饋**: 拖拽時提供平滑的動畫效果和視覺提示
+- **適應性設計**: logo 會自動限制在視窗範圍內，避免移出可視區域
 
 ## 🎨 User Interface Features
 

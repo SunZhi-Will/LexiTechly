@@ -18,6 +18,11 @@ export default defineConfig({
             },
             output: {
                 manualChunks: (id) => {
+                    // 排除 content script，讓它保持為單一檔案
+                    if (id.includes('src/scripts/content')) {
+                        return undefined; // 不分割 content script
+                    }
+
                     // Vis.js 相關套件單獨分塊
                     if (id.includes('vis-network') || id.includes('vis-data')) {
                         return 'vis-libs';
@@ -28,8 +33,12 @@ export default defineConfig({
                         return 'relationship-graph';
                     }
 
-                    // AI 分析相關功能分塊
+                    // AI 分析相關功能分塊（但不包含 content script 中的）
                     if (id.includes('analysis') || id.includes('ai-service')) {
+                        // 如果是 content script 的分析模組，不分割
+                        if (id.includes('src/scripts/content/analysis')) {
+                            return undefined;
+                        }
                         return 'analysis';
                     }
 
@@ -38,8 +47,12 @@ export default defineConfig({
                         return 'vocabulary-core';
                     }
 
-                    // 工具類分塊
+                    // 工具類分塊（但不包含 content script 中的）
                     if (id.includes('storage') || id.includes('filters') || id.includes('formatters')) {
+                        // 如果是 content script 的工具模組，不分割
+                        if (id.includes('src/scripts/content/')) {
+                            return undefined;
+                        }
                         return 'utils';
                     }
 
