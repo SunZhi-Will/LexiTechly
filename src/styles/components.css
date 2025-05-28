@@ -1,0 +1,409 @@
+/* 結果區域 */
+.result {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+}
+
+.level-container {
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+}
+
+.level-container p {
+    font-size: 11px;
+    margin: 0;
+    color: #5f6368;
+}
+
+.level {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    color: #1a73e8;
+    margin: 8px 0;
+    padding: 8px;
+    background-color: #e8f0fe;
+    border-radius: 4px;
+}
+
+/* 分析區塊樣式 */
+.analysis-section {
+    margin-bottom: 8px;
+    background-color: white;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.analysis-section h4 {
+    color: #1a73e8;
+    margin: 0 0 2px 0;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.detail-text {
+    color: #3c4043;
+    font-size: 11px;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* 底部導航 */
+.bottom-nav {
+    height: 48px;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    padding: 0;
+    display: flex;
+    justify-content: space-around;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0;
+    color: #5f6368;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background-color: #1a73e8;
+    transition: width 0.2s;
+    border-radius: 3px 3px 0 0;
+}
+
+.nav-item.active {
+    color: #1a73e8;
+}
+
+.nav-item.active::after {
+    width: 32px;
+}
+
+.nav-item:hover {
+    color: #1a73e8;
+    background-color: rgba(26, 115, 232, 0.04);
+}
+
+.nav-item svg {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 2px;
+    fill: currentColor;
+    transition: transform 0.2s;
+}
+
+.nav-item:hover svg {
+    transform: scale(1.1);
+}
+
+.nav-item span {
+    font-size: 11px;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+
+.nav-item:hover span {
+    transform: scale(1.05);
+}
+
+/* 開關按鈕樣式 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #1a73e8;
+}
+
+input:checked+.slider:before {
+    transform: translateX(24px);
+}
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0;
+    gap: 12px;
+}
+
+.theme-toggle label {
+    color: #3c4043;
+    font-size: 13px;
+}
+
+/* 確認對話框 */
+.confirm-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(2px);
+    animation: fadeInOverlay 0.2s ease-out;
+}
+
+.confirm-dialog {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 340px;
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.15),
+        0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(0.9);
+    animation: popIn 0.2s ease-out forwards;
+}
+
+.confirm-dialog h3 {
+    margin: 0 0 16px 0;
+    color: #d32f2f;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.confirm-dialog h3::before {
+    content: '⚠️';
+    font-size: 24px;
+}
+
+.confirm-dialog-content {
+    margin-bottom: 24px;
+    color: #5f6368;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.confirm-dialog-content ul {
+    margin: 12px 0;
+    padding-left: 20px;
+    color: #3c4043;
+}
+
+.confirm-dialog-content li {
+    margin-bottom: 4px;
+}
+
+.confirm-dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.confirm-dialog-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    min-width: 80px;
+}
+
+.confirm-dialog-btn.cancel {
+    background: #f1f3f4;
+    color: #3c4043;
+    border: 1px solid #dadce0;
+}
+
+.confirm-dialog-btn.cancel:hover {
+    background: #e8eaed;
+    transform: translateY(-1px);
+}
+
+.confirm-dialog-btn.confirm {
+    background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+}
+
+.confirm-dialog-btn.confirm:hover {
+    background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+}
+
+/* Toast 樣式 - 移到頂部 */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    color: #333;
+    padding: 10px 16px;
+    border-radius: 12px;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 280px;
+    max-width: 85%;
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.loading {
+    background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+    color: white;
+    border: 1px solid rgba(26, 115, 232, 0.3);
+}
+
+.toast.error {
+    background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+    color: white;
+    border: 1px solid rgba(211, 47, 47, 0.3);
+}
+
+.toast.success {
+    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+    color: white;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    width: 100%;
+    line-height: 1.2;
+}
+
+.toast .loading-spinner {
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-top: 1.5px solid white;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    animation: spin 1s linear infinite;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.toast-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin: 0;
+}
+
+/* 動畫 */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeInOverlay {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

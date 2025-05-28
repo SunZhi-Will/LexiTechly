@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>LexiTechly</title>
+    <link rel="stylesheet" href="../styles/main.css">
+</head>
+
+<body style="font-family: 'Microsoft JhengHei', sans-serif;">
+    <div class="container">
+        <div class="pages-container">
+            <!-- 主頁面 -->
+            <div id="main-page" class="page active">
+                <div class="page-content">
+                    <div class="page-header">
+                        <h2>英文程度分析器</h2>
+                    </div>
+
+                    <button id="analyze">分析當前頁面</button>
+
+                    <div class="result">
+                        <div class="level-container">
+                            <p>CEFR 等級：</p>
+                            <div id="level" class="level">-</div>
+                        </div>
+                        <div class="analysis-details">
+                            <div class="analysis-section">
+                                <h4>詞彙難度</h4>
+                                <div id="vocabulary" class="detail-text">-</div>
+                            </div>
+                            <div class="analysis-section">
+                                <h4>語法結構</h4>
+                                <div id="grammar" class="detail-text">-</div>
+                            </div>
+                            <div class="analysis-section">
+                                <h4>主題難度</h4>
+                                <div id="topic" class="detail-text">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 對話頁面 -->
+            <div id="chat-page" class="page">
+                <div class="page-content">
+                    <div class="page-header">
+                        <h2>AI 對話</h2>
+                        <button id="clear-chat" class="clear-chat-btn">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                            清除對話
+                        </button>
+                    </div>
+
+                    <div class="chat-container">
+                        <div id="chat-messages" class="chat-messages"></div>
+                        <div class="chat-input-container">
+                            <input type="text" id="chat-input" class="chat-input" placeholder="輸入您的問題...">
+                            <button id="send-message" class="chat-send">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 設定頁面 -->
+            <div id="settings-page" class="page">
+                <div class="page-content">
+                    <div class="page-header">
+                        <h2>設定</h2>
+                    </div>
+
+                    <div class="settings-sections">
+                        <!-- API 設定區塊 -->
+                        <div class="settings-section collapsible" id="gemini-api-section">
+                            <div class="section-header" id="gemini-api-header">
+                                <h3>GeminiAPI 設定</h3>
+                                <svg class="arrow-icon" viewBox="0 0 24 24">
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                            </div>
+                            <div class="section-content" id="gemini-api-content">
+                                <div class="api-key-section">
+                                    <label for="gemini-api-key">Gemini API Key</label>
+                                    <input type="password" id="gemini-api-key" class="api-key-input"
+                                        placeholder="請輸入您的 API Key">
+                                    <button id="save-gemini-api-key" class="save-button">儲存</button>
+                                </div>
+                                <div class="help-text">
+                                    <p>如何取得 API Key：</p>
+                                    <ol>
+                                        <li>前往 <a href="https://makersuite.google.com/app/apikey" target="_blank">Google
+                                                AI Studio</a></li>
+                                        <li>登入您的 Google 帳號</li>
+                                        <li>點擊「Get API key」按鈕</li>
+                                        <li>複製產生的 API Key</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 語音 API 設定區塊 -->
+                        <div class="settings-section collapsible" id="speechify-api-section">
+                            <div class="section-header" id="speechify-api-header">
+                                <h3>語音 API 設定</h3>
+                                <svg class="arrow-icon" viewBox="0 0 24 24">
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                            </div>
+                            <div class="section-content" id="speechify-api-content">
+                                <div class="api-key-section">
+                                    <label for="speechify-api-key">Speechify API Key</label>
+                                    <input type="password" id="speechify-api-key" class="api-key-input"
+                                        placeholder="請輸入您的 API Key">
+                                    <button id="save-speechify-api-key" class="save-button">儲存</button>
+                                </div>
+                                <div class="help-text">
+                                    <p>如何取得 API Key：</p>
+                                    <ol>
+                                        <li>前往 <a href="https://console.sws.speechify.com/tts" target="_blank">Speechify
+                                                API</a></li>
+                                        <li>登入您的帳號</li>
+                                        <li>複製產生的 API Key</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 外觀設定區塊 -->
+                        <div class="settings-section appearance">
+                            <div class="section-header">
+                                <h3>外觀設定</h3>
+                                <div class="theme-toggle">
+                                    <label>深色模式</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="dark-mode">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 儲存空間管理 -->
+                        <div class="storage-info">
+                            <h4>儲存空間使用狀態</h4>
+
+                            <div style="margin-bottom: 12px;">
+                                <div class="storage-input-container">
+                                    <div class="storage-input-wrapper">
+                                        <input type="text" id="storage-limit" placeholder="未限制容量">
+                                        <span class="unit-label">MB</span>
+                                    </div>
+                                    <button id="save-storage-limit" class="storage-save-btn">
+                                        <svg viewBox="0 -960 960 960">
+                                            <path
+                                                d="M840-680v480q0 33-23.5 56.5T760-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h480l160 160Zm-80 34L646-760H200v560h560v-446ZM480-240q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35ZM240-560h360v-160H240v160Zm-40-86v446-560 114Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div style="font-size: 12px; color: #5f6368; margin-bottom: 4px;">
+                                    目前狀態：<span id="storage-status" style="color: #1a73e8; font-weight: 500;">無限制</span>
+                                </div>
+                            </div>
+
+                            <div class="storage-bar">
+                                <div class="storage-used" id="storage-used-bar"></div>
+                            </div>
+
+                            <div class="storage-text">
+                                <div>已使用：<span id="storage-used">計算中...</span></div>
+                                <div>未使用：<span id="storage-free">計算中...</span></div>
+                                <div>總容量：<span id="storage-total">計算中...</span></div>
+                            </div>
+
+                            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                                <button id="clear-audio" class="save-button" style="flex: 1; font-size: 12px;">
+                                    清除語音快取
+                                </button>
+                                <button id="clear-all-data" class="save-button" style="flex: 1; font-size: 12px;">
+                                    清除所有資料
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 單字頁面 -->
+            <div id="vocabulary-page" class="page">
+                <div class="page-content">
+                    <div class="page-header">
+                        <h2>單字列表</h2>
+                    </div>
+                    <div class="vocabulary-list" id="vocabulary-list">
+                        <!-- 單字卡片將由 JavaScript 動態添加 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部導航欄 -->
+        <div class="bottom-nav">
+            <button class="nav-item active" data-page="main-page">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
+                    <path d="M7 12h2v5H7zm4-7h2v12h-2zm4 4h2v8h-2z" />
+                </svg>
+                <span>分析</span>
+            </button>
+            <button class="nav-item" data-page="vocabulary-page">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8zm0-3h8v2h-8zm0 6h4v2h-4z" />
+                </svg>
+                <span>單字</span>
+            </button>
+            <button class="nav-item" data-page="chat-page">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                </svg>
+                <span>對話</span>
+            </button>
+            <button class="nav-item" data-page="settings-page">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5-0.38,1.03-0.7,1.62-0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+                </svg>
+                <span>設定</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 錯誤訊息 -->
+    <div id="error-message"
+        style="display: none; color: #d32f2f; background-color: #fde8e8; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 14px;">
+    </div>
+
+    <!-- 確認對話框 -->
+    <div class="confirm-dialog-overlay" id="confirm-dialog">
+        <div class="confirm-dialog">
+            <h3>確認清除資料</h3>
+            <div class="confirm-dialog-content">
+                此操作將清除以下資料：
+                <ul>
+                    <li>單字列表</li>
+                    <li>分析快取</li>
+                    <li>語音快取</li>
+                    <li>對話記錄</li>
+                </ul>
+                <strong style="color: #d32f2f;">此操作無法復原！</strong>
+            </div>
+            <div class="confirm-dialog-buttons">
+                <button class="confirm-dialog-btn cancel" id="cancel-clear">取消</button>
+                <button class="confirm-dialog-btn confirm" id="confirm-clear">確認清除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清除語音快取確認對話框 -->
+    <div class="confirm-dialog-overlay" id="confirm-audio-dialog">
+        <div class="confirm-dialog">
+            <h3>確認清除語音快取</h3>
+            <div class="confirm-dialog-content">
+                此操作將清除所有已下載的語音檔案。
+                <ul>
+                    <li>所有語音檔案將被刪除</li>
+                    <li>需要時會自動重新下載</li>
+                    <li>不會影響其他資料</li>
+                </ul>
+                <strong style="color: #1a73e8;">語音檔案會在需要時自動重新下載</strong>
+            </div>
+            <div class="confirm-dialog-buttons">
+                <button class="confirm-dialog-btn cancel" id="cancel-audio-clear">取消</button>
+                <button class="confirm-dialog-btn confirm" id="confirm-audio-clear">確認清除</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../scripts/popup.ts"></script>
+</body>
+
+</html>

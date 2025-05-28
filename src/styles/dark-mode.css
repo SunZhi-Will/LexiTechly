@@ -1,0 +1,411 @@
+/* ===== 深色模式樣式 ===== */
+body.dark-mode {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+.dark-mode .container {
+    background-color: #1a1a1a;
+}
+
+.dark-mode .page {
+    background-color: #1a1a1a;
+}
+
+.dark-mode .page-header h2 {
+    color: #64b5f6;
+}
+
+.dark-mode .result {
+    background-color: #2d2d2d;
+}
+
+.dark-mode .level {
+    color: #64b5f6;
+    background-color: #1a1a1a;
+}
+
+.dark-mode .level-container p {
+    color: #e0e0e0;
+}
+
+.dark-mode .analysis-section {
+    background-color: #2d2d2d;
+    border-color: #404040;
+}
+
+.dark-mode .analysis-section h4 {
+    color: #64b5f6;
+}
+
+.dark-mode .detail-text {
+    color: #e0e0e0;
+}
+
+.dark-mode .loading {
+    background-color: #2d2d2d;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .loading p {
+    color: #e0e0e0;
+}
+
+.dark-mode .loading-spinner {
+    border: 2px solid #404040;
+    border-top: 2px solid #64b5f6;
+}
+
+.dark-mode .bottom-nav {
+    background-color: #1a1a1a;
+    border-color: #404040;
+}
+
+.dark-mode .nav-item {
+    color: #9e9e9e;
+}
+
+.dark-mode .nav-item.active {
+    color: #64b5f6;
+}
+
+.dark-mode .nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.dark-mode .nav-item::after {
+    background-color: #64b5f6;
+}
+
+.dark-mode .chat-messages {
+    background-color: #2d2d2d;
+}
+
+.dark-mode .chat-input-container {
+    background-color: #1a1a1a;
+    border-color: #404040;
+}
+
+.dark-mode .chat-input {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: #e0e0e0;
+}
+
+.dark-mode .chat-input::placeholder {
+    color: #9e9e9e;
+}
+
+.dark-mode .user-message .message-content {
+    background-color: #1a73e8;
+    color: #ffffff;
+}
+
+.dark-mode .ai-message .message-content {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: #e0e0e0;
+}
+
+.dark-mode .message-content pre {
+    background-color: #1a1a1a;
+}
+
+.dark-mode .message-content code {
+    background-color: #1a1a1a;
+    color: #64b5f6;
+}
+
+.dark-mode .clear-chat-btn {
+    color: #e0e0e0;
+}
+
+.dark-mode .clear-chat-btn:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: #64b5f6;
+}
+
+.dark-mode .settings-section {
+    background-color: #2d2d2d;
+    border-color: #404040;
+}
+
+.dark-mode .settings-section h3 {
+    color: #64b5f6;
+}
+
+.dark-mode .settings-section.collapsible .section-header:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.dark-mode .settings-section.collapsible .arrow-icon {
+    fill: #e0e0e0;
+}
+
+.dark-mode .api-key-section label {
+    color: #e0e0e0;
+}
+
+.dark-mode .api-key-input {
+    background-color: #1a1a1a;
+    border-color: #404040;
+    color: #e0e0e0;
+}
+
+.dark-mode .api-key-input::placeholder {
+    color: #9e9e9e;
+}
+
+.dark-mode .help-text {
+    border-color: #404040;
+}
+
+.dark-mode .help-text p {
+    color: #e0e0e0;
+}
+
+.dark-mode .help-text ol {
+    color: #e0e0e0;
+}
+
+.dark-mode .help-text li {
+    color: #e0e0e0;
+}
+
+.dark-mode .theme-toggle label {
+    color: #e0e0e0;
+}
+
+.dark-mode .word-card {
+    background-color: #2d2d2d;
+    border-color: #404040;
+}
+
+.dark-mode .word-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .word-text-main {
+    color: #64b5f6;
+}
+
+.dark-mode .word-phonetic {
+    color: #64b5f6;
+}
+
+.dark-mode .word-level {
+    background-color: #1a1a1a;
+    color: #64b5f6;
+}
+
+.dark-mode .word-details {
+    color: #e0e0e0;
+}
+
+.dark-mode .word-translation {
+    color: #e0e0e0;
+}
+
+.dark-mode .section-title {
+    color: #64b5f6;
+}
+
+.dark-mode .popout-button {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .popout-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .popout-button svg {
+    fill: #64b5f6;
+}
+
+.dark-mode .storage-info {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .storage-info h4 {
+    color: #e0e0e0;
+}
+
+.dark-mode .storage-bar {
+    background: #404040;
+}
+
+.dark-mode .storage-used {
+    background: #64b5f6;
+}
+
+.dark-mode .storage-text {
+    color: #e0e0e0;
+}
+
+.dark-mode .storage-input-wrapper input {
+    background-color: #1a1a1a;
+    border-color: #404040;
+    color: #e0e0e0;
+}
+
+.dark-mode .storage-input-wrapper input::placeholder {
+    color: #9e9e9e;
+}
+
+.dark-mode .storage-input-wrapper .unit-label {
+    color: #e0e0e0;
+}
+
+.dark-mode .confirm-dialog {
+    background: #2d2d2d;
+}
+
+.dark-mode .confirm-dialog h3 {
+    color: #ff5252;
+}
+
+.dark-mode .confirm-dialog-content {
+    color: #e0e0e0;
+}
+
+.dark-mode .confirm-dialog-content ul {
+    color: #ffffff;
+}
+
+.dark-mode .confirm-dialog-btn.cancel {
+    background: #404040;
+    color: #e0e0e0;
+}
+
+.dark-mode .confirm-dialog-btn.confirm {
+    background: #ff5252;
+}
+
+/* 深色模式滾動條 */
+.dark-mode .page-content::-webkit-scrollbar-thumb,
+.dark-mode .chat-messages::-webkit-scrollbar-thumb,
+.dark-mode .result::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .page-content::-webkit-scrollbar-thumb:hover,
+.dark-mode .chat-messages::-webkit-scrollbar-thumb:hover,
+.dark-mode .result::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Tailwind 深色模式覆蓋 */
+.dark-mode .bg-white {
+    background-color: #1a1a1a;
+}
+
+.dark-mode .text-primary {
+    color: #64b5f6;
+}
+
+.dark-mode .focus\:border-primary:focus {
+    border-color: #64b5f6;
+}
+
+/* 深色模式分析按鈕樣式 */
+.dark-mode #analyze {
+    background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+    box-shadow:
+        0 4px 12px rgba(100, 181, 246, 0.3),
+        0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode #analyze:hover {
+    background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+    box-shadow:
+        0 8px 20px rgba(100, 181, 246, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.dark-mode #analyze:active {
+    box-shadow:
+        0 2px 8px rgba(100, 181, 246, 0.3),
+        0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode #analyze:disabled {
+    background: linear-gradient(135deg, #616161 0%, #424242 100%);
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* 深色模式 Toast 樣式 */
+.dark-mode .toast {
+    background: rgba(42, 42, 42, 0.95);
+    color: #e0e0e0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 280px;
+    max-width: 85%;
+    padding: 10px 16px;
+}
+
+.dark-mode .toast-content {
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.dark-mode .toast.loading {
+    background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+    color: white;
+    border: 1px solid rgba(100, 181, 246, 0.3);
+}
+
+.dark-mode .toast.error {
+    background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+    color: white;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.dark-mode .toast.success {
+    background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+    color: white;
+    border: 1px solid rgba(102, 187, 106, 0.3);
+}
+
+/* 深色模式確認對話框樣式 */
+.dark-mode .confirm-dialog-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.dark-mode .confirm-dialog {
+    background: #2d2d2d;
+    border: 1px solid #404040;
+}
+
+.dark-mode .confirm-dialog h3 {
+    color: #ff5252;
+}
+
+.dark-mode .confirm-dialog-content {
+    color: #e0e0e0;
+}
+
+.dark-mode .confirm-dialog-content ul {
+    color: #ffffff;
+}
+
+.dark-mode .confirm-dialog-btn.cancel {
+    background: #404040;
+    color: #e0e0e0;
+    border: 1px solid #555555;
+}
+
+.dark-mode .confirm-dialog-btn.cancel:hover {
+    background: #505050;
+}
+
+.dark-mode .confirm-dialog-btn.confirm {
+    background: linear-gradient(135deg, #ff5252 0%, #f44336 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 82, 82, 0.3);
+}
+
+.dark-mode .confirm-dialog-btn.confirm:hover {
+    background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.4);
+}

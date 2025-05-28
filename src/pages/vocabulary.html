@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>單字列表</title>
+    <link rel="stylesheet" href="../assets/css/vocabulary.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>單字列表</h1>
+            <div class="stats">
+                總計: <span id="total-count">0</span> 個單字
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>CEFR 等級</label>
+                <select id="level-filter">
+                    <option value="">全部</option>
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                    <option value="B1">B1</option>
+                    <option value="B2">B2</option>
+                    <option value="C1">C1</option>
+                    <option value="C2">C2</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>搜尋</label>
+                <input type="text" id="search-filter" placeholder="搜尋單字...">
+            </div>
+            <div class="filter-group">
+                <label>排序方式</label>
+                <select id="sort-filter">
+                    <option value="level">依等級</option>
+                    <option value="alphabet">依字母</option>
+                    <option value="latest">最新加入</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="word-grid" class="word-grid">
+            <!-- 單字卡片將由 JavaScript 動態添加 -->
+        </div>
+    </div>
+
+    <div class="analyzing-overlay">
+        <div class="analyzing-spinner">
+            <div class="spinner"></div>
+            <p>正在分析單字...</p>
+        </div>
+    </div>
+
+    <script type="module" src="../scripts/vocabulary-page-main.ts"></script>
+</body>
+
+</html>

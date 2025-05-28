@@ -14,7 +14,7 @@
         "<all_urls>"
     ],
     "action": {
-        "default_popup": "popup.html",
+        "default_popup": "src/pages/popup.html",
         "default_icon": {
             "128": "images/icon128.png"
         }
@@ -28,7 +28,7 @@
                 "<all_urls>"
             ],
             "js": [
-                "content.js"
+                "src/scripts/content.ts"
             ],
             "run_at": "document_idle"
         }
@@ -36,7 +36,7 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "marked.min.js"
+                "libs/marked.min.js"
             ],
             "matches": [
                 "<all_urls>"
