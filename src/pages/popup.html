@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>LexiTechly</title>
     <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/shared/audio.css">
 </head>
 
 <body style="font-family: 'Microsoft JhengHei', sans-serif;">
@@ -203,6 +204,57 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 語音頁面 -->
+            <div id="speech-page" class="page">
+                <div class="page-content">
+                    <div class="page-header">
+                        <h2>語音功能</h2>
+                    </div>
+                    <div class="speech-container">
+                        <div class="speech-input-container">
+                            <textarea id="speech-text" placeholder="輸入要轉換為語音的文字" rows="6" class="speech-textarea"></textarea>
+                            <div class="speech-controls-container">
+                                <div class="speech-control-group">
+                                    <label for="voice-select">語音:</label>
+                                    <select id="voice-select" class="speech-select">
+                                        <option value="Puck">PUCK</option>
+                                        <option value="Nano">NANO</option>
+                                        <option value="Helios">HELIOS</option>
+                                        <option value="Cobalt">COBALT</option>
+                                    </select>
+                                </div>
+                                <div class="speech-control-group">
+                                    <label for="language-select">語言:</label>
+                                    <select id="language-select" class="speech-select">
+                                        <option value="en-US">英文</option>
+                                        <option value="zh">中文</option>
+                                    </select>
+                                </div>
+                                <div class="speech-control-group">
+                                    <label for="speed-range">語速: <span id="speed-value">1.0</span></label>
+                                    <input type="range" id="speed-range" class="speech-range" min="0.5" max="2.0" step="0.1" value="1.0">
+                                </div>
+                                <div class="speech-control-group">
+                                    <label for="pitch-range">音調: <span id="pitch-value">1.0</span></label>
+                                    <input type="range" id="pitch-range" class="speech-range" min="0.5" max="2.0" step="0.1" value="1.0">
+                                </div>
+                            </div>
+                            <div class="speech-controls">
+                                <button id="generate-speech" class="speech-button">
+                                    <svg viewBox="0 0 24 24" width="18" height="18">
+                                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                                    </svg>
+                                    生成語音
+                                </button>
+                            </div>
+                        </div>
+                        <div id="speech-result" class="speech-result" style="display: none;">
+                            <audio id="speech-audio" controls class="speech-audio-player"></audio>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 底部導航欄 -->
@@ -221,6 +273,12 @@
                         d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8zm0-3h8v2h-8zm0 6h4v2h-4z" />
                 </svg>
                 <span>單字</span>
+            </button>
+            <button class="nav-item" data-page="speech-page">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+                <span>語音</span>
             </button>
             <button class="nav-item" data-page="chat-page">
                 <svg viewBox="0 0 24 24">

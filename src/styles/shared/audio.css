@@ -1,0 +1,114 @@
+/* 播放按鈕樣式 */
+.speak-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background-color: #e8f0fe;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.speak-btn.elegant {
+    background-color: #f0f7ff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.speak-btn:hover {
+    background-color: #d2e3fc;
+    transform: scale(1.05);
+}
+
+.speak-btn:active {
+    transform: scale(0.95);
+}
+
+.speak-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: #1a73e8;
+    transition: all 0.2s ease;
+}
+
+.speak-btn.playing {
+    background-color: #1a73e8;
+}
+
+.speak-btn.playing svg {
+    fill: white;
+}
+
+.speak-btn svg.play-icon {
+    display: block;
+}
+
+.speak-btn svg.stop-icon {
+    display: none;
+}
+
+.speak-btn.playing svg.play-icon {
+    display: none;
+}
+
+.speak-btn.playing svg.stop-icon {
+    display: block;
+}
+
+/* 載入動畫 */
+.speak-btn.loading {
+    pointer-events: none;
+}
+
+.speak-btn.loading svg {
+    opacity: 0;
+}
+
+.speak-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2px solid transparent;
+    border-top-color: #1a73e8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* 深色模式樣式 */
+.dark-mode .speak-btn {
+    background-color: rgba(100, 181, 246, 0.15);
+}
+
+.dark-mode .speak-btn:hover {
+    background-color: rgba(100, 181, 246, 0.25);
+}
+
+.dark-mode .speak-btn svg {
+    fill: #64b5f6;
+}
+
+.dark-mode .speak-btn.playing {
+    background-color: #64b5f6;
+}
+
+.dark-mode .speak-btn.playing svg {
+    fill: #2d2d2d;
+}
+
+.dark-mode .speak-btn.loading::after {
+    border-top-color: #64b5f6;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+} 

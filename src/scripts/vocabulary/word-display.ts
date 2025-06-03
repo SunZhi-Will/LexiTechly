@@ -7,7 +7,7 @@ import {
     checkStorageLimit
 } from './storage.js';
 import { analyzeWordOnDemand } from './analysis.js';
-import { getSpeakButtonHTML } from './audio.js';
+import { getSpeakButtonHTML, speakWord } from './audio.js';
 import { showToast } from './ui.js';
 import { addSpeakButtonListeners, updateDetailsContent } from './word-interactions.js';
 
@@ -62,11 +62,28 @@ function createWordCard(word: Word): HTMLElement {
     card.innerHTML = `
         <div class="word-header">
             <span class="word-text">${word.text}</span>
+            <button class="speak-btn small elegant" title="播放發音" data-text="${word.text}">
+                <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg class="stop-icon" viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M6 6h12v12H6z"/>
+                </svg>
+            </button>
             <span class="word-level">${word.level || 'N/A'}</span>
         </div>
         <div class="word-details">${word.example || ''}</div>
         <div class="word-translation">${word.translation || ''}</div>
     `;
+    
+    // 添加語音按鈕事件監聽
+    const speakBtn = card.querySelector('.speak-btn') as HTMLElement;
+    if (speakBtn) {
+        speakBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止觸發卡片點擊
+            speakWord(word.text, speakBtn);
+        });
+    }
 
     // 創建詳細頁面
     const detailsPage = createWordDetailsPage(word);

@@ -1,3 +1,5 @@
+@import url('./shared/audio.css');
+
 body {
     margin: 0;
     padding: 20px;
@@ -527,6 +529,28 @@ body {
     height: 36px;
     min-width: 36px;
     z-index: auto;
+}
+
+.speak-btn.elegant {
+    background-color: #f0f7ff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    padding: 4px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    transition: all 0.2s ease;
+}
+
+.speak-btn.elegant:hover {
+    background-color: #e3f2fd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.speak-btn.elegant.playing {
+    background-color: #e3f2fd;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
 }
 
 .speak-btn svg {
@@ -1163,4 +1187,23 @@ body.dark-mode .close-graph-btn:hover {
 
 body.dark-mode .word-card.analyzed {
     border-left: 3px solid #81c784;
+}
+
+body.dark-mode .speak-btn.elegant {
+    background-color: rgba(100, 181, 246, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .speak-btn.elegant:hover {
+    background-color: rgba(100, 181, 246, 0.15);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+}
+
+body.dark-mode .speak-btn.elegant.playing {
+    background-color: rgba(100, 181, 246, 0.2);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .speak-btn.playing {
+    background-color: rgba(100, 181, 246, 0.1);
 }

@@ -1,3 +1,5 @@
+@import url('./shared/audio.css');
+
 /* 聊天介面 */
 .chat-container {
     flex: 1;
@@ -282,22 +284,24 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 8px;
+    padding: 12px;
 }
 
 /* 單字列表區塊樣式 */
 .vocabulary-section {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     position: relative;
-    padding-top: 8px;
 }
 
 .section-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: #1a73e8;
     margin: 0 0 12px 0;
-    padding: 0 8px;
+    padding-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-left: 2px solid #1a73e8;
 }
 
 .word-list {
@@ -308,16 +312,18 @@
 
 .word-card {
     background-color: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
     padding: 12px;
-    transition: all 0.2s;
-    margin: 0 8px;
+    transition: all 0.2s ease;
     position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .word-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
 .word-header {
@@ -327,47 +333,116 @@
     margin-bottom: 8px;
 }
 
-.word-text {
+.word-text-group {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
 }
 
 .word-text-main {
     font-weight: 500;
     color: #1a73e8;
-    font-size: 18px;
-}
-
-.word-phonetic {
-    font-size: 14px;
-    color: #1a73e8;
-    opacity: 0.85;
-    transition: opacity 0.2s;
-    line-height: 1.2;
-}
-
-.word-card:hover .word-phonetic {
-    opacity: 1;
+    font-size: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
 }
 
 .word-level {
     font-size: 12px;
-    padding: 2px 8px;
+    padding: 4px 8px;
     border-radius: 12px;
     background-color: #e8f0fe;
     color: #1a73e8;
+    white-space: nowrap;
+    margin-left: 8px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
 }
 
 .word-details {
     font-size: 13px;
     color: #5f6368;
+    margin: 8px 0;
+    line-height: 1.5;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    font-style: italic;
 }
 
 .word-translation {
-    margin-top: 4px;
     font-size: 13px;
     color: #3c4043;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
+/* 空狀態樣式 */
+.word-card.empty-state {
+    text-align: center;
+    padding: 24px 12px;
+}
+
+.empty-state-icon {
+    width: 32px;
+    height: 32px;
+    fill: #9aa0a6;
+    margin-bottom: 12px;
+}
+
+.empty-state-text {
+    color: #5f6368;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.empty-state-subtext {
+    color: #80868b;
+    font-size: 12px;
+}
+
+.dark-mode .empty-state-icon {
+    fill: #5f6368;
+}
+
+.dark-mode .empty-state-text {
+    color: #9aa0a6;
+}
+
+.dark-mode .empty-state-subtext {
+    color: #5f6368;
+}
+
+/* 載入狀態樣式 */
+.word-card.loading-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 12px;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e8f0fe;
+    border-top-color: #1a73e8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.dark-mode .loading-spinner {
+    border-color: rgba(100, 181, 246, 0.1);
+    border-top-color: #64b5f6;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* popout-button 樣式 */
@@ -488,4 +563,76 @@
 .storage-text {
     font-size: 12px;
     color: #5f6368;
+}
+
+/* 語音頁面樣式 */
+.speech-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.speech-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.speech-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-family: 'Microsoft JhengHei', sans-serif;
+    font-size: 14px;
+    resize: none;
+    background-color: #fff;
+}
+
+.dark-mode .speech-textarea {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: #e0e0e0;
+}
+
+.speech-controls {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.speech-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.speech-button:hover {
+    background-color: #0d66d0;
+}
+
+.dark-mode .speech-button {
+    background-color: #64b5f6;
+    color: #1a1a1a;
+}
+
+.dark-mode .speech-button:hover {
+    background-color: #42a5f5;
+}
+
+.speech-result {
+    margin-top: 8px;
+}
+
+.speech-audio-player {
+    width: 100%;
+    margin-top: 8px;
+    border-radius: 8px;
 }

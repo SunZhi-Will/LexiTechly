@@ -4,6 +4,10 @@
 import * as State from './popup/state.js';
 import * as UI from './popup/ui.js';
 import * as Storage from './popup/storage.js';
+import * as Speech from './popup/speech.js';
+import { removePhoneticFromVocabulary } from './vocabulary/cleaner.js';
+import { getSpeakButtonHTML, speakWord } from './vocabulary/audio.js';
+import { audioCache } from './vocabulary/storage.js';
 
 export { }; // 使此檔案成為模組
 
@@ -30,20 +34,62 @@ async function ensureContentScriptInjected(tabId: number): Promise<void> {
     }
 }
 
+/**
+ * 為語音按鈕添加事件監聽器
+ * @param button 語音按鈕元素
+ * @param text 要播放的文字
+ */
+function setupSpeakButtonListener(button: HTMLElement, text: string): void {
+    // 移除任何舊的事件監聽器
+    const oldClickHandler = (button as any).clickHandler;
+    if (oldClickHandler) {
+        button.removeEventListener('click', oldClickHandler);
+    }
+
+    // 創建新的事件處理函數
+    const newClickHandler = async (e: Event) => {
+        e.stopPropagation(); // 防止觸發卡片點擊
+        
+        // 如果按鈕已在載入或播放中，直接返回
+        if (button.classList.contains('loading')) return;
+        
+        // 調用播放功能
+        await speakWord(text, button);
+    };
+
+    // 儲存事件處理函數的引用
+    (button as any).clickHandler = newClickHandler;
+    button.addEventListener('click', newClickHandler);
+}
+
 function createWordCard(word: Word): HTMLDivElement {
     const wordCard = document.createElement('div');
     wordCard.className = 'word-card';
     wordCard.innerHTML = `
         <div class="word-header">
-            <div class="word-text">
-                <span class="word-text-main">${word.text}</span>
-                ${word.phonetic ? `<span class="word-phonetic">/${word.phonetic}/</span>` : ''}
+            <div class="word-text-group">
+                <span class="word-text-main" title="${word.text}">${word.text}</span>
+                <button class="speak-btn elegant small" title="播放發音" data-text="${word.text}" aria-label="播放 ${word.text} 的發音">
+                    <svg class="play-icon" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <svg class="stop-icon" viewBox="0 0 24 24">
+                        <path d="M6 6h12v12H6z"/>
+                    </svg>
+                </button>
             </div>
-            <div class="word-level">${word.level || 'N/A'}</div>
+            <span class="word-level" title="單字等級">${word.level || 'N/A'}</span>
         </div>
-        <div class="word-details">${word.example || '暫無例句'}</div>
-        <div class="word-translation">${word.translation || '暫無翻譯'}</div>
+        ${word.example ? `<div class="word-details" title="例句">${word.example}</div>` : ''}
+        ${word.translation ? `<div class="word-translation" title="翻譯">${word.translation}</div>` : ''}
     `;
+    
+    // 立即綁定語音按鈕事件
+    const speakBtn = wordCard.querySelector('.speak-btn') as HTMLElement;
+    if (speakBtn) {
+        setupSpeakButtonListener(speakBtn, word.text);
+    }
+    
     return wordCard;
 }
 
@@ -72,7 +118,7 @@ function updateVocabularyUI(isLoading: boolean = false): void {
         loadingCard.className = 'word-card loading-card';
         loadingCard.innerHTML = `
             <div class="loading-spinner"></div>
-            <p style="color: #5f6368; text-align: center; margin-top: 12px;">正在分析單字...</p>
+            <p class="empty-state-text" style="margin-top: 16px;">正在分析單字...</p>
         `;
         vocabularyContainer.appendChild(loadingCard);
         return;
@@ -82,14 +128,13 @@ function updateVocabularyUI(isLoading: boolean = false): void {
     if ((!State.accumulatedVocabulary || State.accumulatedVocabulary.length === 0) &&
         (!State.currentPageVocabulary || State.currentPageVocabulary.length === 0)) {
         const emptyCard = document.createElement('div');
-        emptyCard.className = 'word-card';
-        emptyCard.style.textAlign = 'center';
+        emptyCard.className = 'word-card empty-state';
         emptyCard.innerHTML = `
-            <p style="color: #5f6368; margin-bottom: 8px;">尚未收集任何單字</p>
-            <p style="color: #5f6368; font-size: 12px;">請先進行頁面分析來收集單字</p>
-            <svg style="width: 48px; height: 48px; fill: #9aa0a6; margin-top: 12px;" viewBox="0 0 24 24">
+            <svg class="empty-state-icon" viewBox="0 0 24 24">
                 <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8zm0-3h8v2h-8zm0 6h4v2h-4z"/>
             </svg>
+            <p class="empty-state-text">尚未收集任何單字</p>
+            <p class="empty-state-subtext">請先進行頁面分析來收集單字</p>
         `;
         vocabularyContainer.appendChild(emptyCard);
         return;
@@ -100,7 +145,7 @@ function updateVocabularyUI(isLoading: boolean = false): void {
         const currentPageSection = document.createElement('div');
         currentPageSection.className = 'vocabulary-section';
         currentPageSection.innerHTML = `
-            <h3 class="section-title">當前頁面單字</h3>
+            <h3 class="section-title">當前頁面單字 (${State.currentPageVocabulary.length})</h3>
             <div class="word-list current-page"></div>
         `;
         vocabularyContainer.appendChild(currentPageSection);
@@ -126,7 +171,7 @@ function updateVocabularyUI(isLoading: boolean = false): void {
             const accumulatedSection = document.createElement('div');
             accumulatedSection.className = 'vocabulary-section';
             accumulatedSection.innerHTML = `
-                <h3 class="section-title">累積單字</h3>
+                <h3 class="section-title">累積單字 (${filteredAccumulatedWords.length})</h3>
                 <div class="word-list accumulated"></div>
             `;
             vocabularyContainer.appendChild(accumulatedSection);
@@ -373,212 +418,243 @@ function initializeClearDataFeature(): void {
 
 // 主初始化函數
 document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
-    // 初始化各個模組
-    initializeSettingsPage();
-    initializeClearDataFeature();
+    try {
+        // 清除單字列表中的KK音標
+        await removePhoneticFromVocabulary();
+        
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // 載入已儲存的數據
-    const storageData: StorageData = await chrome.storage.local.get([
-        'apiKey', 'savedAnalysis', 'savedChat', 'savedUrl',
-        'accumulatedVocabulary', 'currentPageVocabulary'
-    ]);
+        // 初始化各個模組
+        initializeSettingsPage();
+        initializeClearDataFeature();
 
-    // 獲取當前 tab URL
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    State.setCurrentTabUrl(tab?.url || '');
+        // 載入已儲存的數據
+        const storageData: StorageData = await chrome.storage.local.get([
+            'apiKey', 'savedAnalysis', 'savedChat', 'savedUrl',
+            'accumulatedVocabulary', 'currentPageVocabulary', 'audioCache'
+        ]);
 
-    // 處理 URL 切換
-    if (storageData.savedUrl && storageData.savedUrl !== State.currentTabUrl) {
-        chrome.storage.local.remove(['savedAnalysis', 'savedChat']);
-        State.setLastAnalysisResult(null);
-        State.setChatHistory([]);
+        // 如果有音訊快取，先載入
+        if (storageData.audioCache) {
+            // 將儲存的 base64 資料轉換為 Blob URL
+            for (const [text, audioData] of Object.entries(storageData.audioCache)) {
+                try {
+                    const audioDataString = typeof audioData === 'string'
+                        ? audioData
+                        : JSON.stringify(audioData);
 
-        ['level', 'vocabulary', 'grammar', 'topic'].forEach(id => {
-            const element = document.getElementById(id);
-            if (element) element.textContent = '-';
-        });
-
-        const chatMessagesElement = document.getElementById('chat-messages');
-        if (chatMessagesElement) chatMessagesElement.innerHTML = '';
-
-        chrome.storage.local.set({ savedUrl: State.currentTabUrl });
-    } else {
-        if (storageData.savedAnalysis) {
-            State.setLastAnalysisResult(storageData.savedAnalysis);
-            // 顯示分析結果
-            const { level } = storageData.savedAnalysis;
-            document.getElementById('level')!.textContent = level.level;
-            document.getElementById('vocabulary')!.textContent = level.analysis.vocabulary;
-            document.getElementById('grammar')!.textContent = level.analysis.grammar;
-            document.getElementById('topic')!.textContent = level.analysis.topic;
+                    const audioBlob = await fetch(`data:audio/mp3;base64,${audioDataString}`).then(r => r.blob());
+                    audioCache[text] = URL.createObjectURL(audioBlob);
+                } catch (error) {
+                    console.warn('音訊資料轉換失敗:', error);
+                    delete storageData.audioCache[text];
+                }
+            }
+            await chrome.storage.local.set({ audioCache: storageData.audioCache });
         }
-        if (storageData.savedChat) {
-            State.setChatHistory(storageData.savedChat);
-            // 恢復聊天記錄
-            storageData.savedChat.forEach((message: ChatMessage) => {
-                // 添加聊天訊息到 UI
-                const chatMessages = document.getElementById('chat-messages');
-                if (chatMessages) {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = `message ${message.type}-message`;
-                    const messageContent = document.createElement('div');
-                    messageContent.className = 'message-content';
-                    messageContent.textContent = message.text;
-                    messageDiv.appendChild(messageContent);
-                    chatMessages.appendChild(messageDiv);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // 獲取當前 tab URL
+        State.setCurrentTabUrl(tab?.url || '');
+
+        // 處理 URL 切換
+        if (storageData.savedUrl && storageData.savedUrl !== State.currentTabUrl) {
+            chrome.storage.local.remove(['savedAnalysis', 'savedChat']);
+            State.setLastAnalysisResult(null);
+            State.setChatHistory([]);
+
+            ['level', 'vocabulary', 'grammar', 'topic'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = '-';
+            });
+
+            const chatMessagesElement = document.getElementById('chat-messages');
+            if (chatMessagesElement) chatMessagesElement.innerHTML = '';
+
+            chrome.storage.local.set({ savedUrl: State.currentTabUrl });
+        } else {
+            if (storageData.savedAnalysis) {
+                State.setLastAnalysisResult(storageData.savedAnalysis);
+                // 顯示分析結果
+                const { level } = storageData.savedAnalysis;
+                document.getElementById('level')!.textContent = level.level;
+                document.getElementById('vocabulary')!.textContent = level.analysis.vocabulary;
+                document.getElementById('grammar')!.textContent = level.analysis.grammar;
+                document.getElementById('topic')!.textContent = level.analysis.topic;
+            }
+            if (storageData.savedChat) {
+                State.setChatHistory(storageData.savedChat);
+                // 恢復聊天記錄
+                storageData.savedChat.forEach((message: ChatMessage) => {
+                    // 添加聊天訊息到 UI
+                    const chatMessages = document.getElementById('chat-messages');
+                    if (chatMessages) {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${message.type}-message`;
+                        const messageContent = document.createElement('div');
+                        messageContent.className = 'message-content';
+                        messageContent.textContent = message.text;
+                        messageDiv.appendChild(messageContent);
+                        chatMessages.appendChild(messageDiv);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                });
+            }
+        }
+
+        // 載入單字資料
+        if (storageData.accumulatedVocabulary) {
+            State.setAccumulatedVocabulary(storageData.accumulatedVocabulary);
+        }
+        if (storageData.currentPageVocabulary) {
+            State.setCurrentPageVocabulary(storageData.currentPageVocabulary);
+        }
+
+        // 載入深色模式設定
+        const { darkMode }: { darkMode?: boolean } = await chrome.storage.local.get('darkMode');
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+            const darkModeToggle = document.getElementById('dark-mode') as HTMLInputElement;
+            if (darkModeToggle) darkModeToggle.checked = true;
+        }
+
+        // 深色模式切換監聽
+        const darkModeToggle = document.getElementById('dark-mode') as HTMLInputElement;
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', (e) => {
+                const target = e.target as HTMLInputElement;
+                if (target.checked) {
+                    document.body.classList.add('dark-mode');
+                    chrome.storage.local.set({ darkMode: true });
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    chrome.storage.local.set({ darkMode: false });
                 }
             });
         }
-    }
 
-    // 載入單字資料
-    if (storageData.accumulatedVocabulary) {
-        State.setAccumulatedVocabulary(storageData.accumulatedVocabulary);
-    }
-    if (storageData.currentPageVocabulary) {
-        State.setCurrentPageVocabulary(storageData.currentPageVocabulary);
-    }
-
-    // 載入深色模式設定
-    const { darkMode }: { darkMode?: boolean } = await chrome.storage.local.get('darkMode');
-    if (darkMode) {
-        document.body.classList.add('dark-mode');
-        const darkModeToggle = document.getElementById('dark-mode') as HTMLInputElement;
-        if (darkModeToggle) darkModeToggle.checked = true;
-    }
-
-    // 深色模式切換監聽
-    const darkModeToggle = document.getElementById('dark-mode') as HTMLInputElement;
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener('change', (e) => {
-            const target = e.target as HTMLInputElement;
-            if (target.checked) {
-                document.body.classList.add('dark-mode');
-                chrome.storage.local.set({ darkMode: true });
-            } else {
-                document.body.classList.remove('dark-mode');
-                chrome.storage.local.set({ darkMode: false });
-            }
-        });
-    }
-
-    // 底部導航監聽
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const element = item as HTMLElement;
-            const pageId = element.dataset.page;
-            if (pageId) {
-                UI.switchPage(pageId);
-                if (pageId === 'vocabulary-page') {
-                    updateVocabularyUI();
-                } else if (pageId === 'settings-page') {
-                    Storage.updateStorageUsage();
+        // 底部導航監聽
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const element = item as HTMLElement;
+                const pageId = element.dataset.page;
+                if (pageId) {
+                    UI.switchPage(pageId);
+                    if (pageId === 'vocabulary-page') {
+                        updateVocabularyUI();
+                    } else if (pageId === 'settings-page') {
+                        Storage.updateStorageUsage();
+                    }
                 }
-            }
+            });
         });
-    });
 
-    // 分析按鈕監聽
-    const analyzeButton = document.getElementById('analyze');
-    if (analyzeButton) {
-        analyzeButton.addEventListener('click', async (): Promise<void> => {
-            const { apiKey }: { apiKey?: string } = await chrome.storage.local.get('apiKey');
-            if (!apiKey) {
-                UI.showError('請先設定 API Key');
-                return;
-            }
-
-            UI.showToast('正在分析頁面內容...', true, false);
-
-            try {
-                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-                if (!tab?.id || !isValidUrl(tab.url)) {
-                    UI.showError('此頁面不支援內容分析');
+        // 分析按鈕監聽
+        const analyzeButton = document.getElementById('analyze');
+        if (analyzeButton) {
+            analyzeButton.addEventListener('click', async (): Promise<void> => {
+                const { apiKey }: { apiKey?: string } = await chrome.storage.local.get('apiKey');
+                if (!apiKey) {
+                    UI.showError('請先設定 API Key');
                     return;
                 }
 
-                await ensureContentScriptInjected(tab.id);
+                UI.showToast('正在分析頁面內容...', true, false);
 
-                // 第一步：CEFR 分析
-                const message: ChromeMessage = { action: 'analyze', apiKey };
-                const response: ChromeResponse = await chrome.tabs.sendMessage(tab.id, message);
+                try {
+                    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                    if (!tab?.id || !isValidUrl(tab.url)) {
+                        UI.showError('此頁面不支援內容分析');
+                        return;
+                    }
 
-                if (response.error) {
-                    UI.showError(response.error);
-                } else if (response.level && response.text) {
-                    const analysisResult: AnalysisResult = {
-                        level: response.level,
-                        text: response.text,
-                        error: undefined
-                    };
+                    await ensureContentScriptInjected(tab.id);
 
-                    State.setLastAnalysisResult(analysisResult);
+                    // 第一步：CEFR 分析
+                    const message: ChromeMessage = { action: 'analyze', apiKey };
+                    const response: ChromeResponse = await chrome.tabs.sendMessage(tab.id, message);
 
-                    // 顯示結果
-                    document.getElementById('level')!.textContent = response.level.level;
-                    document.getElementById('vocabulary')!.textContent = response.level.analysis.vocabulary;
-                    document.getElementById('grammar')!.textContent = response.level.analysis.grammar;
-                    document.getElementById('topic')!.textContent = response.level.analysis.topic;
-
-                    await Storage.saveAnalysis(analysisResult);
-                    chrome.storage.local.set({ savedUrl: State.currentTabUrl });
-                    Storage.updateStorageUsage();
-
-                    // 隱藏載入提示並顯示中間成功訊息
-                    const existingToast = document.querySelector('.toast.loading');
-                    if (existingToast) existingToast.remove();
-                    UI.showToast('CEFR 分析完成，正在分析單字...', true, false);
-
-                    // 第二步：單字分析
-                    try {
-                        const vocabMessage: ChromeMessage = {
-                            action: 'analyzeVocabulary',
-                            apiKey: apiKey
+                    if (response.error) {
+                        UI.showError(response.error);
+                    } else if (response.level && response.text) {
+                        const analysisResult: AnalysisResult = {
+                            level: response.level,
+                            text: response.text,
+                            error: undefined
                         };
 
-                        const vocabResponse: ChromeResponse = await chrome.tabs.sendMessage(tab.id, vocabMessage);
+                        State.setLastAnalysisResult(analysisResult);
 
-                        if (vocabResponse.error) {
-                            UI.showError('單字分析失敗：' + vocabResponse.error);
-                        } else if (vocabResponse.vocabulary) {
-                            State.setCurrentPageVocabulary(vocabResponse.vocabulary);
-                            State.addToAccumulatedVocabulary(vocabResponse.vocabulary);
+                        // 顯示結果
+                        document.getElementById('level')!.textContent = response.level.level;
+                        document.getElementById('vocabulary')!.textContent = response.level.analysis.vocabulary;
+                        document.getElementById('grammar')!.textContent = response.level.analysis.grammar;
+                        document.getElementById('topic')!.textContent = response.level.analysis.topic;
 
-                            await Storage.saveVocabulary(State.accumulatedVocabulary);
-                            await chrome.storage.local.set({ currentPageVocabulary: State.currentPageVocabulary });
+                        await Storage.saveAnalysis(analysisResult);
+                        chrome.storage.local.set({ savedUrl: State.currentTabUrl });
+                        Storage.updateStorageUsage();
 
-                            Storage.updateStorageUsage();
-                            updateVocabularyUI();
+                        // 隱藏載入提示並顯示中間成功訊息
+                        const existingToast = document.querySelector('.toast.loading');
+                        if (existingToast) existingToast.remove();
+                        UI.showToast('CEFR 分析完成，正在分析單字...', true, false);
 
-                            // 隱藏載入提示並顯示最終成功訊息
+                        // 第二步：單字分析
+                        try {
+                            const vocabMessage: ChromeMessage = {
+                                action: 'analyzeVocabulary',
+                                apiKey: apiKey
+                            };
+
+                            const vocabResponse: ChromeResponse = await chrome.tabs.sendMessage(tab.id, vocabMessage);
+
+                            if (vocabResponse.error) {
+                                UI.showError('單字分析失敗：' + vocabResponse.error);
+                            } else if (vocabResponse.vocabulary) {
+                                State.setCurrentPageVocabulary(vocabResponse.vocabulary);
+                                State.addToAccumulatedVocabulary(vocabResponse.vocabulary);
+
+                                await Storage.saveVocabulary(State.accumulatedVocabulary);
+                                await chrome.storage.local.set({ currentPageVocabulary: State.currentPageVocabulary });
+
+                                Storage.updateStorageUsage();
+                                updateVocabularyUI();
+
+                                // 隱藏載入提示並顯示最終成功訊息
+                                const finalToast = document.querySelector('.toast.loading');
+                                if (finalToast) finalToast.remove();
+                                UI.showToast(`找到 ${vocabResponse.vocabulary.length} 個單字！`, false, false, true);
+                            } else {
+                                const finalToast = document.querySelector('.toast.loading');
+                                if (finalToast) finalToast.remove();
+                                UI.showToast('CEFR 分析完成，未找到單字', false, false, true);
+                            }
+                        } catch (vocabError) {
                             const finalToast = document.querySelector('.toast.loading');
                             if (finalToast) finalToast.remove();
-                            UI.showToast(`找到 ${vocabResponse.vocabulary.length} 個單字！`, false, false, true);
-                        } else {
-                            const finalToast = document.querySelector('.toast.loading');
-                            if (finalToast) finalToast.remove();
-                            UI.showToast('CEFR 分析完成，未找到單字', false, false, true);
+                            UI.showToast('分析完成，單字分析失敗', false, true);
                         }
-                    } catch (vocabError) {
-                        const finalToast = document.querySelector('.toast.loading');
-                        if (finalToast) finalToast.remove();
-                        UI.showToast('分析完成，單字分析失敗', false, true);
                     }
+                } catch (error) {
+                    const errorMessage = (error as Error).message;
+                    if (errorMessage.includes('Could not establish connection')) {
+                        UI.showError('無法連接到頁面內容，請重新整理頁面後再試');
+                    } else {
+                        UI.showError('分析失敗，請確認頁面已載入完成');
+                    }
+                } finally {
+                    const loadingToast = document.querySelector('.toast.loading');
+                    if (loadingToast) loadingToast.remove();
                 }
-            } catch (error) {
-                const errorMessage = (error as Error).message;
-                if (errorMessage.includes('Could not establish connection')) {
-                    UI.showError('無法連接到頁面內容，請重新整理頁面後再試');
-                } else {
-                    UI.showError('分析失敗，請確認頁面已載入完成');
-                }
-            } finally {
-                const loadingToast = document.querySelector('.toast.loading');
-                if (loadingToast) loadingToast.remove();
-            }
-        });
-    }
+            });
+        }
 
-    updateVocabularyUI();
+        // 初始化語音功能
+        Speech.initializeSpeechPage();
+
+        updateVocabularyUI();
+    } catch (error) {
+        console.error('初始化失敗:', error);
+        UI.showError('初始化失敗，請確認頁面已載入完成');
+    }
 }); 

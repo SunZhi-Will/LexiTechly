@@ -5,6 +5,7 @@ import { loadVocabulary, accumulatedVocabulary } from './vocabulary/storage.js';
 import { filterAndSortWords } from './vocabulary/filters.js';
 import { updateWordDisplay } from './vocabulary/word-display.js';
 import { showToast } from './vocabulary/ui.js';
+import { removePhoneticFromVocabulary } from './vocabulary/cleaner.js';
 
 // 全域變數
 let allWords: Word[] = [];
@@ -82,6 +83,9 @@ async function initializePage(): Promise<void> {
         if (darkMode) {
             document.body.classList.add('dark-mode');
         }
+
+        // 清除單字列表中的KK音標
+        await removePhoneticFromVocabulary();
 
         // 載入詞彙數據
         allWords = await loadVocabulary();
