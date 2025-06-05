@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
         // 載入深色模式設定
         const { darkMode }: { darkMode?: boolean } = await chrome.storage.local.get('darkMode');
         if (darkMode) {
-            document.body.classList.add('dark-mode');
+            document.documentElement.classList.add('dark-mode');
             const darkModeToggle = document.getElementById('dark-mode') as HTMLInputElement;
             if (darkModeToggle) darkModeToggle.checked = true;
         }
@@ -523,10 +523,10 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
             darkModeToggle.addEventListener('change', (e) => {
                 const target = e.target as HTMLInputElement;
                 if (target.checked) {
-                    document.body.classList.add('dark-mode');
+                    document.documentElement.classList.add('dark-mode');
                     chrome.storage.local.set({ darkMode: true });
                 } else {
-                    document.body.classList.remove('dark-mode');
+                    document.documentElement.classList.remove('dark-mode');
                     chrome.storage.local.set({ darkMode: false });
                 }
             });

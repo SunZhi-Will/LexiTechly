@@ -61,15 +61,17 @@ function createWordCard(word: Word): HTMLElement {
 
     card.innerHTML = `
         <div class="word-header">
-            <span class="word-text">${word.text}</span>
-            <button class="speak-btn small elegant" title="播放發音" data-text="${word.text}">
-                <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
-                    <path d="M8 5v14l11-7z"/>
-                </svg>
-                <svg class="stop-icon" viewBox="0 0 24 24" width="16" height="16">
-                    <path d="M6 6h12v12H6z"/>
-                </svg>
-            </button>
+            <div style="display: flex; align-items: center;">
+                <span class="word-text">${word.text}</span>
+                <button class="speak-btn small elegant" title="播放發音" data-text="${word.text}">
+                    <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <svg class="stop-icon" viewBox="0 0 24 24" width="16" height="16">
+                        <path d="M6 6h12v12H6z"/>
+                    </svg>
+                </button>
+            </div>
             <span class="word-level">${word.level || 'N/A'}</span>
         </div>
         <div class="word-details">${word.example || ''}</div>

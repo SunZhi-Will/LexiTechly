@@ -15,8 +15,8 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
     // 使用 PNG 圖片作為 logo
     const logoImg = document.createElement('img');
     logoImg.src = chrome.runtime.getURL('images/icon128.png');
-    logoImg.style.width = '24px';
-    logoImg.style.height = '24px';
+    logoImg.style.width = '32px';
+    logoImg.style.height = '32px';
     logoImg.style.objectFit = 'contain';
     logoImg.style.pointerEvents = 'none'; // 防止圖片本身接收點擊事件
 
@@ -26,23 +26,23 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
     Object.assign(floatingLogo.style, {
         position: 'fixed',
         top: '50%',
-        right: '15px', // 距離右邊15px，避開滾動條
-        width: '32px',
-        height: '32px',
-        borderRadius: '50%', // 圓形
-        cursor: 'pointer', // 改為指標
+        right: '20px',
+        width: '48px',
+        height: '48px',
+        borderRadius: '50%',
+        cursor: 'pointer',
         zIndex: '10000',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         userSelect: 'none',
-        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
         backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        boxShadow: '2px 2px 8px rgba(0, 0, 0, 0.1)',
-        opacity: '0.7',
-        transition: 'all 0.3s ease',
-        transform: 'translateY(-50%)' // 垂直居中
+        border: '2px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+        opacity: '0.9',
+        transform: 'translateY(-50%)', // 只保留初始垂直置中
+        transition: 'opacity 0.3s, background-color 0.3s, box-shadow 0.3s' // 只保留顏色和陰影的動畫
     });
 
     // 拖拽相關變數
@@ -51,42 +51,20 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
     let clickStartTime = 0;
     let hasMovedDuringDrag = false;
 
-    // 添加懸停效果
+    // 添加懸停效果（移除位移動畫）
     floatingLogo.addEventListener('mouseenter', () => {
         if (floatingLogo && !isDragging) {
             floatingLogo.style.opacity = '1';
-
-            // 檢查是否有自定義位置
-            const savedPosition = localStorage.getItem('lexitechly-logo-position');
-            if (savedPosition) {
-                // 有自定義位置時，只放大，不使用 translateY
-                floatingLogo.style.transform = 'scale(1.1)';
-            } else {
-                // 預設位置時，使用 translateY + 放大
-                floatingLogo.style.transform = 'translateY(-50%) scale(1.1)';
-            }
-
-            floatingLogo.style.boxShadow = '2px 4px 16px rgba(0, 0, 0, 0.2)';
-            floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            floatingLogo.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.25)';
+            floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
         }
     });
 
     floatingLogo.addEventListener('mouseleave', () => {
         if (floatingLogo && !isDragging) {
-            floatingLogo.style.opacity = '0.7';
-
-            // 檢查是否有自定義位置
-            const savedPosition = localStorage.getItem('lexitechly-logo-position');
-            if (savedPosition) {
-                // 有自定義位置時，清除 transform
-                floatingLogo.style.transform = 'none';
-            } else {
-                // 預設位置時，保持 translateY
-                floatingLogo.style.transform = 'translateY(-50%)';
-            }
-
-            floatingLogo.style.boxShadow = '2px 2px 8px rgba(0, 0, 0, 0.1)';
-            floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+            floatingLogo.style.opacity = '0.9';
+            floatingLogo.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
+            floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
         }
     });
 
@@ -104,18 +82,8 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         if (floatingLogo) {
             floatingLogo.classList.add('lexitechly-dragging');
             floatingLogo.style.cursor = 'grabbing';
-            floatingLogo.style.transition = 'none';
-
-            // 檢查是否有自定義位置
-            const savedPosition = localStorage.getItem('lexitechly-logo-position');
-            if (savedPosition) {
-                // 有自定義位置時，只放大，不使用 translateY
-                floatingLogo.style.transform = 'scale(1.05)';
-            } else {
-                // 預設位置時，使用 translateY + 放大
-                floatingLogo.style.transform = 'translateY(-50%) scale(1.05)';
-            }
-
+            floatingLogo.style.transition = 'none'; // 拖拽時移除所有動畫
+            floatingLogo.style.transform = 'none'; // 拖拽時移除 transform
             floatingLogo.style.opacity = '1';
         }
 
@@ -133,8 +101,8 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         const y = e.clientY - dragOffset.y;
 
         // 限制在視窗範圍內
-        const maxX = window.innerWidth - 32;
-        const maxY = window.innerHeight - 32;
+        const maxX = window.innerWidth - 48; // 使用實際寬度
+        const maxY = window.innerHeight - 48; // 使用實際高度
 
         const constrainedX = Math.max(0, Math.min(maxX, x));
         const constrainedY = Math.max(0, Math.min(maxY, y));
@@ -143,7 +111,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         floatingLogo.style.top = `${constrainedY}px`;
         floatingLogo.style.right = 'auto';
         floatingLogo.style.bottom = 'auto';
-        floatingLogo.style.transform = 'none'; // 拖拽時清除 transform
+        floatingLogo.style.transform = 'none';
 
         // 儲存位置到 localStorage
         localStorage.setItem('lexitechly-logo-position', JSON.stringify({
@@ -168,10 +136,8 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
 
         floatingLogo.classList.remove('lexitechly-dragging');
         floatingLogo.style.cursor = 'pointer';
-        floatingLogo.style.transition = 'all 0.3s ease';
-
-        // 保持當前位置，不自動回到預設位置
-        floatingLogo.style.opacity = '0.7';
+        floatingLogo.style.transition = 'opacity 0.3s, background-color 0.3s, box-shadow 0.3s';
+        floatingLogo.style.opacity = '0.9';
 
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);

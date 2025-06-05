@@ -80,8 +80,13 @@ async function initializePage(): Promise<void> {
     try {
         // 載入深色模式設定
         const { darkMode }: { darkMode?: boolean } = await chrome.storage.local.get('darkMode');
-        if (darkMode) {
-            document.body.classList.add('dark-mode');
+        // 如果沒有儲存的設定，檢查系統偏好
+        if (darkMode === undefined) {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.classList.toggle('dark-mode', prefersDark);
+            chrome.storage.local.set({ darkMode: prefersDark });
+        } else {
+            document.body.classList.toggle('dark-mode', darkMode);
         }
 
         // 清除單字列表中的KK音標

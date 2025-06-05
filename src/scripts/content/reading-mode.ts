@@ -541,18 +541,22 @@ function showToast(message: string, isLoading: boolean = false, isError: boolean
 
 // 初始化查閱模式
 function initReadingMode(): void {
+    console.log('LexiTechly: 初始化查閱模式...');
+    
     // 檢查頁面是否為有效的網頁
     if (window.location.protocol === 'chrome-extension:' ||
         window.location.protocol === 'chrome:' ||
         window.location.protocol === 'about:') {
+        console.log('LexiTechly: 不支援的頁面類型，跳過初始化');
         return;
     }
 
-    // 等待頁面載入完成
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => createFloatingLogo(toggleReadingMode));
-    } else {
+    // 創建浮動 logo
+    try {
         createFloatingLogo(toggleReadingMode);
+        console.log('LexiTechly: 浮動 logo 創建成功');
+    } catch (error) {
+        console.error('LexiTechly: 浮動 logo 創建失敗', error);
     }
 
     // 監聽點擊事件以隱藏提示
@@ -562,6 +566,8 @@ function initReadingMode(): void {
             removeTooltip();
         }
     });
+
+    console.log('LexiTechly: 查閱模式初始化完成');
 }
 
 // 高亮相關功能

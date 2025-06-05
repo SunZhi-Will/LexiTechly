@@ -36,9 +36,19 @@ export function getSpeakButtonHTML(size: 'small' | 'normal' | 'tiny' = 'normal')
 
 // 同步所有相同文字的按鈕狀態
 function syncButtonStates(text: string, isPlaying: boolean, isLoading: boolean = false): void {
-    document.querySelectorAll(`.speak-btn[data-text="${text}"]`).forEach(btn => {
+    // 找到所有相關的按鈕，包括沒有 data-text 屬性的按鈕
+    const buttons = Array.from(document.querySelectorAll('.speak-btn')).filter(btn => {
         const button = btn as HTMLElement;
-        button.classList.toggle('playing', isPlaying);
+        return button.dataset.text === text || (!button.dataset.text && button.closest('.word-title-container')?.querySelector('.word-title')?.textContent === text);
+    });
+
+    buttons.forEach(btn => {
+        const button = btn as HTMLElement;
+        if (isPlaying) {
+            button.classList.add('playing');
+        } else {
+            button.classList.remove('playing');
+        }
         button.classList.toggle('loading', isLoading);
         (button as HTMLButtonElement).disabled = isLoading;
     });
@@ -52,22 +62,17 @@ function syncButtonStates(text: string, isPlaying: boolean, isLoading: boolean =
 export async function speakWord(text: string, button?: HTMLElement): Promise<void> {
     try {
         // 防止重複觸發
-        if (button && button.classList.contains('loading') && !button.classList.contains('playing')) {
+        if (button && button.classList.contains('loading')) {
             return;
         }
 
         // 如果當前正在播放，停止播放
-        if (currentAudio && button?.classList.contains('playing')) {
+        if (currentAudio) {
             currentAudio.pause();
             currentAudio = null;
             syncButtonStates(text, false);
             return;
         }
-
-        // 重置所有按鈕狀態
-        document.querySelectorAll('.speak-btn, .speak-btn-circle').forEach(btn => {
-            btn.classList.remove('playing');
-        });
 
         // 設定播放速度
         const isRepeating = text === lastPlayedText;
@@ -75,14 +80,8 @@ export async function speakWord(text: string, button?: HTMLElement): Promise<voi
         lastPlayedText = text;
         lastPlayedSpeed = speed;
 
-        // 停止當前播放的音頻
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
-        }
-
         // 設置所有相同文字的按鈕為載入狀態
-        syncButtonStates(text, false, true);
+        syncButtonStates(text, true, true);
 
         // 先檢查快取中是否已有此語音
         if (audioCache[text]) {

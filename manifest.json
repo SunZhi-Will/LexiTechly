@@ -37,7 +37,13 @@
         {
             "resources": [
                 "libs/marked.min.js",
-                "images/icon128.png"
+                "images/icon128.png",
+                "assets/*.js",
+                "assets/*.css",
+                "scripts/*.js",
+                "styles/*.css",
+                "src/scripts/*.ts",
+                "src/scripts/content/*.ts"
             ],
             "matches": [
                 "<all_urls>"

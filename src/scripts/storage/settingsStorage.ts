@@ -90,8 +90,8 @@ export class SettingsStorage {
    */
   async getDarkMode(): Promise<boolean> {
     try {
-      const result = await chrome.storage.local.get('dark_mode');
-      return result['dark_mode'] === true;
+      const result = await chrome.storage.local.get('darkMode');
+      return result['darkMode'] === true;
     } catch (error) {
       console.error('無法獲取暗色模式設定:', error);
       return false;
@@ -103,7 +103,7 @@ export class SettingsStorage {
    */
   async setDarkMode(enabled: boolean): Promise<void> {
     try {
-      await chrome.storage.local.set({ 'dark_mode': enabled });
+      await chrome.storage.local.set({ 'darkMode': enabled });
     } catch (error) {
       console.error('無法設置暗色模式:', error);
       throw error;

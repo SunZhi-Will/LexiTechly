@@ -186,7 +186,7 @@ function createWordDetailsPage(word: Word, details: WordDetails): HTMLElement {
             <div class="word-title-container">
                 <div class="word-title">${word.text || ''}</div>
                 <div class="word-translation-title">${word.translation || '暫無翻譯'}</div>
-                <button class="speak-btn" title="播放發音">
+                <button class="speak-btn" title="播放發音" data-text="${word.text}">
                     ${getSpeakButtonHTML()}
                 </button>
             </div>
@@ -280,9 +280,23 @@ export function addSpeakButtonListeners(detailsPage: HTMLElement, word: Word): v
             wordSpeakBtn.removeEventListener('click', oldClickHandler);
         }
 
-        const newClickHandler = (e: Event) => {
+        const newClickHandler = async (e: Event) => {
             e.stopPropagation();
-            speakWord(word.text, wordSpeakBtn);
+            
+            // 如果按鈕已經在播放中，則停止播放
+            if (wordSpeakBtn.classList.contains('playing')) {
+                window.speechSynthesis.cancel();
+                wordSpeakBtn.classList.remove('playing');
+                return;
+            }
+
+            // 開始播放
+            try {
+                await speakWord(word.text, wordSpeakBtn);
+            } catch (error) {
+                console.error('播放失敗:', error);
+                wordSpeakBtn.classList.remove('playing');
+            }
         };
 
         (wordSpeakBtn as any).clickHandler = newClickHandler;

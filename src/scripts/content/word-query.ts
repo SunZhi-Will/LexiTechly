@@ -1,5 +1,7 @@
 /// <reference types="chrome"/>
 
+import { getSpeakButtonHTML, speakWord } from '../vocabulary/audio.js';
+
 // 查詢單字資訊
 export async function queryWordInfo(word: string, apiKey: string): Promise<{ html: string, wordData?: any }> {
     const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -68,18 +70,53 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<{ htm
         // 生成自訂 HTML
         const html = `
             <div class="word-header">
-                <strong class="word-title">${wordData.word}</strong>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <strong class="word-title">${wordData.word}</strong>
+                    <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.word}">
+                        <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <svg class="stop-icon" viewBox="0 0 24 24" width="16" height="16">
+                            <path d="M6 6h12v12H6z"/>
+                        </svg>
+                    </button>
+                </div>
                 <span class="word-level">${wordData.level}</span>
             </div>
             <div class="word-info">
                 <div class="translation"><strong>中文：</strong>${wordData.translation}</div>
                 <div class="part-of-speech"><strong>詞性：</strong>${wordData.partOfSpeech}</div>
                 <div class="example">
-                    <strong>例句：</strong>${wordData.example}<br>
+                    <strong>例句：</strong>${wordData.example}
+                    <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.example}">
+                        <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <svg class="stop-icon" viewBox="0 0 24 24" width="16" height="16">
+                            <path d="M6 6h12v12H6z"/>
+                        </svg>
+                    </button><br>
                     <em>${wordData.exampleTranslation}</em>
                 </div>
             </div>
         `;
+
+        // 添加事件監聽器
+        setTimeout(() => {
+            document.querySelectorAll('.speak-btn').forEach(btn => {
+                const button = btn as HTMLElement;
+                if (!button.dataset.hasListener) {
+                    button.dataset.hasListener = 'true';
+                    button.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const text = button.dataset.text;
+                        if (text) {
+                            await speakWord(text, button);
+                        }
+                    });
+                }
+            });
+        }, 0);
 
         return { html, wordData };
 
