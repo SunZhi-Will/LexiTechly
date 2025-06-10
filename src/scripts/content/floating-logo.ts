@@ -164,12 +164,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
 
     // 首次顯示時的引導提示
     const hasSeenGuide = localStorage.getItem('lexitechly-drag-guide-shown');
-    if (!hasSeenGuide) {
-        setTimeout(() => {
-            showToast('💡 新功能：logo 現在可以拖拽移動位置了！', false, false, true);
-            localStorage.setItem('lexitechly-drag-guide-shown', 'true');
-        }, 2000);
-    }
+    
 }
 
 // 更新logo外觀
