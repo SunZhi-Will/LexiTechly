@@ -199,6 +199,40 @@ function initializeSettingsPage(): void {
         });
     });
 
+    // 載入設定
+    chrome.storage.sync.get(['hideFloatingLogo'], (result) => {
+        const showFloatingLogoCheckbox = document.getElementById('show-floating-logo') as HTMLInputElement;
+        if (showFloatingLogoCheckbox) {
+            // 如果設定未初始化，預設為顯示
+            showFloatingLogoCheckbox.checked = result.hideFloatingLogo === undefined ? true : !result.hideFloatingLogo;
+            
+            // 如果設定未初始化，設置預設值
+            if (result.hideFloatingLogo === undefined) {
+                chrome.storage.sync.set({ 'hideFloatingLogo': false });
+            }
+        }
+    });
+
+    // 監聽懸浮圖示顯示設定的變更
+    const showFloatingLogoCheckbox = document.getElementById('show-floating-logo');
+    if (showFloatingLogoCheckbox) {
+        showFloatingLogoCheckbox.addEventListener('change', (e) => {
+            const isChecked = (e.target as HTMLInputElement).checked;
+            chrome.storage.sync.set({ 'hideFloatingLogo': !isChecked });
+            
+            // 通知內容腳本更新懸浮圖示的顯示狀態
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                const activeTab = tabs[0];
+                if (activeTab.id) {
+                    chrome.tabs.sendMessage(activeTab.id, {
+                        type: 'updateFloatingLogo',
+                        show: isChecked
+                    });
+                }
+            });
+        });
+    }
+
     // 載入 API Keys
     chrome.storage.local.get(['apiKey', 'speechifyApiKey']).then(({ apiKey, speechifyApiKey }) => {
         const apiKeyInput = document.getElementById('gemini-api-key') as HTMLInputElement;

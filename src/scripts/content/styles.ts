@@ -389,28 +389,31 @@ export function injectStyles(): void {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
-        /* 浮動logo懸停提示 */
-        #lexitechly-floating-logo::after {
-            content: attr(data-tooltip);
+        /* 關閉按鈕樣式 */
+        .lexitechly-close-btn {
             position: absolute;
-            top: -40px;
-            right: 0;
-            background: ${isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(0, 0, 0, 0.8)'};
-            color: ${isDark ? '#F9FAFB' : 'white'};
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 10003;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: ${isDark ? 'rgba(75, 85, 99, 0.9)' : 'rgba(255, 255, 255, 0.9)'};
+            border: 1px solid ${isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.1)'};
+            color: ${isDark ? '#F9FAFB' : '#374151'};
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            z-index: 10001;
         }
 
-        #lexitechly-floating-logo:hover::after {
-            opacity: 1;
+        .lexitechly-close-btn:hover {
+            background: ${isDark ? 'rgba(107, 114, 128, 0.9)' : 'rgba(255, 255, 255, 1)'};
+            transform: scale(1.1);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
 
         /* 位置指示器 */

@@ -6,165 +6,212 @@ let isReadingMode = false;
 
 // 創建浮動logo
 export function createFloatingLogo(onToggleReadingMode: () => void): void {
-    if (floatingLogo) return; // 避免重複創建
-
-    floatingLogo = document.createElement('div');
-    floatingLogo.id = 'lexitechly-floating-logo';
-    floatingLogo.setAttribute('data-tooltip', '拖拽移動位置 | 點擊切換查閱模式');
-
-    // 使用 PNG 圖片作為 logo
-    const logoImg = document.createElement('img');
-    logoImg.src = chrome.runtime.getURL('images/icon128.png');
-    logoImg.style.width = '32px';
-    logoImg.style.height = '32px';
-    logoImg.style.objectFit = 'contain';
-    logoImg.style.pointerEvents = 'none'; // 防止圖片本身接收點擊事件
-
-    floatingLogo.appendChild(logoImg);
-
-    // 設定樣式 - 靠在滾動條旁邊
-    Object.assign(floatingLogo.style, {
-        position: 'fixed',
-        top: '50%',
-        right: '20px',
-        width: '48px',
-        height: '48px',
-        borderRadius: '50%',
-        cursor: 'pointer',
-        zIndex: '10000',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        userSelect: 'none',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(8px)',
-        border: '2px solid rgba(255, 255, 255, 0.3)',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
-        opacity: '0.9',
-        transform: 'translateY(-50%)', // 只保留初始垂直置中
-        transition: 'opacity 0.3s, background-color 0.3s, box-shadow 0.3s' // 只保留顏色和陰影的動畫
-    });
-
-    // 拖拽相關變數
-    let isDragging = false;
-    let dragOffset = { x: 0, y: 0 };
-    let clickStartTime = 0;
-    let hasMovedDuringDrag = false;
-
-    // 添加懸停效果（移除位移動畫）
-    floatingLogo.addEventListener('mouseenter', () => {
-        if (floatingLogo && !isDragging) {
-            floatingLogo.style.opacity = '1';
-            floatingLogo.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.25)';
-            floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+    // 檢查是否應該隱藏懸浮圖示
+    chrome.storage.sync.get(['hideFloatingLogo'], (result) => {
+        // 如果 hideFloatingLogo 未設置或為 false，則顯示懸浮圖示
+        if (result.hideFloatingLogo === undefined) {
+            // 初始化設定
+            chrome.storage.sync.set({ 'hideFloatingLogo': false });
         }
-    });
-
-    floatingLogo.addEventListener('mouseleave', () => {
-        if (floatingLogo && !isDragging) {
-            floatingLogo.style.opacity = '0.9';
-            floatingLogo.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
-            floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+        
+        if (result.hideFloatingLogo) {
+            return; // 如果設定為隱藏，則不創建懸浮圖示
         }
-    });
+        
+        if (floatingLogo) return; // 避免重複創建
 
-    // 拖拽開始
-    floatingLogo.addEventListener('mousedown', (e: MouseEvent) => {
-        e.preventDefault();
-        isDragging = true;
-        hasMovedDuringDrag = false;
-        clickStartTime = Date.now();
+        floatingLogo = document.createElement('div');
+        floatingLogo.id = 'lexitechly-floating-logo';
 
-        const rect = floatingLogo!.getBoundingClientRect();
-        dragOffset.x = e.clientX - rect.left;
-        dragOffset.y = e.clientY - rect.top;
+        // 使用 PNG 圖片作為 logo
+        const logoImg = document.createElement('img');
+        logoImg.src = chrome.runtime.getURL('images/icon128.png');
+        logoImg.style.width = '24px'; // 縮小圖示
+        logoImg.style.height = '24px'; // 縮小圖示
+        logoImg.style.objectFit = 'contain';
+        logoImg.style.pointerEvents = 'none'; // 防止圖片本身接收點擊事件
 
-        if (floatingLogo) {
-            floatingLogo.classList.add('lexitechly-dragging');
-            floatingLogo.style.cursor = 'grabbing';
-            floatingLogo.style.transition = 'none'; // 拖拽時移除所有動畫
-            floatingLogo.style.transform = 'none'; // 拖拽時移除 transform
-            floatingLogo.style.opacity = '1';
-        }
+        // 創建關閉按鈕
+        const closeButton = document.createElement('button');
+        closeButton.className = 'lexitechly-close-btn';
+        closeButton.innerHTML = '×';
+        closeButton.style.display = 'none'; // 預設隱藏
 
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-    });
+        floatingLogo.appendChild(logoImg);
+        floatingLogo.appendChild(closeButton);
 
-    // 拖拽移動
-    function handleMouseMove(e: MouseEvent): void {
-        if (!isDragging || !floatingLogo) return;
+        // 設定樣式 - 靠在滾動條旁邊
+        Object.assign(floatingLogo.style, {
+            position: 'fixed',
+            top: '50%',
+            right: '20px',
+            width: '36px', // 縮小容器
+            height: '36px', // 縮小容器
+            borderRadius: '50%',
+            cursor: 'pointer',
+            zIndex: '10000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            userSelect: 'none',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(8px)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+            opacity: '0.9',
+            transform: 'translateY(-50%)', // 只保留初始垂直置中
+            transition: 'opacity 0.3s, background-color 0.3s, box-shadow 0.3s' // 只保留顏色和陰影的動畫
+        });
 
-        hasMovedDuringDrag = true;
+        // 拖拽相關變數
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let clickStartTime = 0;
+        let hasMovedDuringDrag = false;
 
-        const x = e.clientX - dragOffset.x;
-        const y = e.clientY - dragOffset.y;
+        // 拖拽開始
+        floatingLogo.addEventListener('mousedown', (e) => {
+            // 如果點擊的是關閉按鈕，不啟動拖拽
+            if ((e.target as HTMLElement).classList.contains('lexitechly-close-btn')) {
+                return;
+            }
 
-        // 限制在視窗範圍內
-        const maxX = window.innerWidth - 48; // 使用實際寬度
-        const maxY = window.innerHeight - 48; // 使用實際高度
+            e.preventDefault();
+            isDragging = true;
+            hasMovedDuringDrag = false;
+            clickStartTime = Date.now();
 
-        const constrainedX = Math.max(0, Math.min(maxX, x));
-        const constrainedY = Math.max(0, Math.min(maxY, y));
+            const rect = floatingLogo!.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
 
-        floatingLogo.style.left = `${constrainedX}px`;
-        floatingLogo.style.top = `${constrainedY}px`;
-        floatingLogo.style.right = 'auto';
-        floatingLogo.style.bottom = 'auto';
-        floatingLogo.style.transform = 'none';
+            if (floatingLogo) {
+                floatingLogo.classList.add('lexitechly-dragging');
+                floatingLogo.style.cursor = 'grabbing';
+                floatingLogo.style.transition = 'none';
+                floatingLogo.style.transform = 'none';
+                floatingLogo.style.opacity = '1';
+            }
 
-        // 儲存位置到 localStorage
-        localStorage.setItem('lexitechly-logo-position', JSON.stringify({
-            x: constrainedX,
-            y: constrainedY
-        }));
-    }
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        });
 
-    // 拖拽結束
-    function handleMouseUp(): void {
-        if (!floatingLogo) return;
+        // 拖拽移動
+        function handleMouseMove(e: MouseEvent): void {
+            if (!isDragging || !floatingLogo) return;
 
-        const clickDuration = Date.now() - clickStartTime;
+            hasMovedDuringDrag = true;
 
-        // 如果是短時間點擊且沒有移動，則觸發切換模式
-        if (clickDuration < 200 && !hasMovedDuringDrag) {
-            onToggleReadingMode();
-        }
+            const x = e.clientX - dragOffset.x;
+            const y = e.clientY - dragOffset.y;
 
-        isDragging = false;
-        hasMovedDuringDrag = false;
+            // 限制在視窗範圍內
+            const maxX = window.innerWidth - floatingLogo.offsetWidth;
+            const maxY = window.innerHeight - floatingLogo.offsetHeight;
 
-        floatingLogo.classList.remove('lexitechly-dragging');
-        floatingLogo.style.cursor = 'pointer';
-        floatingLogo.style.transition = 'opacity 0.3s, background-color 0.3s, box-shadow 0.3s';
-        floatingLogo.style.opacity = '0.9';
+            const constrainedX = Math.max(0, Math.min(maxX, x));
+            const constrainedY = Math.max(0, Math.min(maxY, y));
 
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    }
-
-    // 載入儲存的位置
-    const savedPosition = localStorage.getItem('lexitechly-logo-position');
-    if (savedPosition) {
-        try {
-            const { x, y } = JSON.parse(savedPosition);
-            floatingLogo.style.left = `${x}px`;
-            floatingLogo.style.top = `${y}px`;
+            floatingLogo.style.left = `${constrainedX}px`;
+            floatingLogo.style.top = `${constrainedY}px`;
             floatingLogo.style.right = 'auto';
             floatingLogo.style.bottom = 'auto';
             floatingLogo.style.transform = 'none';
-        } catch (error) {
-            // 如果解析失敗，使用預設位置
+
+            // 儲存位置到 localStorage
+            localStorage.setItem('lexitechly-logo-position', JSON.stringify({
+                x: constrainedX,
+                y: constrainedY
+            }));
         }
-    }
 
-    document.body.appendChild(floatingLogo);
-    // 初始化時設定為未啟用狀態
-    updateLogoAppearance(false);
+        // 拖拽結束
+        function handleMouseUp(e: MouseEvent): void {
+            if (!floatingLogo) return;
 
-    // 首次顯示時的引導提示
-    const hasSeenGuide = localStorage.getItem('lexitechly-drag-guide-shown');
-    
+            isDragging = false;
+            
+            // 如果點擊的是關閉按鈕，不處理點擊事件
+            if ((e.target as HTMLElement).classList.contains('lexitechly-close-btn')) {
+                return;
+            }
+
+            floatingLogo.classList.remove('lexitechly-dragging');
+            floatingLogo.style.cursor = 'pointer';
+            floatingLogo.style.transition = 'opacity 0.3s, background-color 0.3s, box-shadow 0.3s';
+            floatingLogo.style.opacity = '0.9';
+
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            // 如果是短時間點擊且沒有移動，則觸發切換模式
+            const clickDuration = Date.now() - clickStartTime;
+            if (clickDuration < 200 && !hasMovedDuringDrag) {
+                isReadingMode = !isReadingMode;
+                onToggleReadingMode();
+                floatingLogo.classList.toggle('reading-mode', isReadingMode);
+            }
+        }
+
+        // 顯示/隱藏關閉按鈕
+        floatingLogo.addEventListener('mouseenter', () => {
+            if (closeButton) {
+                closeButton.style.display = 'flex';
+            }
+            if (floatingLogo && !isDragging) {
+                floatingLogo.style.opacity = '1';
+                floatingLogo.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.25)';
+                floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+
+        floatingLogo.addEventListener('mouseleave', () => {
+            if (closeButton) {
+                closeButton.style.display = 'none';
+            }
+            if (floatingLogo && !isDragging) {
+                floatingLogo.style.opacity = '0.9';
+                floatingLogo.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
+                floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            }
+        });
+
+        // 關閉按鈕點擊事件
+        closeButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止觸發 logo 的點擊事件
+            if (floatingLogo && floatingLogo.parentNode) {
+                // 如果在閱讀模式中，先關閉閱讀模式
+                if (isReadingMode) {
+                    isReadingMode = false;
+                    onToggleReadingMode();
+                }
+                floatingLogo.parentNode.removeChild(floatingLogo);
+                floatingLogo = null;
+                // 儲存設定到 storage
+                chrome.storage.sync.set({ 'hideFloatingLogo': true });
+            }
+        });
+
+        // 將 logo 添加到頁面
+        document.body.appendChild(floatingLogo);
+
+        // 載入儲存的位置
+        const savedPosition = localStorage.getItem('lexitechly-logo-position');
+        if (savedPosition) {
+            try {
+                const { x, y } = JSON.parse(savedPosition);
+                if (floatingLogo) {
+                    floatingLogo.style.left = `${x}px`;
+                    floatingLogo.style.top = `${y}px`;
+                    floatingLogo.style.right = 'auto';
+                    floatingLogo.style.transform = 'none';
+                }
+            } catch (error) {
+                console.error('無法載入懸浮圖示位置:', error);
+            }
+        }
+    });
 }
 
 // 更新logo外觀
@@ -246,4 +293,26 @@ function showToast(message: string, isLoading: boolean = false, isError: boolean
             }, 300);
         }, 3000);
     }
-} 
+}
+
+// 監聽來自 popup 的消息
+chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === 'updateFloatingLogo') {
+        if (message.show) {
+            // 如果當前沒有顯示懸浮圖示，則創建它
+            if (!floatingLogo) {
+                createFloatingLogo(() => {
+                    // 切換閱讀模式的回調函數
+                    isReadingMode = !isReadingMode;
+                    floatingLogo?.classList.toggle('reading-mode', isReadingMode);
+                });
+            }
+        } else {
+            // 如果當前顯示著懸浮圖示，則移除它
+            if (floatingLogo && floatingLogo.parentNode) {
+                floatingLogo.parentNode.removeChild(floatingLogo);
+                floatingLogo = null;
+            }
+        }
+    }
+}); 
