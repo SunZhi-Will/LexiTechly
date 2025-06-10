@@ -8,6 +8,7 @@ import * as Speech from './popup/speech.js';
 import { removePhoneticFromVocabulary } from './vocabulary/cleaner.js';
 import { getSpeakButtonHTML, speakWord } from './vocabulary/audio.js';
 import { audioCache } from './vocabulary/storage.js';
+import { convertToCSV, downloadCSV } from './vocabulary/export.js';
 
 export { }; // 使此檔案成為模組
 
@@ -450,6 +451,14 @@ function initializeClearDataFeature(): void {
     }
 }
 
+// 匯出單字列表為 CSV
+function exportVocabularyToCSV() {
+    const allWords = [...State.accumulatedVocabulary];
+    const csvContent = convertToCSV(allWords);
+    const timestamp = new Date().toISOString().split('T')[0];
+    downloadCSV(csvContent, `vocabulary-${timestamp}.csv`);
+}
+
 // 主初始化函數
 document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
     try {
@@ -685,6 +694,18 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
 
         // 初始化語音功能
         Speech.initializeSpeechPage();
+
+        // 綁定匯出 CSV 按鈕事件（單字列表頁面）
+        const exportButton = document.getElementById('export-csv');
+        if (exportButton) {
+            exportButton.addEventListener('click', exportVocabularyToCSV);
+        }
+        
+        // 綁定匯出 CSV 按鈕事件（設定頁面）
+        const settingsExportButton = document.getElementById('settings-export-csv');
+        if (settingsExportButton) {
+            settingsExportButton.addEventListener('click', exportVocabularyToCSV);
+        }
 
         updateVocabularyUI();
     } catch (error) {
