@@ -68,6 +68,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         let dragOffset = { x: 0, y: 0 };
         let clickStartTime = 0;
         let hasMovedDuringDrag = false;
+        let dragStartPos = { x: 0, y: 0 }; // 新增：記錄拖拽開始位置
 
         // 拖拽開始
         floatingLogo.addEventListener('mousedown', (e) => {
@@ -80,6 +81,12 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
             isDragging = true;
             hasMovedDuringDrag = false;
             clickStartTime = Date.now();
+
+            // 記錄拖拽開始位置
+            dragStartPos = {
+                x: e.clientX,
+                y: e.clientY
+            };
 
             const rect = floatingLogo!.getBoundingClientRect();
             dragOffset.x = e.clientX - rect.left;
@@ -101,7 +108,16 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         function handleMouseMove(e: MouseEvent): void {
             if (!isDragging || !floatingLogo) return;
 
-            hasMovedDuringDrag = true;
+            // 計算移動距離
+            const moveDistance = Math.sqrt(
+                Math.pow(e.clientX - dragStartPos.x, 2) + 
+                Math.pow(e.clientY - dragStartPos.y, 2)
+            );
+
+            // 只有當移動距離超過閾值時才視為拖拽
+            if (moveDistance > 5) { // 5px 的移動閾值
+                hasMovedDuringDrag = true;
+            }
 
             const x = e.clientX - dragOffset.x;
             const y = e.clientY - dragOffset.y;
@@ -147,7 +163,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
 
             // 如果是短時間點擊且沒有移動，則觸發切換模式
             const clickDuration = Date.now() - clickStartTime;
-            if (clickDuration < 200 && !hasMovedDuringDrag) {
+            if (clickDuration < 300 && !hasMovedDuringDrag) { // 增加點擊時間閾值到 300ms
                 isReadingMode = !isReadingMode;
                 onToggleReadingMode();
                 floatingLogo.classList.toggle('reading-mode', isReadingMode);

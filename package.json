@@ -9,12 +9,13 @@
         "release": "npm run build && npm-build-zip --source dist --name release --name_only true"
     },
     "dependencies": {
-        "@google/genai": "^1.3.0",
+        "@google/genai": "^1.7.0",
         "autoprefixer": "^10.4.19",
         "mime": "^4.0.1",
         "postcss": "^8.4.38",
         "vis-data": "^7.1.9",
-        "vis-network": "^9.1.10"
+        "vis-network": "^9.1.10",
+        "wav": "^1.0.2"
     },
     "devDependencies": {
         "@crxjs/vite-plugin": "^1.0.14",
