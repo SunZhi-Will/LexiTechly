@@ -95,9 +95,28 @@ export async function speakWord(text: string, button?: HTMLElement): Promise<voi
 
     } catch (error) {
         console.error('語音播放失敗:', error);
-        const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-        showToast(`語音播放失敗: ${errorMessage}`, false, true);
-        
+        let errorMessage = '語音播放失敗: ';
+        if (error instanceof DOMException) {
+            if (error.name === 'NotAllowedError') {
+                errorMessage += '瀏覽器阻擋自動播放，請用戶點擊觸發語音。';
+            } else if (error.name === 'NotSupportedError') {
+                errorMessage += '音訊格式不支援，請聯絡開發者。';
+            } else {
+                errorMessage += '瀏覽器安全限制或 CORS 問題，請檢查 API 回應與網路環境。';
+            }
+        } else if (typeof error === 'object' && error && 'message' in error) {
+            const msg = String((error as any).message);
+            if (msg.includes('API Key')) {
+                errorMessage += 'API 金鑰錯誤或權限不足，請重新設定。';
+            } else if (msg.includes('CORS')) {
+                errorMessage += 'CORS 限制，請改用後端代理呼叫 Gemini API。';
+            } else {
+                errorMessage += msg;
+            }
+        } else {
+            errorMessage += '未知錯誤';
+        }
+        showToast(errorMessage, false, true);
         // 重置所有相同文字的按鈕狀態
         syncButtonStates(text, false, false);
     }
@@ -130,8 +149,17 @@ async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button
                 });
                 
                 if (audioData) {
+                    // 新增：檢查瀏覽器是否支援 audio/wav
+                    const canPlayWav = (new Audio()).canPlayType('audio/wav');
+                    if (!canPlayWav) {
+                        showToast('瀏覽器不支援 WAV 格式音訊，請改用 Chrome/Edge 或聯絡開發者。', false, true);
+                        syncButtonStates(text, false, false);
+                        return;
+                    }
                     const blob = new Blob([audioData], { type: 'audio/wav' });
                     const audioUrl = URL.createObjectURL(blob);
+                    // 下載按鈕
+                    showDownloadButton(blob, text);
                     
                     // 轉換並儲存到快取
                     const audioBase64 = await blobToBase64(blob);
@@ -289,4 +317,26 @@ async function fallbackSpeak(text: string, displayText: string, speed: 'slow' | 
             reject(error);
         }
     });
+} 
+
+// 新增：語音下載功能
+function showDownloadButton(blob: Blob, text: string) {
+    // 移除舊的下載按鈕
+    document.querySelectorAll('.lexi-tts-download').forEach(btn => btn.remove());
+    // 建立新按鈕
+    const downloadBtn = document.createElement('a');
+    downloadBtn.className = 'lexi-tts-download';
+    downloadBtn.textContent = '下載語音';
+    downloadBtn.style.marginLeft = '8px';
+    downloadBtn.style.fontSize = '12px';
+    downloadBtn.style.color = '#1a73e8';
+    downloadBtn.style.cursor = 'pointer';
+    downloadBtn.style.textDecoration = 'underline';
+    downloadBtn.download = `${text.slice(0, 10)}.wav`;
+    downloadBtn.href = URL.createObjectURL(blob);
+    // 插入到第一個 .speak-btn 後面
+    const btn = document.querySelector('.speak-btn');
+    if (btn && btn.parentElement) {
+        btn.parentElement.appendChild(downloadBtn);
+    }
 } 

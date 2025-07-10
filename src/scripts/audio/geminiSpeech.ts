@@ -33,6 +33,7 @@ export interface SpeechOptions {
   language?: string;  // 語言
   pitch?: number;     // 音調 (0.25-4.0)
   speakingRate?: number; // 語速 (0.25-4.0)
+  temperature?: number; // 溫度 (0.0-1.0)
 }
 
 async function handleTurn(): Promise<LiveServerMessage[]> {
@@ -214,8 +215,6 @@ export async function textToSpeech(
     throw new Error('API Key 未提供');
   }
 
-  
-
   const ai = new GoogleGenAI({
     apiKey: apiKey,
   });
@@ -229,18 +228,18 @@ export async function textToSpeech(
   const language = options.language || LANGUAGE_OPTIONS.ENGLISH;
   const speakingRate = options.speakingRate || 1.0;
   const pitch = options.pitch || 1.0;
+  const temperature = options.temperature ?? 1;
 
   // 使用較新的模型
   const model = 'models/gemini-2.0-flash-live-001';
 
-
+  // config 結構與 Bash/curl 一致
   const config = {
     responseModalities: [
-        Modality.AUDIO,
+      Modality.AUDIO,
     ],
-    mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
+    temperature,
     speechConfig: {
-      languageCode: language,
       voiceConfig: {
         prebuiltVoiceConfig: {
           voiceName: voice,
@@ -248,10 +247,6 @@ export async function textToSpeech(
           pitch: pitch
         }
       }
-    },
-    contextWindowCompression: {
-        triggerTokens: '25600',
-        slidingWindow: { targetTokens: '12800' },
     },
   };
 

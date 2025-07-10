@@ -312,6 +312,54 @@ function initializeSettingsPage(): void {
         });
     }
 
+    // === 新增語音設定同步 ===
+    // 載入語音設定
+    const voiceSelect = document.getElementById('voice-select') as HTMLSelectElement;
+    const languageSelect = document.getElementById('language-select') as HTMLSelectElement;
+    const speedRange = document.getElementById('speed-range') as HTMLInputElement;
+    const speedValue = document.getElementById('speed-value');
+    const pitchRange = document.getElementById('pitch-range') as HTMLInputElement;
+    const pitchValue = document.getElementById('pitch-value');
+
+    function loadSpeechSettings() {
+        const savedSettings = localStorage.getItem('speechSettings');
+        if (savedSettings) {
+            try {
+                const settings = JSON.parse(savedSettings);
+                if (voiceSelect) voiceSelect.value = settings.voice || 'Puck';
+                if (languageSelect) languageSelect.value = settings.language || 'en-US';
+                if (speedRange) {
+                    speedRange.value = settings.speed ? settings.speed.toString() : '1.0';
+                    if (speedValue) speedValue.textContent = parseFloat(speedRange.value).toFixed(1);
+                }
+                if (pitchRange) {
+                    pitchRange.value = settings.pitch ? settings.pitch.toString() : '1.0';
+                    if (pitchValue) pitchValue.textContent = parseFloat(pitchRange.value).toFixed(1);
+                }
+            } catch (e) { console.error('無法載入語音設定', e); }
+        }
+    }
+    function saveSpeechSettings() {
+        const settings = {
+            voice: voiceSelect ? voiceSelect.value : 'Puck',
+            language: languageSelect ? languageSelect.value : 'en-US',
+            speed: speedRange ? parseFloat(speedRange.value) : 1.0,
+            pitch: pitchRange ? parseFloat(pitchRange.value) : 1.0
+        };
+        localStorage.setItem('speechSettings', JSON.stringify(settings));
+    }
+    if (voiceSelect) voiceSelect.addEventListener('change', saveSpeechSettings);
+    if (languageSelect) languageSelect.addEventListener('change', saveSpeechSettings);
+    if (speedRange) speedRange.addEventListener('input', () => {
+        if (speedValue) speedValue.textContent = parseFloat(speedRange.value).toFixed(1);
+        saveSpeechSettings();
+    });
+    if (pitchRange) pitchRange.addEventListener('input', () => {
+        if (pitchValue) pitchValue.textContent = parseFloat(pitchRange.value).toFixed(1);
+        saveSpeechSettings();
+    });
+    loadSpeechSettings();
+
     Storage.updateStorageUsage();
 }
 
