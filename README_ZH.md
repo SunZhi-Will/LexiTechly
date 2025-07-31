@@ -2,7 +2,7 @@
 
 # LexiTechly
 
-![LexiTechly Logo](logo.png)
+![LexiTechly Logo](src/assets/images/logo.png)
 
 🔍 智慧英文內容分析擴充功能 (TypeScript 版本)
 
@@ -165,7 +165,7 @@ dist/
 ├── libs/
 │   └── marked.min.js        # Markdown 解析庫
 └── images/
-    └── icon128.png          # 擴充功能圖示
+    └── logo128.png          # 擴充功能圖示
 ```
 
 ## 📖 使用方法

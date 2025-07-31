@@ -19,6 +19,8 @@ let lastMouseMoveTime = 0;
 let mouseMoveThrottleDelay = 50; // 減少到50ms，讓反應更靈敏
 let disabledElements: HTMLElement[] = []; // 儲存被禁用的元素
 
+
+
 // 切換查閱模式
 function toggleReadingMode(): void {
     isReadingMode = !isReadingMode;
@@ -63,6 +65,8 @@ function clearAllTimersAndState(): void {
     lastMouseEvent = null;
     currentHighlight = null;
     lockedHighlight = null;
+    
+
 }
 
 // 清除所有高亮狀態（包括鎖定狀態）
@@ -315,6 +319,13 @@ async function showWordTooltip(word: string, x: number, y: number): Promise<void
     const tooltip = document.createElement('div');
     tooltip.className = 'lexitechly-tooltip';
     tooltip.innerHTML = `
+        <div class="lexitechly-tooltip-header">
+            <span class="lexitechly-tooltip-title">單字查詢</span>
+            <div class="lexitechly-tooltip-actions">
+                <button class="lexitechly-tooltip-vocabulary" title="查看單字列表">📚</button>
+                <button class="lexitechly-tooltip-close" title="關閉字卡">×</button>
+            </div>
+        </div>
         <div class="lexitechly-tooltip-content">
             <div class="lexitechly-loading">
                 <div class="lexitechly-spinner"></div>
@@ -331,6 +342,15 @@ async function showWordTooltip(word: string, x: number, y: number): Promise<void
 
     document.body.appendChild(tooltip);
     currentTooltip = tooltip;
+
+    // 添加拖拉功能
+    addTooltipDragFunctionality(tooltip);
+
+    // 添加關閉按鈕功能
+    addTooltipCloseButton(tooltip);
+
+    // 添加跳轉到單字列表功能
+    addTooltipVocabularyButton(tooltip);
 
     // 查詢單字詳情
     try {
@@ -419,6 +439,12 @@ function updateTooltipContent(tooltip: HTMLElement, word: string, content: strin
         tooltip.style.visibility = 'visible';
         tooltip.style.opacity = '1';
     }
+
+    // 添加關閉按鈕事件監聽器
+    addTooltipCloseButton(tooltip);
+
+    // 添加跳轉到單字列表按鈕事件監聽器
+    addTooltipVocabularyButton(tooltip);
 }
 
 // 移除提示
@@ -447,6 +473,21 @@ function handleDocumentClick(event: MouseEvent): void {
 
     // 如果點選在鎖定的高亮上，不處理
     if (target.closest('[data-lexitechly-locked]')) {
+        return;
+    }
+
+    // 如果點選在關閉按鈕上，不處理（讓關閉按鈕自己處理）
+    if (target.classList.contains('lexitechly-tooltip-close')) {
+        return;
+    }
+
+    // 如果點選在跳轉按鈕上，不處理（讓跳轉按鈕自己處理）
+    if (target.classList.contains('lexitechly-tooltip-vocabulary')) {
+        return;
+    }
+
+    // 如果點選在例句標題上，不處理（讓播放按鈕自己處理）
+    if (target.closest('.example-header')) {
         return;
     }
 
@@ -575,3 +616,259 @@ export { highlightWord, removeWordHighlight, highlightWordInElement };
 
 // 查閱模式主要功能
 export { initReadingMode };
+
+// 為漂浮卡片添加拖拉功能
+function addTooltipDragFunctionality(tooltip: HTMLElement): void {
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialLeft = 0;
+    let initialTop = 0;
+    let dragDistance = 0;
+    const DRAG_THRESHOLD = 5; // 拖拉閾值，超過此距離才算是拖拉
+
+    // 滑鼠按下事件
+    function handleMouseDown(e: MouseEvent): void {
+        // 檢查是否點擊在播放按鈕、跳轉按鈕或關閉按鈕上，如果是則不啟動拖拉
+        const target = e.target as HTMLElement;
+        if (target.closest('.speak-btn') || 
+            target.closest('.lexitechly-tooltip-vocabulary') || 
+            target.closest('.lexitechly-tooltip-close') ||
+            target.closest('.example-header')) {
+            return;
+        }
+
+        // 防止拖拉時觸發其他事件
+        e.preventDefault();
+        e.stopPropagation();
+
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        dragDistance = 0; // 重置拖拉距離
+        
+        // 獲取當前位置
+        const rect = tooltip.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        // 添加拖拉樣式
+        tooltip.classList.add('dragging');
+        
+        // 防止文字選擇
+        document.body.style.userSelect = 'none';
+        
+        // 改變游標樣式
+        document.body.style.cursor = 'grabbing';
+        
+        // 添加觸覺反饋（如果支援）
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+        
+        // 顯示提示訊息
+        showToast('按 ESC 鍵取消拖拉', false, false, false);
+
+        // 添加事件監聽器
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('keydown', handleKeyDown);
+    }
+
+    // 滑鼠移動事件
+    function handleMouseMove(e: MouseEvent): void {
+        if (!isDragging) return;
+        
+        // 防止頁面滾動
+        e.preventDefault();
+
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        
+        // 計算拖拉距離
+        dragDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        // 計算新位置
+        const newLeft = initialLeft + deltaX;
+        const newTop = initialTop + deltaY;
+
+        // 確保卡片不會完全移出視窗
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        let finalLeft = newLeft;
+        let finalTop = newTop;
+
+        // 限制左邊界
+        if (finalLeft < 0) finalLeft = 0;
+        if (finalLeft + tooltipRect.width > windowWidth) {
+            finalLeft = windowWidth - tooltipRect.width;
+        }
+
+        // 限制上邊界
+        if (finalTop < 0) finalTop = 0;
+        if (finalTop + tooltipRect.height > windowHeight) {
+            finalTop = windowHeight - tooltipRect.height;
+        }
+        
+        // 添加邊界視覺提示
+        if (finalLeft === 0 || finalLeft + tooltipRect.width === windowWidth ||
+            finalTop === 0 || finalTop + tooltipRect.height === windowHeight) {
+            tooltip.style.border = '2px solid #ff6b6b';
+        } else {
+            tooltip.style.border = '1px solid var(--lexitechly-border)';
+        }
+
+        // 更新位置
+        tooltip.style.left = `${finalLeft}px`;
+        tooltip.style.top = `${finalTop}px`;
+    }
+
+    // 鍵盤事件處理
+    function handleKeyDown(e: KeyboardEvent): void {
+        if (e.key === 'Escape' && isDragging) {
+            // 取消拖拉，恢復原始位置
+            tooltip.style.left = `${initialLeft}px`;
+            tooltip.style.top = `${initialTop}px`;
+            
+            isDragging = false;
+            dragDistance = 0;
+            
+            // 恢復樣式
+            tooltip.classList.remove('dragging');
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+            
+            // 恢復邊框樣式
+            tooltip.style.border = '1px solid var(--lexitechly-border)';
+            
+            // 移除事件監聽器
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('keydown', handleKeyDown);
+        }
+    }
+
+    // 滑鼠釋放事件
+    function handleMouseUp(e: MouseEvent): void {
+        if (!isDragging) return;
+        
+        // 防止事件傳播
+        e.preventDefault();
+        e.stopPropagation();
+
+        isDragging = false;
+        dragDistance = 0; // 重置拖拉距離
+
+        // 恢復樣式
+        tooltip.classList.remove('dragging');
+        
+        // 恢復文字選擇
+        document.body.style.userSelect = '';
+        
+        // 恢復游標樣式
+        document.body.style.cursor = '';
+        
+        // 恢復邊框樣式
+        tooltip.style.border = '1px solid var(--lexitechly-border)';
+        
+        // 添加觸覺反饋（如果支援）
+        if (navigator.vibrate) {
+            navigator.vibrate(25);
+        }
+
+        // 移除事件監聽器
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('keydown', handleKeyDown);
+    }
+
+    // 添加拖拉事件監聽器（在整個字卡和標題欄上）
+    tooltip.addEventListener('mousedown', handleMouseDown as EventListener);
+    
+    // 特別為標題欄添加拖拉事件（確保標題欄也可以拖拉）
+    const header = tooltip.querySelector('.lexitechly-tooltip-header');
+    if (header) {
+        header.addEventListener('mousedown', handleMouseDown as EventListener);
+    }
+
+    // 為例句標題添加拖拉事件（但排除播放按鈕）
+    const exampleHeaders = tooltip.querySelectorAll('.example-header');
+    exampleHeaders.forEach(exampleHeader => {
+        exampleHeader.addEventListener('mousedown', (e: Event) => {
+            const mouseEvent = e as MouseEvent;
+            const target = mouseEvent.target as HTMLElement;
+            if (!target.closest('.speak-btn')) {
+                handleMouseDown(mouseEvent);
+            }
+        });
+    });
+
+    // 防止拖拉時觸發點擊事件
+    tooltip.addEventListener('click', (e) => {
+        if (isDragging && dragDistance > DRAG_THRESHOLD) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+}
+
+// 添加字卡關閉按鈕功能
+function addTooltipCloseButton(tooltip: HTMLElement): void {
+    const closeButton = tooltip.querySelector('.lexitechly-tooltip-close');
+    if (closeButton) {
+        // 移除舊的事件監聽器（如果有的話）
+        closeButton.removeEventListener('click', handleTooltipClose as EventListener);
+        // 添加新的事件監聽器
+        closeButton.addEventListener('click', handleTooltipClose as EventListener);
+    }
+}
+
+// 處理字卡關閉
+function handleTooltipClose(event: Event): void {
+    const mouseEvent = event as MouseEvent;
+    mouseEvent.preventDefault();
+    mouseEvent.stopPropagation();
+
+    // 清除鎖定狀態的高亮
+    clearLockedHighlight();
+
+    // 清除選取狀態
+    removeWordHighlight();
+    currentWord = '';
+    currentElement = null;
+    lastMouseEvent = null;
+    currentHighlight = null;
+
+    // 顯示關閉通知
+    showToast('📖 字卡已關閉', false, false, false);
+}
+
+// 添加跳轉到單字列表按鈕功能
+function addTooltipVocabularyButton(tooltip: HTMLElement): void {
+    const vocabularyButton = tooltip.querySelector('.lexitechly-tooltip-vocabulary');
+    if (vocabularyButton) {
+        // 移除舊的事件監聽器（如果有的話）
+        vocabularyButton.removeEventListener('click', handleTooltipVocabulary as EventListener);
+        // 添加新的事件監聽器
+        vocabularyButton.addEventListener('click', handleTooltipVocabulary as EventListener);
+    }
+}
+
+// 處理跳轉到單字列表
+function handleTooltipVocabulary(event: Event): void {
+    const mouseEvent = event as MouseEvent;
+    mouseEvent.preventDefault();
+    mouseEvent.stopPropagation();
+
+    // 打開單字列表頁面
+    chrome.runtime.sendMessage({ action: 'openVocabularyPage' }, (response) => {
+        if (chrome.runtime.lastError) {
+            console.error('無法打開單字列表:', chrome.runtime.lastError);
+            showToast('❌ 無法打開單字列表', false, true, false);
+        } else {
+            showToast('📚 正在打開單字列表...', false, false, true);
+        }
+    });
+}

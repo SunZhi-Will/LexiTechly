@@ -108,21 +108,22 @@ export function injectStyles(): void {
 
         /* 播放按鈕樣式 */
 .speak-btn {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    padding: 0;
-    margin: 0;
-    border: none;
-    background-color: #e8f0fe;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background-color: #e8f0fe !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
 }
 
 .speak-btn.elegant {
@@ -263,74 +264,227 @@ export function injectStyles(): void {
             color: var(--lexitechly-text-primary) !important;
             border: 1px solid var(--lexitechly-border) !important;
             border-radius: 8px !important;
-            padding: 12px !important;
+            padding: 0 !important;
             box-shadow: 0 4px 12px var(--lexitechly-shadow) !important;
             z-index: 99999 !important;
             font-family: Arial, sans-serif !important;
             font-size: 14px !important;
-            max-width: 300px !important;
-            min-width: 200px !important;
+            max-width: 350px !important;
+            min-width: 250px !important;
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
+            cursor: move !important;
+            user-select: none !important;
+            transition: opacity 0.3s, box-shadow 0.3s !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
         }
+
+        /* 字卡標題欄樣式 */
+        .lexitechly-tooltip-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 8px 12px !important;
+            border-bottom: 1px solid var(--lexitechly-border) !important;
+            background: var(--lexitechly-bg-secondary) !important;
+            border-radius: 8px 8px 0 0 !important;
+            cursor: move !important;
+        }
+
+        /* 字卡操作按鈕容器 */
+        .lexitechly-tooltip-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+
+        .lexitechly-tooltip-title {
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            color: var(--lexitechly-text-secondary) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+        }
+
+        /* 關閉按鈕樣式 */
+        .lexitechly-tooltip-close {
+            width: 20px !important;
+            height: 20px !important;
+            border: none !important;
+            background: transparent !important;
+            color: var(--lexitechly-text-muted) !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 50% !important;
+            transition: all 0.2s ease !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            line-height: 1 !important;
+        }
+
+        .lexitechly-tooltip-close:hover {
+            background: var(--lexitechly-bg-secondary) !important;
+            color: var(--lexitechly-text-primary) !important;
+            transform: scale(1.1) !important;
+        }
+
+        .lexitechly-tooltip-close:active {
+            transform: scale(0.95) !important;
+        }
+
+        /* 跳轉到單字列表按鈕樣式 */
+        .lexitechly-tooltip-vocabulary {
+            width: 20px !important;
+            height: 20px !important;
+            border: none !important;
+            background: transparent !important;
+            color: var(--lexitechly-text-muted) !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 50% !important;
+            transition: all 0.2s ease !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            line-height: 1 !important;
+        }
+
+        .lexitechly-tooltip-vocabulary:hover {
+            background: var(--lexitechly-bg-secondary) !important;
+            color: var(--lexitechly-text-primary) !important;
+            transform: scale(1.1) !important;
+        }
+
+        .lexitechly-tooltip-vocabulary:active {
+            transform: scale(0.95) !important;
+        }
+
+        /* 拖拉時的樣式 */
+        .lexitechly-tooltip.dragging {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+            opacity: 0.95 !important;
+            transition: none !important;
+            transform: scale(1.02) !important;
+            z-index: 100000 !important;
+            filter: brightness(1.1) !important;
+        }
+
+
+
+
 
         .lexitechly-tooltip-content {
             word-wrap: break-word !important;
             color: var(--lexitechly-text-primary) !important;
             width: 100% !important;
             display: block !important;
+            padding: 12px !important;
+            box-sizing: border-box !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
         }
 
         /* 單字資訊樣式 */
         .word-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--lexitechly-border);
-            padding-bottom: 8px;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-bottom: 12px !important;
+            border-bottom: 1px solid var(--lexitechly-border) !important;
+            padding-bottom: 8px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         .word-title {
-            font-size: 18px;
+            font-size: 16px !important;
             color: var(--lexitechly-text-primary) !important;
-            text-transform: capitalize;
+            text-transform: capitalize !important;
+            flex: 1 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        /* 單字標題和播放按鈕容器 */
+        .word-title-container {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex: 1 !important;
+            min-width: 0 !important;
         }
 
         .word-level {
-            background-color: #4F46E5;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
+            background-color: #4F46E5 !important;
+            color: white !important;
+            padding: 2px 8px !important;
+            border-radius: 12px !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+            margin-left: 8px !important;
         }
 
         .word-info > div {
-            margin-bottom: 8px;
-            line-height: 1.5;
+            margin-bottom: 8px !important;
+            line-height: 1.5 !important;
             color: var(--lexitechly-text-secondary) !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
         }
 
         .word-info > div:last-child {
-            margin-bottom: 0;
+            margin-bottom: 0 !important;
         }
 
         .translation {
             color: var(--lexitechly-text-secondary) !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         .part-of-speech {
             color: var(--lexitechly-text-muted) !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         .example {
             color: var(--lexitechly-text-secondary) !important;
             background-color: var(--lexitechly-bg-secondary) !important;
-            padding: 8px;
-            border-radius: 6px;
-            border-left: 3px solid #4F46E5;
+            padding: 8px !important;
+            border-radius: 6px !important;
+            border-left: 3px solid #4F46E5 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            margin: 0 !important;
+        }
+
+        /* 例句標題容器 */
+        .example-header {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 4px !important;
+            margin-bottom: 4px !important;
+        }
+
+        .example-header strong {
+            flex: 1 !important;
+            margin-right: 4px !important;
         }
 
         .example em {

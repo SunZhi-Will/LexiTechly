@@ -25,7 +25,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
 
         // 使用 PNG 圖片作為 logo
         const logoImg = document.createElement('img');
-        logoImg.src = chrome.runtime.getURL('images/icon128.png');
+        logoImg.src = chrome.runtime.getURL('images/logo128.png');
         logoImg.style.width = '24px'; // 縮小圖示
         logoImg.style.height = '24px'; // 縮小圖示
         logoImg.style.objectFit = 'contain';

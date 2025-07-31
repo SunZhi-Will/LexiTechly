@@ -2,7 +2,7 @@
 
 # LexiTechly
 
-![LexiTechly Logo](logo.png)
+![LexiTechly Logo](src/assets/images/logo.png)
 
 🔍 An intelligent Chrome extension for English content analysis (TypeScript Edition)
 
@@ -165,7 +165,7 @@ dist/
 ├── libs/
 │   └── marked.min.js        # Markdown parsing library
 └── images/
-    └── icon128.png          # Extension icon
+    └── logo128.png          # Extension icon
 ```
 
 ## 📖 How to Use

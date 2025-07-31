@@ -741,4 +741,18 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
         console.error('初始化失敗:', error);
         UI.showError('初始化失敗，請確認頁面已載入完成');
     }
+});
+
+// 監聽來自 content script 的消息
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'openVocabularyPage') {
+        // 切換到單字列表頁面
+        const vocabularyTab = document.querySelector('[data-page="vocabulary-page"]') as HTMLElement;
+        if (vocabularyTab) {
+            vocabularyTab.click();
+            // 確保單字列表是最新的
+            updateVocabularyUI();
+        }
+        sendResponse({ success: true });
+    }
 }); 
