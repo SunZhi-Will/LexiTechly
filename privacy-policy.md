@@ -64,7 +64,7 @@ The extension requests the following permissions:
 ## Third-Party Services
 
 - Google Gemini API: For AI analysis and conversation features
-- Speechify API: Provides word and sentence audio playback
+- Google Gemini API: Provides word and sentence audio playback
 - API Keys are provided by users and we do not store or share them
 
 ## Children's Privacy
@@ -144,7 +144,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 ## 第三方服務
 
 - Google Gemini API：用於 AI 分析與對話功能
-- Speechify API：提供單字和例句的語音播放
+- Google Gemini API：提供單字和例句的語音播放
 - API Key 由用戶自行提供，我們不會存儲或分享該金鑰
 
 ## 兒童隱私

@@ -4,7 +4,6 @@
 export class SettingsStorage {
   // API Key 儲存鍵名
   private readonly GEMINI_API_KEY = 'apiKey';
-  private readonly SPEECHIFY_API_KEY = 'speechifyApiKey';
   
   // 快取期限（毫秒）
   private readonly CACHE_EXPIRATION = 30 * 24 * 60 * 60 * 1000; // 30天
@@ -34,30 +33,7 @@ export class SettingsStorage {
     }
   }
   
-  /**
-   * 獲取 Speechify API Key
-   */
-  async getSpeechifyApiKey(): Promise<string | null> {
-    try {
-      const result = await chrome.storage.local.get(this.SPEECHIFY_API_KEY);
-      return result[this.SPEECHIFY_API_KEY] || null;
-    } catch (error) {
-      console.error('無法獲取 Speechify API Key:', error);
-      return null;
-    }
-  }
-  
-  /**
-   * 保存 Speechify API Key
-   */
-  async saveSpeechifyApiKey(apiKey: string): Promise<void> {
-    try {
-      await chrome.storage.local.set({ [this.SPEECHIFY_API_KEY]: apiKey });
-    } catch (error) {
-      console.error('無法保存 Speechify API Key:', error);
-      throw error;
-    }
-  }
+
   
   /**
    * 獲取儲存容量限制（以字節為單位）

@@ -2,6 +2,8 @@
 
 # LexiTechly
 
+![LexiTechly Logo](logo.png)
+
 🔍 An intelligent Chrome extension for English content analysis (TypeScript Edition)
 
 [![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
@@ -32,7 +34,7 @@
   - Custom confirmation dialogs
   - Smooth loading animations
 - 🌙 Complete Dark Mode Support
-- 🔊 High-quality Audio Playback (Speechify API)
+- 🔊 High-quality Audio Playback (Gemini API)
 - 💾 Smart Storage Management
   - Configurable storage limits
   - Detailed usage statistics
@@ -130,10 +132,7 @@ After building, the `dist/` directory will contain all necessary extension files
    - Click "Create API Key"
    - Copy the generated API Key
 
-2. **Get Speechify API Key (Optional)**
-   - Visit [Speechify Console](https://console.sws.speechify.com/tts)
-   - Sign in to your account
-   - Copy the generated API Key
+
 
 3. **Configure API Keys in Extension**
    - Click the LexiTechly icon in the browser toolbar
@@ -173,7 +172,6 @@ dist/
 
 ### 1. Get API Keys
 - **Gemini API**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-- **Speechify API** (Optional): Visit [Speechify Console](https://console.sws.speechify.com/tts)
 
 ### 2. Set Up API Keys
 - Click the extension icon
@@ -277,7 +275,7 @@ dist/
 - 🌐 English content analysis only
 - 🔑 Valid Gemini API Key required
 - 🌟 Stable internet connection recommended
-- 📱 Speechify API is optional
+
 - 💾 Recommend setting appropriate storage limits
 
 ## 🔮 Future Development
@@ -306,8 +304,8 @@ dist/
 
 **Q: Word pronunciation not working**
 - Check if browser allows audio playback
-- Ensure stable internet connection (requires Speechify API)
-- Verify Speechify API Key is configured (if using)
+- Ensure stable internet connection (requires Gemini API)
+- Verify Gemini API Key is configured
 
 **Q: Toast notifications or loading animations not displaying**
 - Refresh the page and try again

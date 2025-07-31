@@ -55,7 +55,7 @@ function syncButtonStates(text: string, isPlaying: boolean, isLoading: boolean =
 }
 
 /**
- * 語音播放功能 - 使用 Gemini API 優先，然後是 Speechify，最後是瀏覽器內建 TTS
+ * 語音播放功能 - 使用 Gemini API 優先，失敗時使用瀏覽器內建 TTS
  * @param text 要播放的文字
  * @param button 播放按鈕元素
  */
@@ -176,56 +176,13 @@ async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button
                     return;
                 }
             } catch (geminiError) {
-                console.warn('Gemini 語音 API 失敗，嘗試 Speechify:', geminiError);
+                console.warn('Gemini 語音 API 失敗，使用瀏覽器內建語音:', geminiError);
             }
         }
 
-        // 嘗試 Speechify API
-        try {
-            const { speechifyApiKey }: { speechifyApiKey?: string } = await chrome.storage.local.get('speechifyApiKey');
-            if (!speechifyApiKey) {
-                throw new Error('未設定任何語音 API Key');
-            }
-
-            const response = await fetch('https://api.sws.speechify.com/v1/audio/speech', {
-                method: 'POST',
-                headers: {
-                    'accept': '*/*',
-                    'content-type': 'application/json',
-                    'Authorization': `Bearer ${speechifyApiKey}`
-                },
-                body: JSON.stringify({
-                    voice_id: 'henry',
-                    input: text,
-                    output_format: 'mp3'
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Speechify API 請求失敗');
-            }
-
-            const data = await response.json();
-            if (!data.audio_data) {
-                throw new Error('未收到音訊資料');
-            }
-
-            const audioBlob = await fetch(`data:audio/mp3;base64,${data.audio_data}`).then(r => r.blob());
-            const audioUrl = URL.createObjectURL(audioBlob);
-            audioCache[text] = audioUrl;
-            currentAudio = new Audio(audioUrl);
-
-            const cacheSuccess = await cacheAudioData(text, data.audio_data);
-            if (!cacheSuccess) {
-                console.warn('儲存空間不足，語音將不會被快取');
-            }
-            
-            await setupAndPlayAudio(currentAudio, speed, text);
-            return;
-        } catch (speechifyError) {
-            console.warn('Speechify API 失敗，使用瀏覽器內建語音:', speechifyError);
-            await fallbackSpeak(text, text, speed);
-        }
+        // 如果 Gemini API 失敗，使用瀏覽器內建語音
+        console.warn('Gemini 語音 API 失敗，使用瀏覽器內建語音');
+        await fallbackSpeak(text, text, speed);
     } catch (error) {
         throw error;
     }

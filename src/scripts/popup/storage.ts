@@ -99,7 +99,6 @@ export async function updateStorageUsage(): Promise<void> {
             getSize(data.audioCache || {}) +
             getSize({
                 apiKey: data.apiKey || '',
-                speechifyApiKey: data.speechifyApiKey || '',
                 darkMode: data.darkMode || false,
                 storageLimit: data.storageLimit || 10
             });

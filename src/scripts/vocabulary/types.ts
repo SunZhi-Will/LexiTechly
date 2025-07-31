@@ -37,7 +37,6 @@ export interface StorageData {
     savedChat?: any[];
     storageLimit?: number;
     apiKey?: string;
-    speechifyApiKey?: string;
 }
 
 // 過濾選項介面

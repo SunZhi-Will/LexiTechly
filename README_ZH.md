@@ -2,6 +2,8 @@
 
 # LexiTechly
 
+![LexiTechly Logo](logo.png)
+
 🔍 智慧英文內容分析擴充功能 (TypeScript 版本)
 
 [![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
@@ -32,7 +34,7 @@
   - 自訂確認對話框
   - 流暢的載入動畫
 - 🌙 完整深色模式支援
-- 🔊 高品質語音播放（Speechify API）
+- 🔊 高品質語音播放（Gemini API）
 - 💾 智慧儲存空間管理
   - 可設定儲存限制
   - 詳細使用量統計
@@ -130,10 +132,7 @@ npm run build  # 建置擴充功能
    - 點選「Create API Key」
    - 複製產生的 API Key
 
-2. **取得 Speechify API Key（可選）**
-   - 前往 [Speechify Console](https://console.sws.speechify.com/tts)
-   - 登入您的帳戶
-   - 複製產生的 API Key
+
 
 3. **在擴充功能中設定 API Keys**
    - 點選瀏覽器工具列的 LexiTechly 圖示
@@ -173,7 +172,6 @@ dist/
 
 ### 1. 取得 API Key
 - **Gemini API**: 前往 [Google AI Studio](https://makersuite.google.com/app/apikey)
-- **Speechify API** (可選): 前往 [Speechify Console](https://console.sws.speechify.com/tts)
 
 ### 2. 設定 API Key
 - 點擊擴充功能圖示
@@ -269,7 +267,7 @@ dist/
 - 🌐 僅支援英文內容分析
 - 🔑 需要有效的 Gemini API Key
 - 🌟 建議在網路連線穩定時使用
-- 📱 Speechify API 為可選功能
+
 - 💾 建議設定適當的儲存空間限制
 
 ## 🔮 未來發展
@@ -298,8 +296,8 @@ dist/
 
 **Q: 單字發音功能無法使用**
 - 檢查瀏覽器是否允許音訊播放
-- 確認網路連線正常（需要連接 Speechify API）
-- 確認已設定 Speechify API Key（如果使用的話）
+- 確認網路連線正常（需要連接 Gemini API）
+- 確認已設定 Gemini API Key
 
 **Q: Toast 通知或載入動畫無法顯示**
 - 重新整理頁面並重試

@@ -234,13 +234,10 @@ function initializeSettingsPage(): void {
         });
     }
 
-    // 載入 API Keys
-    chrome.storage.local.get(['apiKey', 'speechifyApiKey']).then(({ apiKey, speechifyApiKey }) => {
+    // 載入 API Key
+    chrome.storage.local.get(['apiKey']).then(({ apiKey }) => {
         const apiKeyInput = document.getElementById('gemini-api-key') as HTMLInputElement;
-        const speechifyApiKeyInput = document.getElementById('speechify-api-key') as HTMLInputElement;
-
         if (apiKeyInput && apiKey) apiKeyInput.value = apiKey;
-        if (speechifyApiKeyInput && speechifyApiKey) speechifyApiKeyInput.value = speechifyApiKey;
     });
 
     // API Key 儲存按鈕
@@ -261,22 +258,7 @@ function initializeSettingsPage(): void {
         });
     }
 
-    const saveSpeechifyApiKeyButton = document.getElementById('save-speechify-api-key');
-    if (saveSpeechifyApiKeyButton) {
-        saveSpeechifyApiKeyButton.addEventListener('click', () => {
-            const speechifyApiKeyInput = document.getElementById('speechify-api-key') as HTMLInputElement;
-            if (speechifyApiKeyInput) {
-                const speechifyApiKey = speechifyApiKeyInput.value.trim();
-                if (speechifyApiKey) {
-                    chrome.storage.local.set({ speechifyApiKey });
-                    UI.showToast('Speechify API Key 已儲存', false, false, true);
-                    Storage.updateStorageUsage();
-                } else {
-                    UI.showToast('請輸入有效的 API Key', false, true);
-                }
-            }
-        });
-    }
+
 
     // 儲存空間限制設定
     chrome.storage.local.get('storageLimit').then(({ storageLimit }) => {
@@ -376,15 +358,14 @@ function initializeClearDataFeature(): void {
                 async () => {
                     try {
                         // 備份重要設定
-                        const { apiKey, speechifyApiKey, darkMode, storageLimit } =
-                            await chrome.storage.local.get(['apiKey', 'speechifyApiKey', 'darkMode', 'storageLimit']);
+                        const { apiKey, darkMode, storageLimit } =
+                            await chrome.storage.local.get(['apiKey', 'darkMode', 'storageLimit']);
 
                         await chrome.storage.local.clear();
 
                         // 恢復設定
                         const settingsToRestore: any = {};
                         if (apiKey) settingsToRestore.apiKey = apiKey;
-                        if (speechifyApiKey) settingsToRestore.speechifyApiKey = speechifyApiKey;
                         if (darkMode !== undefined) settingsToRestore.darkMode = darkMode;
                         if (storageLimit !== undefined) settingsToRestore.storageLimit = storageLimit;
 

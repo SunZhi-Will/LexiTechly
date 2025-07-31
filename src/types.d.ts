@@ -31,7 +31,6 @@ interface ChatMessage {
 
 interface StorageData {
     apiKey?: string;
-    speechifyApiKey?: string;
     savedAnalysis?: AnalysisResult;
     savedChat?: ChatMessage[];
     savedUrl?: string;
