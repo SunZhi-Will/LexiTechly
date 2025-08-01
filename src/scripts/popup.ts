@@ -746,13 +746,79 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
 // 監聽來自 content script 的消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'openVocabularyPage') {
-        // 切換到單字列表頁面
-        const vocabularyTab = document.querySelector('[data-page="vocabulary-page"]') as HTMLElement;
-        if (vocabularyTab) {
-            vocabularyTab.click();
-            // 確保單字列表是最新的
-            updateVocabularyUI();
+        console.log('收到打開單字列表請求:', message);
+        
+        // 檢查是否來自 reading-mode
+        if (message.source === 'reading-mode') {
+            try {
+                console.log('準備打開單字列表頁面...');
+                
+                // 打開新標籤頁顯示單字列表
+                chrome.tabs.create({
+                    url: chrome.runtime.getURL('src/pages/vocabulary.html')
+                }, (tab) => {
+                    if (chrome.runtime.lastError) {
+                        console.error('無法打開單字列表頁面:', chrome.runtime.lastError);
+                        sendResponse({ 
+                            success: false, 
+                            error: chrome.runtime.lastError.message || '無法打開新標籤頁' 
+                        });
+                    } else {
+                        console.log('成功打開單字列表頁面:', tab);
+                        sendResponse({ success: true });
+                    }
+                });
+            } catch (error) {
+                console.error('打開單字列表頁面時發生錯誤:', error);
+                sendResponse({ 
+                    success: false, 
+                    error: error instanceof Error ? error.message : '未知錯誤' 
+                });
+            }
+            return true; // 保持訊息通道開啟
+        } else {
+            // 原有的 popup 內切換邏輯
+            const vocabularyTab = document.querySelector('[data-page="vocabulary-page"]') as HTMLElement;
+            if (vocabularyTab) {
+                vocabularyTab.click();
+                // 確保單字列表是最新的
+                updateVocabularyUI();
+            }
+            sendResponse({ success: true });
         }
-        sendResponse({ success: true });
+    } else if (message.action === 'switchToVocabularyPage') {
+        console.log('收到切換到單字列表請求:', message);
+        
+        // 檢查是否來自 reading-mode
+        if (message.source === 'reading-mode') {
+            try {
+                console.log('準備切換到單字列表頁面...');
+                
+                // 切換到單字列表頁面
+                const vocabularyTab = document.querySelector('[data-page="vocabulary-page"]') as HTMLElement;
+                if (vocabularyTab) {
+                    vocabularyTab.click();
+                    // 確保單字列表是最新的
+                    updateVocabularyUI();
+                    console.log('成功切換到單字列表頁面');
+                    sendResponse({ success: true });
+                } else {
+                    console.error('找不到單字列表頁面元素');
+                    sendResponse({ 
+                        success: false, 
+                        error: '找不到單字列表頁面元素' 
+                    });
+                }
+            } catch (error) {
+                console.error('切換到單字列表頁面時發生錯誤:', error);
+                sendResponse({ 
+                    success: false, 
+                    error: error instanceof Error ? error.message : '未知錯誤' 
+                });
+            }
+            return true; // 保持訊息通道開啟
+        } else {
+            sendResponse({ success: false, error: '無效的來源' });
+        }
     }
 }); 

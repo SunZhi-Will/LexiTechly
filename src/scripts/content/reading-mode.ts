@@ -862,13 +862,130 @@ function handleTooltipVocabulary(event: Event): void {
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
 
-    // 打開單字列表頁面
-    chrome.runtime.sendMessage({ action: 'openVocabularyPage' }, (response) => {
-        if (chrome.runtime.lastError) {
-            console.error('無法打開單字列表:', chrome.runtime.lastError);
-            showToast('❌ 無法打開單字列表', false, true, false);
-        } else {
-            showToast('📚 正在打開單字列表...', false, false, true);
-        }
-    });
+    // 檢查是否在支援的頁面上
+    const currentUrl = window.location.href;
+    const isGmail = currentUrl.includes('mail.google.com');
+    
+    console.log('準備打開單字列表，當前頁面:', currentUrl);
+    
+    if (isGmail) {
+        console.log('在 Gmail 頁面上，可能需要特殊處理');
+    }
+
+    // 檢查 chrome.runtime 是否可用
+    if (typeof chrome === 'undefined' || !chrome.runtime) {
+        console.error('chrome.runtime 不可用');
+        showToast('❌ 擴充功能環境不可用', false, true, false);
+        return;
+    }
+
+    // 獲取當前選中的單字
+    const currentWord = getCurrentWord();
+    console.log('當前選中的單字:', currentWord);
+
+    // 嘗試切換到單字列表頁面
+    try {
+        console.log('嘗試切換到單字列表頁面...');
+        
+        // 使用 Promise 包裝訊息發送，添加重試機制
+        const sendMessageWithRetry = async (retries = 3): Promise<any> => {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    return await new Promise((resolve, reject) => {
+                        // 設定超時時間
+                        const timeout = setTimeout(() => {
+                            reject(new Error('訊息發送超時'));
+                        }, 5000);
+
+                        // 嘗試發送到 background script
+                        chrome.runtime.sendMessage({ 
+                            action: 'switchToVocabularyPage',
+                            source: 'reading-mode',
+                            currentUrl: currentUrl,
+                            word: currentWord // 傳遞當前單字
+                        }, (response) => {
+                            clearTimeout(timeout);
+                            if (chrome.runtime.lastError) {
+                                console.warn('Background script 通訊失敗，嘗試直接發送到 popup:', chrome.runtime.lastError);
+                                // 如果 background script 不可用，嘗試直接發送到 popup
+                                chrome.runtime.sendMessage({ 
+                                    action: 'switchToVocabularyPage',
+                                    source: 'reading-mode',
+                                    currentUrl: currentUrl,
+                                    word: currentWord // 傳遞當前單字
+                                }, (popupResponse) => {
+                                    if (chrome.runtime.lastError) {
+                                        reject(chrome.runtime.lastError);
+                                    } else {
+                                        resolve(popupResponse);
+                                    }
+                                });
+                            } else {
+                                resolve(response);
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.warn(`第 ${i + 1} 次嘗試失敗:`, error);
+                    if (i === retries - 1) {
+                        throw error;
+                    }
+                    // 等待一段時間後重試
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                }
+            }
+        };
+
+        // 嘗試發送訊息
+        sendMessageWithRetry()
+            .then((response: any) => {
+                console.log('收到回應:', response);
+                if (response && response.success) {
+                    const wordText = currentWord ? `「${currentWord}」` : '';
+                    showToast(`📚 已在新標籤頁開啟單字列表${wordText}`, false, false, true);
+                } else if (response && response.error) {
+                    showToast(`❌ 無法打開單字列表: ${response.error}`, false, true, false);
+                } else {
+                    showToast('❌ 無法打開單字列表', false, true, false);
+                }
+            })
+            .catch((error: any) => {
+                console.error('無法切換到單字列表:', error);
+                const errorMessage = error.message || '未知錯誤';
+                
+                if (errorMessage.includes('Could not establish connection')) {
+                    // 針對 Gmail 的特殊處理
+                    if (isGmail) {
+                        showToast('❌ Gmail 頁面限制，正在嘗試直接開啟單字列表...', false, true, false);
+                    } else {
+                        showToast('❌ 連線問題，正在嘗試直接開啟單字列表...', false, true, false);
+                    }
+                } else if (errorMessage.includes('Receiving end does not exist')) {
+                    showToast('❌ 擴充功能未回應，正在嘗試直接開啟單字列表...', false, true, false);
+                } else if (errorMessage.includes('超時')) {
+                    showToast('❌ 連線超時，正在嘗試直接開啟單字列表...', false, true, false);
+                } else {
+                    showToast(`❌ 無法打開單字列表: ${errorMessage}`, false, true, false);
+                }
+            });
+    } catch (error) {
+        console.error('打開單字列表時發生錯誤:', error);
+        showToast('❌ 無法打開單字列表', false, true, false);
+    }
+}
+
+// 獲取當前選中的單字
+function getCurrentWord(): string {
+    // 如果有當前選中的單字，返回它
+    if (currentWord && currentWord.trim()) {
+        return currentWord.trim();
+    }
+    
+    // 如果沒有，嘗試從選取的文字中獲取
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim()) {
+        return selection.toString().trim();
+    }
+    
+    return '';
 }

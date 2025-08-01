@@ -16,7 +16,8 @@ export default defineConfig({
             input: {
                 'src/pages/vocabulary': resolve(__dirname, 'src/pages/vocabulary.html'),
                 'src/pages/popup': resolve(__dirname, 'src/pages/popup.html'),
-                'src/scripts/content': resolve(__dirname, 'src/scripts/content.ts')
+                'src/scripts/content': resolve(__dirname, 'src/scripts/content.ts'),
+                'src/scripts/background': resolve(__dirname, 'src/scripts/background.ts')
             },
             output: {
                 entryFileNames: '[name].js',
