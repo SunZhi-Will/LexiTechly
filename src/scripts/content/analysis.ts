@@ -39,7 +39,7 @@ export async function analyzeContent(content: string, apiKey: string): Promise<C
             };
         }
 
-        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
         const maxRetries = 3;
         let retryCount = 0;
         let lastError: Error | undefined;
@@ -232,7 +232,7 @@ export async function chatWithAI(
     history: Array<{ text: string; type: 'user' | 'ai' }> = []
 ): Promise<ChromeResponse> {
     try {
-        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
         // 建構對話歷史
         const conversationHistory = history.map(msg =>
@@ -310,7 +310,7 @@ export async function chatWithAI(
 // 分析頁面單字
 export async function analyzePageVocabulary(text: string, apiKey: string): Promise<ChromeResponse> {
     try {
-        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
         const prompt = `
         請分析以下英文文本中的重要單字，並提供詳細資訊。

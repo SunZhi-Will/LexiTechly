@@ -230,8 +230,8 @@ export async function textToSpeech(
   const pitch = options.pitch || 1.0;
   const temperature = options.temperature ?? 1;
 
-  // 使用較新的模型
-  const model = 'models/gemini-2.0-flash-live-001';
+  // 使用最新 Gemini 2.5 語音模型
+  const model = 'models/gemini-2.5-flash-live-001';
 
   // config 結構與 Bash/curl 一致
   const config = {

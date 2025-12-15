@@ -4,30 +4,22 @@ import { getSpeakButtonHTML, speakWord } from '../vocabulary/audio.js';
 
 // 查詢單字資訊
 export async function queryWordInfo(word: string, apiKey: string): Promise<{ html: string, wordData?: any }> {
-    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-    const prompt = `
-    請為英文單字 "${word}" 提供簡潔的學習資訊，以JSON格式回應：
-
+    const basePrompt = `
+    只回傳 JSON，描述英文單字 "${word}"：
     {
-        "word": "${word}",
-        "level": "CEFR等級",
-        "translation": "主要中文翻譯",
-        "partOfSpeech": "詞性",
-        "example": "簡短英文例句",
-        "exampleTranslation": "例句中文翻譯"
+      "word": "${word}",
+      "level": "CEFR等級(或專有名詞)",
+      "translation": "主要中文翻譯",
+      "partOfSpeech": "詞性",
+      "example": "簡短英文例句(<=15字)",
+      "exampleTranslation": "例句中文翻譯"
     }
-
-    要求：
-    1. 使用繁體中文
-    2. 不要包含任何音標
-    3. 例句要簡短實用（15字以內）
-    4. 如果是專有名詞，level 欄位填入「專有名詞」
-    5. 只回應純JSON格式，不要任何額外說明
-    6. 確保JSON格式正確，可以被解析
+    規則：繁體中文；無音標；確保 JSON 可解析；不要額外說明或 Markdown。
     `;
 
-    const requestBody = {
+    const buildRequest = (prompt: string, maxOutputTokens: number) => ({
         contents: [{
             role: "user",
             parts: [{ text: prompt }]
@@ -36,36 +28,55 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<{ htm
             temperature: 0.3,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 300
+            maxOutputTokens,
+            // 請求直接回傳 JSON，減少包裝文字造成解析失敗
+            responseMimeType: "application/json"
         }
-    };
-
-    const response = await fetch(`${API_URL}?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
     });
 
-    if (!response.ok) {
-        throw new Error('API request failed');
-    }
+    // 先嘗試主要請求，若失敗再用縮短提示重試
+    const tryRequest = async (prompt: string, maxTokens: number) => {
+        const response = await fetch(`${API_URL}?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(buildRequest(prompt, maxTokens))
+        });
 
-    const data = await response.json();
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
 
-    if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Invalid API response');
-    }
+        const data = await response.json();
+        const candidate = data?.candidates?.[0];
+        const firstTextPart = candidate?.content?.parts?.find((p: any) => typeof p?.text === 'string' && p.text.trim());
 
-    let result = data.candidates[0].content.parts[0].text.trim();
+        if (candidate?.finishReason === 'MAX_TOKENS') {
+            throw new Error('Model output truncated (MAX_TOKENS)');
+        }
+        if (!firstTextPart?.text) {
+            throw new Error('Invalid API response');
+        }
 
-    // 清理回應，移除可能的 markdown 標記
-    result = result.replace(/^```json\s*/i, '');
-    result = result.replace(/^```\s*/i, '');
-    result = result.replace(/\s*```$/i, '');
+        let result = firstTextPart.text.trim();
+
+        // 清理回應，移除可能的 markdown 標記
+        result = result.replace(/^```json\s*/i, '');
+        result = result.replace(/^```\s*/i, '');
+        result = result.replace(/\s*```$/i, '');
+
+        // 嘗試從文字中擷取第一段 JSON
+        const jsonMatch = result.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            result = jsonMatch[0];
+        }
+
+        const wordData = JSON.parse(result);
+        return { wordData, raw: result };
+    };
 
     try {
-        // 解析 JSON
-        const wordData = JSON.parse(result);
+        // 主請求：較高 token 上限，降低截斷風險
+        const { wordData } = await tryRequest(basePrompt, 900);
 
         // 生成自訂 HTML
         const html = `
@@ -122,15 +133,39 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<{ htm
 
         return { html, wordData };
 
-    } catch (parseError) {
-        // 如果解析失敗，返回簡單的錯誤 HTML
-        const errorHtml = `
-            <div class="lexitechly-error">
-                <strong>${word}</strong><br>
-                <span style="color: #EF4444;">解析回應失敗</span>
-            </div>
-        `;
-        return { html: errorHtml };
+    } catch (error) {
+        // 若主請求失敗，縮短提示再試一次
+        try {
+            const shortPrompt = `只回傳可解析的 JSON：{"word":"${word}","level":"","translation":"","partOfSpeech":"","example":"","exampleTranslation":""}`;
+            const { wordData } = await tryRequest(shortPrompt, 900);
+
+            const html = `
+                <div class="word-header">
+                    <div class="word-title-container">
+                        <strong class="word-title">${wordData.word}</strong>
+                    </div>
+                    <span class="word-level">${wordData.level}</span>
+                </div>
+                <div class="word-info">
+                    <div class="translation"><strong>中文：</strong>${wordData.translation}</div>
+                    <div class="part-of-speech"><strong>詞性：</strong>${wordData.partOfSpeech}</div>
+                    <div class="example">
+                        <strong>例句：</strong>${wordData.example}
+                        <em>${wordData.exampleTranslation}</em>
+                    </div>
+                </div>
+            `;
+            return { html, wordData };
+        } catch (retryError) {
+            const errorHtml = `
+                <div class="lexitechly-error">
+                    <strong>${word}</strong><br>
+                    <span style="color: #EF4444;">解析回應失敗，請稍後重試</span>
+                </div>
+            `;
+            console.error('word query failed:', error, retryError);
+            return { html: errorHtml };
+        }
     }
 }
 

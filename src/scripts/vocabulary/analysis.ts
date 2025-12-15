@@ -5,7 +5,7 @@ import { wordAnalysisCache, accumulatedVocabulary } from './storage.js';
 
 // AI 分析單字詳細資訊
 export async function analyzeWordDetails(word: string, apiKey: string): Promise<WordDetails> {
-    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
     const prompt = `
         分析英文單字 "${word}" 並提供以下資訊：

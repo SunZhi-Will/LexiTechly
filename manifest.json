@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "LexiTechly - 智慧英文內容分析",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "使用 Google Gemini AI 分析英文網頁內容，提供 CEFR 等級評估、單字解析、AI 互動對話與語音發音功能，提升您的英文閱讀與學習體驗！",
     "permissions": [
         "storage",

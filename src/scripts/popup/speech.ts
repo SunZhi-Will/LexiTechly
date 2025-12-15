@@ -55,7 +55,8 @@ export function initializeSpeechPage(): void {
             }
             
             // 直接從 Chrome Storage 獲取 API Key
-            const { apiKey } = await chrome.storage.local.get('apiKey');
+            const result = await chrome.storage.local.get('apiKey');
+            const apiKey = typeof result.apiKey === 'string' ? result.apiKey : null;
             if (!apiKey) {
                 showError('請先在設定頁面設定 API Key');
                 return;

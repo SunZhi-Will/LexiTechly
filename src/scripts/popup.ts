@@ -235,8 +235,9 @@ function initializeSettingsPage(): void {
     }
 
     // 載入 API Key
-    chrome.storage.local.get(['apiKey']).then(({ apiKey }) => {
+    chrome.storage.local.get(['apiKey']).then((result) => {
         const apiKeyInput = document.getElementById('gemini-api-key') as HTMLInputElement;
+        const apiKey = typeof result.apiKey === 'string' ? result.apiKey : null;
         if (apiKeyInput && apiKey) apiKeyInput.value = apiKey;
     });
 

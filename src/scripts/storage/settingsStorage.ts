@@ -14,7 +14,8 @@ export class SettingsStorage {
   async getGeminiApiKey(): Promise<string | null> {
     try {
       const result = await chrome.storage.local.get(this.GEMINI_API_KEY);
-      return result[this.GEMINI_API_KEY] || null;
+      const value = result[this.GEMINI_API_KEY];
+      return typeof value === 'string' ? value : null;
     } catch (error) {
       console.error('無法獲取 Gemini API Key:', error);
       return null;
@@ -41,7 +42,8 @@ export class SettingsStorage {
   async getStorageLimit(): Promise<number | null> {
     try {
       const result = await chrome.storage.local.get('storage_limit');
-      return result['storage_limit'] || null;
+      const value = result['storage_limit'];
+      return typeof value === 'number' ? value : null;
     } catch (error) {
       console.error('無法獲取儲存容量限制:', error);
       return null;
@@ -93,7 +95,11 @@ export class SettingsStorage {
     try {
       // 獲取現有的分析快取
       const result = await chrome.storage.local.get('page_analysis_cache');
-      const cache = result['page_analysis_cache'] || {};
+      const cacheValue = result['page_analysis_cache'];
+      const cache: Record<string, { data: any; timestamp: number }> = 
+        (cacheValue && typeof cacheValue === 'object' && !Array.isArray(cacheValue))
+          ? (cacheValue as Record<string, { data: any; timestamp: number }>)
+          : {};
       
       // 新增或更新當前頁面的分析結果
       cache[url] = {
@@ -118,7 +124,11 @@ export class SettingsStorage {
   async getPageAnalysis(url: string): Promise<any | null> {
     try {
       const result = await chrome.storage.local.get('page_analysis_cache');
-      const cache = result['page_analysis_cache'] || {};
+      const cacheValue = result['page_analysis_cache'];
+      const cache: Record<string, { data: any; timestamp: number }> = 
+        (cacheValue && typeof cacheValue === 'object' && !Array.isArray(cacheValue))
+          ? (cacheValue as Record<string, { data: any; timestamp: number }>)
+          : {};
       
       // 檢查是否有該 URL 的快取
       if (cache[url]) {

@@ -60,7 +60,8 @@ function setupFilterListeners(): void {
 function setupStorageListener(): void {
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'local' && changes.accumulatedVocabulary) {
-            allWords = changes.accumulatedVocabulary.newValue || [];
+            const newValue = changes.accumulatedVocabulary.newValue;
+            allWords = Array.isArray(newValue) ? newValue : [];
             updateDisplay();
         }
     });
