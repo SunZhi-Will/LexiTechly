@@ -6,6 +6,7 @@
 
 🔍 智慧英文內容分析擴充功能 (TypeScript 版本)
 
+[![版本](https://img.shields.io/badge/版本-1.3.1-blue.svg)](CHANGELOG.md)
 [![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-green.svg)](https://chrome.google.com/webstore)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
@@ -269,6 +270,15 @@ dist/
 - 🌟 建議在網路連線穩定時使用
 
 - 💾 建議設定適當的儲存空間限制
+
+## 📋 版本歷史
+
+詳細的版本歷史和更新說明請參考 [CHANGELOG.md](CHANGELOG.md)
+
+**目前版本: 1.3.1** (2025-12-17)
+- 修復 AI 回應的 JSON 解析錯誤
+- 改善 TypeScript 類型安全
+- 增強錯誤診斷功能
 
 ## 🔮 未來發展
 

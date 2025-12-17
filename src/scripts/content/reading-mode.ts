@@ -354,19 +354,18 @@ async function showWordTooltip(word: string, x: number, y: number): Promise<void
 
     // 查詢單字詳情
     try {
-        const result = await chrome.storage.local.get('apiKey');
-        const apiKey = typeof result.apiKey === 'string' ? result.apiKey : null;
+        const { apiKey } = await chrome.storage.local.get('apiKey');
         if (!apiKey) {
             updateTooltipContent(tooltip, word, '請先設定 API Key');
             return;
         }
 
-        const queryResult = await queryWordInfo(word, apiKey);
-        updateTooltipContent(tooltip, word, queryResult.html);
+        const result = await queryWordInfo(word, apiKey as string);
+        updateTooltipContent(tooltip, word, result.html);
 
         // 如果查詢成功且有單字資料，加入到單字列表
-        if (queryResult.wordData) {
-            await addWordToList(queryResult.wordData);
+        if (result.wordData) {
+            await addWordToList(result.wordData);
         }
     } catch (parseError) {
         // 如果解析失敗，返回簡單的錯誤 HTML
@@ -379,8 +378,9 @@ async function addWordToList(wordData: any): Promise<void> {
     try {
         // 獲取現有的單字列表（使用正確的 key）
         const result = await chrome.storage.local.get('accumulatedVocabulary');
-        const vocabularyValue = result['accumulatedVocabulary'];
-        const accumulatedVocabulary: any[] = Array.isArray(vocabularyValue) ? vocabularyValue : [];
+        const accumulatedVocabulary: any[] = Array.isArray(result.accumulatedVocabulary) 
+            ? result.accumulatedVocabulary 
+            : [];
 
         // 轉換資料格式以符合現有系統
         const newWord = {

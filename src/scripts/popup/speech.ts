@@ -55,14 +55,14 @@ export function initializeSpeechPage(): void {
             }
             
             // 直接從 Chrome Storage 獲取 API Key
-            const result = await chrome.storage.local.get('apiKey');
-            const apiKey = typeof result.apiKey === 'string' ? result.apiKey : null;
+            const { apiKey } = await chrome.storage.local.get('apiKey');
             if (!apiKey) {
                 showError('請先在設定頁面設定 API Key');
                 return;
             }
             
-            console.log('開始生成語音，API Key 前5位：', apiKey.substring(0, 5));
+            const apiKeyString = typeof apiKey === 'string' ? apiKey : '';
+            console.log('開始生成語音，API Key 前5位：', apiKeyString.substring(0, 5));
             
             // 設置語音選項
             const options: SpeechOptions = {
@@ -73,7 +73,7 @@ export function initializeSpeechPage(): void {
             };
             
             // 生成語音
-            const audioData = await textToSpeech('請念出這段話(不要說其他多餘的話):' + text, apiKey, options);
+            const audioData = await textToSpeech('請念出這段話(不要說其他多餘的話):' + text, apiKeyString, options);
             if (!audioData) {
                 showError('無法生成語音，請稍後再試');
                 return;

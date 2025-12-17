@@ -14,8 +14,8 @@ export class SettingsStorage {
   async getGeminiApiKey(): Promise<string | null> {
     try {
       const result = await chrome.storage.local.get(this.GEMINI_API_KEY);
-      const value = result[this.GEMINI_API_KEY];
-      return typeof value === 'string' ? value : null;
+      const apiKey = result[this.GEMINI_API_KEY];
+      return (typeof apiKey === 'string' ? apiKey : null);
     } catch (error) {
       console.error('無法獲取 Gemini API Key:', error);
       return null;
@@ -42,8 +42,8 @@ export class SettingsStorage {
   async getStorageLimit(): Promise<number | null> {
     try {
       const result = await chrome.storage.local.get('storage_limit');
-      const value = result['storage_limit'];
-      return typeof value === 'number' ? value : null;
+      const limit = result['storage_limit'];
+      return (typeof limit === 'number' ? limit : null);
     } catch (error) {
       console.error('無法獲取儲存容量限制:', error);
       return null;
@@ -95,10 +95,10 @@ export class SettingsStorage {
     try {
       // 獲取現有的分析快取
       const result = await chrome.storage.local.get('page_analysis_cache');
-      const cacheValue = result['page_analysis_cache'];
+      const cacheData = result['page_analysis_cache'];
       const cache: Record<string, { data: any; timestamp: number }> = 
-        (cacheValue && typeof cacheValue === 'object' && !Array.isArray(cacheValue))
-          ? (cacheValue as Record<string, { data: any; timestamp: number }>)
+        (cacheData && typeof cacheData === 'object' && !Array.isArray(cacheData)) 
+          ? cacheData as Record<string, { data: any; timestamp: number }> 
           : {};
       
       // 新增或更新當前頁面的分析結果
@@ -124,10 +124,10 @@ export class SettingsStorage {
   async getPageAnalysis(url: string): Promise<any | null> {
     try {
       const result = await chrome.storage.local.get('page_analysis_cache');
-      const cacheValue = result['page_analysis_cache'];
+      const cacheData = result['page_analysis_cache'];
       const cache: Record<string, { data: any; timestamp: number }> = 
-        (cacheValue && typeof cacheValue === 'object' && !Array.isArray(cacheValue))
-          ? (cacheValue as Record<string, { data: any; timestamp: number }>)
+        (cacheData && typeof cacheData === 'object' && !Array.isArray(cacheData)) 
+          ? cacheData as Record<string, { data: any; timestamp: number }> 
           : {};
       
       // 檢查是否有該 URL 的快取

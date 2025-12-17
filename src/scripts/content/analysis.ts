@@ -131,7 +131,7 @@ export async function analyzeContent(content: string, apiKey: string): Promise<C
                 // 清理和修復 JSON 格式
                 function cleanAndFixJSON(jsonString: string): string {
                     // 移除可能的 markdown 代碼塊標記
-                    jsonString = jsonString.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+                    jsonString = jsonString.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
 
                     // 移除開頭和結尾的非 JSON 字符
                     const jsonStart = jsonString.indexOf('{');
@@ -141,14 +141,132 @@ export async function analyzeContent(content: string, apiKey: string): Promise<C
                         jsonString = jsonString.substring(jsonStart, jsonEnd + 1);
                     }
 
-                    // 修復常見的 JSON 格式問題
-                    jsonString = jsonString
-                        .replace(/,\s*}/g, '}')  // 移除物件結尾的多餘逗號
-                        .replace(/,\s*]/g, ']')  // 移除陣列結尾的多餘逗號
-                        .replace(/'/g, '"')      // 將單引號替換為雙引號
-                        .replace(/(\w+):/g, '"$1":'); // 為屬性名添加雙引號
+                    // 將智慧引號替換為標準雙引號（在字串值之外）
+                    jsonString = jsonString.replace(/[""]/g, '"').replace(/['']/g, "'");
 
-                    return jsonString;
+                    // 修復常見的 JSON 格式問題（只處理結構性問題，不破壞字串內容）
+                    // 移除物件和陣列結尾的多餘逗號（使用更精確的正則）
+                    jsonString = jsonString
+                        .replace(/,(\s*[}\]])/g, '$1')  // 移除物件/陣列結尾的多餘逗號
+                        .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3'); // 為未加引號的屬性名添加雙引號
+
+                    // 處理未轉義的換行符（在字串值中）
+                    // 使用狀態機來正確處理字串內的內容
+                    let result = '';
+                    let inString = false;
+                    let escapeNext = false;
+
+                    for (let i = 0; i < jsonString.length; i++) {
+                        const char = jsonString[i];
+                        const prevChar = i > 0 ? jsonString[i - 1] : '';
+
+                        if (escapeNext) {
+                            result += char;
+                            escapeNext = false;
+                            continue;
+                        }
+
+                        if (char === '\\') {
+                            escapeNext = true;
+                            result += char;
+                            continue;
+                        }
+
+                        if (char === '"' && prevChar !== '\\') {
+                            inString = !inString;
+                            result += char;
+                            continue;
+                        }
+
+                        if (inString) {
+                            // 在字串內：轉義未轉義的換行符和製表符
+                            if (char === '\n' && prevChar !== '\\') {
+                                result += '\\n';
+                            } else if (char === '\r' && prevChar !== '\\') {
+                                result += '\\r';
+                            } else if (char === '\t' && prevChar !== '\\') {
+                                result += '\\t';
+                            } else {
+                                result += char;
+                            }
+                        } else {
+                            // 在字串外：正常處理
+                            result += char;
+                        }
+                    }
+
+                    // 修復陣列中缺少的逗號（在字串外）
+                    const fixArrayCommas = (input: string): string => {
+                        let output = '';
+                        let inString = false;
+                        let escapeNext = false;
+                        let arrayDepth = 0;
+                        let lastNonWhitespace = '';
+
+                        for (let i = 0; i < input.length; i++) {
+                            const char = input[i];
+                            const prevChar = i > 0 ? input[i - 1] : '';
+
+                            if (escapeNext) {
+                                output += char;
+                                escapeNext = false;
+                                if (!inString) {
+                                    lastNonWhitespace = char;
+                                }
+                                continue;
+                            }
+
+                            if (char === '\\') {
+                                escapeNext = true;
+                                output += char;
+                                continue;
+                            }
+
+                            if (char === '"' && prevChar !== '\\') {
+                                inString = !inString;
+                                output += char;
+                                if (!inString) {
+                                    lastNonWhitespace = '"';
+                                }
+                                continue;
+                            }
+
+                            if (inString) {
+                                output += char;
+                            } else {
+                                // 追蹤陣列深度
+                                if (char === '[') {
+                                    arrayDepth++;
+                                    output += char;
+                                    lastNonWhitespace = '[';
+                                } else if (char === ']') {
+                                    arrayDepth--;
+                                    output += char;
+                                    lastNonWhitespace = ']';
+                                } else if (/\s/.test(char)) {
+                                    // 空白字符
+                                    output += char;
+                                } else {
+                                    // 檢查是否需要在陣列元素之間添加逗號
+                                    if (arrayDepth > 0 && 
+                                        lastNonWhitespace !== ',' && 
+                                        lastNonWhitespace !== '[' &&
+                                        (lastNonWhitespace === '}' || lastNonWhitespace === ']' || lastNonWhitespace === '"') &&
+                                        (char === '{' || char === '[' || char === '"')) {
+                                        output += ',';
+                                    }
+                                    output += char;
+                                    lastNonWhitespace = char;
+                                }
+                            }
+                        }
+
+                        return output;
+                    };
+
+                    result = fixArrayCommas(result);
+
+                    return result;
                 }
 
                 try {
@@ -382,7 +500,7 @@ export async function analyzePageVocabulary(text: string, apiKey: string): Promi
         // 清理和修復 JSON 格式
         function cleanAndFixJSON(jsonString: string): string {
             // 移除可能的 markdown 代碼塊標記
-            jsonString = jsonString.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+            jsonString = jsonString.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
 
             // 移除開頭和結尾的非 JSON 字符
             const jsonStart = jsonString.indexOf('{');
@@ -392,14 +510,132 @@ export async function analyzePageVocabulary(text: string, apiKey: string): Promi
                 jsonString = jsonString.substring(jsonStart, jsonEnd + 1);
             }
 
-            // 修復常見的 JSON 格式問題
-            jsonString = jsonString
-                .replace(/,\s*}/g, '}')  // 移除物件結尾的多餘逗號
-                .replace(/,\s*]/g, ']')  // 移除陣列結尾的多餘逗號
-                .replace(/'/g, '"')      // 將單引號替換為雙引號
-                .replace(/(\w+):/g, '"$1":'); // 為屬性名添加雙引號
+            // 將智慧引號替換為標準雙引號（在字串值之外）
+            jsonString = jsonString.replace(/[""]/g, '"').replace(/['']/g, "'");
 
-            return jsonString;
+            // 修復常見的 JSON 格式問題（只處理結構性問題，不破壞字串內容）
+            // 移除物件和陣列結尾的多餘逗號（使用更精確的正則）
+            jsonString = jsonString
+                .replace(/,(\s*[}\]])/g, '$1')  // 移除物件/陣列結尾的多餘逗號
+                .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3'); // 為未加引號的屬性名添加雙引號
+
+            // 處理未轉義的換行符（在字串值中）
+            // 使用狀態機來正確處理字串內的內容
+            let result = '';
+            let inString = false;
+            let escapeNext = false;
+
+            for (let i = 0; i < jsonString.length; i++) {
+                const char = jsonString[i];
+                const prevChar = i > 0 ? jsonString[i - 1] : '';
+
+                if (escapeNext) {
+                    result += char;
+                    escapeNext = false;
+                    continue;
+                }
+
+                if (char === '\\') {
+                    escapeNext = true;
+                    result += char;
+                    continue;
+                }
+
+                if (char === '"' && prevChar !== '\\') {
+                    inString = !inString;
+                    result += char;
+                    continue;
+                }
+
+                if (inString) {
+                    // 在字串內：轉義未轉義的換行符和製表符
+                    if (char === '\n' && prevChar !== '\\') {
+                        result += '\\n';
+                    } else if (char === '\r' && prevChar !== '\\') {
+                        result += '\\r';
+                    } else if (char === '\t' && prevChar !== '\\') {
+                        result += '\\t';
+                    } else {
+                        result += char;
+                    }
+                } else {
+                    // 在字串外：正常處理
+                    result += char;
+                }
+            }
+
+            // 修復陣列中缺少的逗號（在字串外）
+            const fixArrayCommas = (input: string): string => {
+                let output = '';
+                let inString = false;
+                let escapeNext = false;
+                let arrayDepth = 0;
+                let lastNonWhitespace = '';
+
+                for (let i = 0; i < input.length; i++) {
+                    const char = input[i];
+                    const prevChar = i > 0 ? input[i - 1] : '';
+
+                    if (escapeNext) {
+                        output += char;
+                        escapeNext = false;
+                        if (!inString) {
+                            lastNonWhitespace = char;
+                        }
+                        continue;
+                    }
+
+                    if (char === '\\') {
+                        escapeNext = true;
+                        output += char;
+                        continue;
+                    }
+
+                    if (char === '"' && prevChar !== '\\') {
+                        inString = !inString;
+                        output += char;
+                        if (!inString) {
+                            lastNonWhitespace = '"';
+                        }
+                        continue;
+                    }
+
+                    if (inString) {
+                        output += char;
+                    } else {
+                        // 追蹤陣列深度
+                        if (char === '[') {
+                            arrayDepth++;
+                            output += char;
+                            lastNonWhitespace = '[';
+                        } else if (char === ']') {
+                            arrayDepth--;
+                            output += char;
+                            lastNonWhitespace = ']';
+                        } else if (/\s/.test(char)) {
+                            // 空白字符
+                            output += char;
+                        } else {
+                            // 檢查是否需要在陣列元素之間添加逗號
+                            if (arrayDepth > 0 && 
+                                lastNonWhitespace !== ',' && 
+                                lastNonWhitespace !== '[' &&
+                                (lastNonWhitespace === '}' || lastNonWhitespace === ']' || lastNonWhitespace === '"') &&
+                                (char === '{' || char === '[' || char === '"')) {
+                                output += ',';
+                            }
+                            output += char;
+                            lastNonWhitespace = char;
+                        }
+                    }
+                }
+
+                return output;
+            };
+
+            result = fixArrayCommas(result);
+
+            return result;
         }
 
         try {

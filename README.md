@@ -6,6 +6,7 @@
 
 🔍 An intelligent Chrome extension for English content analysis (TypeScript Edition)
 
+[![Version](https://img.shields.io/badge/Version-1.3.1-blue.svg)](CHANGELOG.md)
 [![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-green.svg)](https://chrome.google.com/webstore)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
@@ -277,6 +278,15 @@ dist/
 - 🌟 Stable internet connection recommended
 
 - 💾 Recommend setting appropriate storage limits
+
+## 📋 Version History
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history and update notes.
+
+**Current Version: 1.3.1** (2025-12-17)
+- Fixed JSON parsing errors in AI responses
+- Improved TypeScript type safety
+- Enhanced error diagnostics
 
 ## 🔮 Future Development
 

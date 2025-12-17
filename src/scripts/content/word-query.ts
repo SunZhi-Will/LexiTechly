@@ -34,6 +34,123 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<{ htm
         }
     });
 
+    // 嘗試從模型回應中擷取可解析的 JSON，並修復常見格式問題
+    const parseJsonSafely = (text: string) => {
+        // 移除可能包裹的 fenced code block
+        let cleaned = text.replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/\s*```$/i, '')
+            .trim();
+
+        // 將智慧引號替換為標準雙引號
+        cleaned = cleaned.replace(/[""]/g, '"').replace(/['']/g, "'");
+
+        // 修復未轉義的換行符和特殊字符（在字串值中）
+        const fixStringEscapes = (input: string): string => {
+            let result = '';
+            let inString = false;
+            let escapeNext = false;
+
+            for (let i = 0; i < input.length; i++) {
+                const char = input[i];
+                const prevChar = i > 0 ? input[i - 1] : '';
+
+                if (escapeNext) {
+                    result += char;
+                    escapeNext = false;
+                    continue;
+                }
+
+                if (char === '\\') {
+                    escapeNext = true;
+                    result += char;
+                    continue;
+                }
+
+                if (char === '"' && prevChar !== '\\') {
+                    inString = !inString;
+                    result += char;
+                    continue;
+                }
+
+                if (inString) {
+                    // 在字串內：轉義未轉義的換行符、製表符和回車符
+                    if (char === '\n' && prevChar !== '\\') {
+                        result += '\\n';
+                    } else if (char === '\r' && prevChar !== '\\') {
+                        result += '\\r';
+                    } else if (char === '\t' && prevChar !== '\\') {
+                        result += '\\t';
+                    } else if (char === '"' && prevChar !== '\\') {
+                        // 如果字串內有未轉義的雙引號，轉義它
+                        result += '\\"';
+                    } else {
+                        result += char;
+                    }
+                } else {
+                    // 在字串外：正常處理
+                    result += char;
+                }
+            }
+
+            return result;
+        };
+
+        cleaned = fixStringEscapes(cleaned);
+
+        // 移除物件和陣列結尾的多餘逗號
+        cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
+
+        // 嘗試找出第一段平衡的大括號內容
+        const extractBalancedJson = (input: string): string | null => {
+            let start = -1;
+            let depth = 0;
+
+            for (let i = 0; i < input.length; i++) {
+                const ch = input[i];
+                if (ch === '{') {
+                    if (depth === 0) start = i;
+                    depth++;
+                } else if (ch === '}') {
+                    if (depth > 0) depth--;
+                    if (depth === 0 && start !== -1) {
+                        return input.slice(start, i + 1);
+                    }
+                }
+            }
+            return null;
+        };
+
+        const candidates: string[] = [];
+
+        // 先收集平衡括號的 JSON 區塊
+        const balanced = extractBalancedJson(cleaned);
+        if (balanced) {
+            candidates.push(balanced);
+        }
+
+        // 若仍失敗，使用到最後一個右大括號的切片作為候選
+        const lastBrace = cleaned.lastIndexOf('}');
+        if (lastBrace !== -1) {
+            candidates.push(cleaned.slice(0, lastBrace + 1));
+        }
+
+        // 最後加入原始清理文本，確保有嘗試所有可能
+        candidates.push(cleaned);
+
+        let lastError: unknown;
+        for (const candidate of candidates) {
+            try {
+                const parsed = JSON.parse(candidate);
+                return { wordData: parsed, raw: candidate };
+            } catch (err) {
+                lastError = err;
+            }
+        }
+
+        throw lastError ?? new Error('Unable to parse JSON response');
+    };
+
     // 先嘗試主要請求，若失敗再用縮短提示重試
     const tryRequest = async (prompt: string, maxTokens: number) => {
         const response = await fetch(`${API_URL}?key=${apiKey}`, {
@@ -57,21 +174,8 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<{ htm
             throw new Error('Invalid API response');
         }
 
-        let result = firstTextPart.text.trim();
-
-        // 清理回應，移除可能的 markdown 標記
-        result = result.replace(/^```json\s*/i, '');
-        result = result.replace(/^```\s*/i, '');
-        result = result.replace(/\s*```$/i, '');
-
-        // 嘗試從文字中擷取第一段 JSON
-        const jsonMatch = result.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            result = jsonMatch[0];
-        }
-
-        const wordData = JSON.parse(result);
-        return { wordData, raw: result };
+        const result = firstTextPart.text.trim();
+        return parseJsonSafely(result);
     };
 
     try {
