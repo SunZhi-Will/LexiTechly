@@ -50,6 +50,7 @@ interface ChromeMessage {
 }
 
 interface ChromeResponse {
+    success?: boolean;
     error?: string;
     level?: AnalysisResult['level'];
     text?: string;

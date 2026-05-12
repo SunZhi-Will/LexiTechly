@@ -71,6 +71,7 @@ export interface ChromeMessage {
 }
 
 export interface ChromeResponse {
+    success?: boolean;
     error?: string | undefined;
     level?: AnalysisResult['level'] | undefined;
     text?: string | undefined;

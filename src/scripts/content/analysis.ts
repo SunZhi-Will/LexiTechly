@@ -27,6 +27,105 @@ export function checkIfEnglish(text: string): boolean {
     return englishRatio > 0.7;
 }
 
+/** MyMemory 英→繁中翻譯（免 API Key），供本地單字分析使用 */
+async function translateWithMyMemory(word: string): Promise<string> {
+    try {
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word.trim())}&langpair=en|zh-TW`;
+        const res = await fetch(url);
+        if (!res.ok) return '';
+        const data = await res.json();
+        const t = data?.responseData?.translatedText;
+        return typeof t === 'string' ? t.trim() : '';
+    } catch {
+        return '';
+    }
+}
+
+/** 本地內容難度分析（不需 API Key）：依字長、句長等簡單規則估計 CEFR */
+export function analyzeContentLocal(content: string): ChromeResponse {
+    if (!checkIfEnglish(content)) {
+        return {
+            error: '此頁面似乎不是英文內容。請選擇英文文章進行分析。',
+            level: undefined,
+            text: undefined
+        };
+    }
+
+    const words = content.split(/\s+/).filter(Boolean);
+    const sentences = content.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+    if (words.length === 0) {
+        return {
+            error: '無法取得足夠文字內容',
+            level: undefined,
+            text: undefined
+        };
+    }
+
+    const totalChars = words.join('').length;
+    const avgWordLength = totalChars / words.length;
+    const avgSentenceLength = sentences.length > 0 ? words.length / sentences.length : 0;
+    const uniqueRatio = new Set(words.map(w => w.toLowerCase())).size / words.length;
+
+    let level: CEFRLevel = 'B2';
+    if (avgWordLength < 4 && avgSentenceLength < 8) level = 'A1';
+    else if (avgWordLength < 4.5 && avgSentenceLength < 12) level = 'A2';
+    else if (avgWordLength < 5 && avgSentenceLength < 15) level = 'B1';
+    else if (avgWordLength < 5.5 && avgSentenceLength < 18) level = 'B2';
+    else if (avgWordLength < 6) level = 'C1';
+    else level = 'C2';
+
+    const vocabularyDesc = uniqueRatio > 0.5 ? '詞彙較豐富，用字多元' : '詞彙難度適中';
+    const grammarDesc = avgSentenceLength > 15 ? '句型較長、結構稍複雜' : '句型簡潔易懂';
+    const topicDesc = level.startsWith('C') ? '主題可能較專業或抽象' : '主題較易理解';
+
+    return {
+        level: {
+            level,
+            analysis: {
+                vocabulary: vocabularyDesc,
+                grammar: grammarDesc,
+                topic: topicDesc
+            }
+        },
+        text: content,
+        error: undefined
+    };
+}
+
+/** 本地單字提取與翻譯（不需 API Key）：擷取英文單字並以 MyMemory 翻譯 */
+export async function analyzePageVocabularyLocal(text: string): Promise<ChromeResponse> {
+    if (!checkIfEnglish(text)) {
+        return { error: '此頁面似乎不是英文內容', vocabulary: undefined };
+    }
+
+    const wordPattern = /\b[a-zA-Z]{4,}\b/g;
+    const count = new Map<string, number>();
+    let m;
+    while ((m = wordPattern.exec(text)) !== null) {
+        const w = m[0].toLowerCase();
+        count.set(w, (count.get(w) || 0) + 1);
+    }
+
+    const sorted = [...count.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([word]) => word);
+
+    const vocabulary: Word[] = [];
+    for (const word of sorted) {
+        const translation = await translateWithMyMemory(word);
+        vocabulary.push({
+            text: word,
+            level: 'B1',
+            translation: translation || '—',
+            example: '',
+            addedTime: Date.now()
+        });
+    }
+
+    return { vocabulary, error: undefined };
+}
+
 // 分析內容
 export async function analyzeContent(content: string, apiKey: string): Promise<ChromeResponse> {
     try {

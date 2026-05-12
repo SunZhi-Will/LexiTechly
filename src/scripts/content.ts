@@ -1,9 +1,9 @@
 /// <reference types="chrome"/>
 
 // 導入所有需要的模組
-import { initReadingMode } from './content/reading-mode';
+import { initReadingMode, lookupSelectionFromContextMenu } from './content/reading-mode';
 import { injectStyles } from './content/styles';
-import { getPageContent, analyzeContent, chatWithAI, analyzePageVocabulary } from './content/analysis';
+import { getPageContent, analyzeContent, chatWithAI, analyzePageVocabulary, analyzeContentLocal, analyzePageVocabularyLocal } from './content/analysis';
 
 // 等待 DOM 載入完成後再初始化
 function initialize() {
@@ -44,21 +44,18 @@ chrome.runtime.onMessage.addListener((
     if (request.action === 'analyze') {
         const content = getPageContent();
 
-        if (!request.apiKey) {
-            sendResponse({
-                error: 'API Key 未提供'
+        if (request.apiKey) {
+            analyzeContent(content, request.apiKey).then(result => {
+                sendResponse(result);
+            }).catch(error => {
+                console.error('LexiTechly: 分析失敗', error);
+                sendResponse({
+                    error: error.message || '分析失敗'
+                });
             });
-            return true;
+        } else {
+            sendResponse(analyzeContentLocal(content));
         }
-
-        analyzeContent(content, request.apiKey).then(result => {
-            sendResponse(result);
-        }).catch(error => {
-            console.error('LexiTechly: 分析失敗', error);
-            sendResponse({
-                error: error.message || '分析失敗'
-            });
-        });
         return true;
 
     } else if (request.action === 'chat') {
@@ -84,21 +81,22 @@ chrome.runtime.onMessage.addListener((
     } else if (request.action === 'analyzeVocabulary') {
         const content = getPageContent();
 
-        if (!request.apiKey) {
-            sendResponse({
-                error: 'API Key 未提供'
+        if (request.apiKey) {
+            analyzePageVocabulary(content, request.apiKey).then(result => {
+                sendResponse(result);
+            }).catch(error => {
+                console.error('LexiTechly: 單字分析失敗', error);
+                sendResponse({
+                    error: error.message || '單字分析失敗'
+                });
             });
-            return true;
+        } else {
+            analyzePageVocabularyLocal(content).then(result => sendResponse(result));
         }
-
-        analyzePageVocabulary(content, request.apiKey).then(result => {
-            sendResponse(result);
-        }).catch(error => {
-            console.error('LexiTechly: 單字分析失敗', error);
-            sendResponse({
-                error: error.message || '單字分析失敗'
-            });
-        });
+        return true;
+    } else if (request.action === 'lookupSelection') {
+        lookupSelectionFromContextMenu((request as any).text || '');
+        sendResponse({ success: true });
         return true;
     }
 

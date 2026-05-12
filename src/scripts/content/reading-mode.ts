@@ -2,7 +2,7 @@
 
 import { highlightWord, removeWordHighlight, highlightWordInElement } from './highlight';
 import { createFloatingLogo, updateLogoAppearance } from './floating-logo';
-import { queryWordInfo, checkPageTheme, updateTooltipTheme } from './word-query';
+import { queryWordInfo, queryWordInfoWithTranslationOnly, checkPageTheme, updateTooltipTheme } from './word-query';
 import { getWordFromElement, disableAllLinks, enableAllLinks } from './word-utils';
 
 // 查閱模式相關變數
@@ -18,8 +18,165 @@ let lockedHighlight: HTMLElement | null = null; // 鎖定狀態的高亮
 let lastMouseMoveTime = 0;
 let mouseMoveThrottleDelay = 50; // 減少到50ms，讓反應更靈敏
 let disabledElements: HTMLElement[] = []; // 儲存被禁用的元素
+let selectionLookupButton: HTMLElement | null = null; // 選取英文後的懸浮查詢按鈕
+let selectionButtonShowTime = 0; // 上次顯示按鈕的時間，用於避免 mouseup 後的 click 立刻關閉
 
+/** 判斷選取文字是否可查詢（含英文即可顯示懸浮按鈕） */
+function isEnglishText(text: string): boolean {
+    const t = text.trim();
+    if (!t || t.length > 500) return false; // 過長不顯示按鈕
+    return (t.match(/[a-zA-Z]/g) || []).length >= 1;
+}
 
+// 從選取範圍查詢（供右鍵選單或懸浮按鈕使用，閱讀模式開關狀態不影響）
+export async function lookupSelectionFromContextMenu(selectedText: string): Promise<void> {
+    const text = (selectedText || window.getSelection()?.toString() || '').trim();
+    if (!text) return;
+
+    let rect: DOMRect | null = null;
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+        try {
+            const range = selection.getRangeAt(0);
+            rect = range.getBoundingClientRect();
+        } catch {
+            rect = null;
+        }
+    }
+
+    const x = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+    const y = rect ? rect.top : window.innerHeight / 3;
+
+    await showWordTooltip(text, x, y);
+}
+
+/** 取得目前選取範圍的視窗座標（用於懸浮按鈕定位） */
+function getSelectionRect(): DOMRect | null {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    try {
+        return sel.getRangeAt(0).getBoundingClientRect();
+    } catch {
+        return null;
+    }
+}
+
+/** 顯示選取英文後的懸浮查詢按鈕（緊湊圖示，位於選取右下方） */
+function showSelectionLookupButton(rect: DOMRect | { left: number; top: number; right: number; bottom: number; width: number; height: number }, selectedText: string): void {
+    hideSelectionLookupButton();
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lexitechly-selection-lookup-btn';
+    btn.setAttribute('aria-label', '查詢選取內容');
+    // 翻譯／查詢圖示（小圓點、半透明）
+    btn.innerHTML = `
+        <svg class="lexitechly-selection-lookup-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+        </svg>
+    `;
+    btn.dataset.selectedText = selectedText;
+
+    const size = 24;
+    const gap = 6;
+    const maxLeft = window.innerWidth - size - 10;
+    const maxTop = window.innerHeight - size - 10;
+
+    // 強制轉成數字，避免 DOMRect 失效或 spread 後變成 NaN（會導致 style 沒有 left/top）
+    const r = {
+        left: Number(rect.left),
+        top: Number(rect.top),
+        right: Number(rect.right),
+        bottom: Number(rect.bottom),
+        width: Number(rect.width),
+        height: Number(rect.height)
+    };
+    // 選取右下方再往右一點（單字右下角外側）
+    let left = r.right + gap;
+    let top = r.bottom + gap;
+    if (!Number.isFinite(left)) left = 10;
+    if (!Number.isFinite(top)) top = 10;
+    left = Math.max(10, Math.min(left, maxLeft));
+    top = Math.max(10, Math.min(top, maxTop));
+
+    btn.style.position = 'fixed';
+    btn.style.left = left + 'px';
+    btn.style.top = top + 'px';
+    btn.style.width = size + 'px';
+    btn.style.height = size + 'px';
+    btn.style.zIndex = '99998';
+
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const text = btn.dataset.selectedText || '';
+        hideSelectionLookupButton();
+        if (text) lookupSelectionFromContextMenu(text);
+    });
+
+    document.body.appendChild(btn);
+    selectionLookupButton = btn;
+    selectionButtonShowTime = Date.now();
+}
+
+/** 隱藏選取查詢懸浮按鈕 */
+function hideSelectionLookupButton(): void {
+    if (selectionLookupButton && selectionLookupButton.parentNode) {
+        selectionLookupButton.parentNode.removeChild(selectionLookupButton);
+        selectionLookupButton = null;
+    }
+}
+
+/** 處理選取結束：若含英文則顯示懸浮查詢按鈕（延遲顯示，避免被同一次手勢的 click 關閉） */
+function handleSelectionEnd(): void {
+    const sel = window.getSelection();
+    const text = (sel?.toString() || '').trim();
+    if (!text || !isEnglishText(text)) {
+        hideSelectionLookupButton();
+        return;
+    }
+    let rect = getSelectionRect();
+    // 若無法取得選取範圍座標（如部分程式碼區塊），用視窗中央偏上作為 fallback
+    if (!rect || rect.width <= 0 || rect.height <= 0) {
+        const size = 24;
+        const left = window.innerWidth / 2 - size;
+        const top = Math.max(10, window.innerHeight / 4 - size);
+        rect = {
+            left,
+            top,
+            right: left + size,
+            bottom: top + size,
+            width: size,
+            height: size,
+            x: left,
+            y: top,
+            toJSON: () => ({})
+        } as DOMRect;
+    }
+    // 立即快照為純數字，避免 100ms 後 DOMRect 失效或變成 NaN
+    const capturedRect = {
+        left: Number(rect.left),
+        top: Number(rect.top),
+        right: Number(rect.right),
+        bottom: Number(rect.bottom),
+        width: Number(rect.width),
+        height: Number(rect.height)
+    };
+    const capturedText = text;
+    // 延遲顯示，讓同一次手勢產生的 click 先觸發並被忽略（見下方 click 的 250ms 保護）
+    setTimeout(() => {
+        showSelectionLookupButton(capturedRect, capturedText);
+    }, 100);
+}
+
+/** 處理選取變更：若選取被清空則隱藏懸浮按鈕（避免在延遲顯示前就清掉） */
+function handleSelectionChange(): void {
+    const sel = window.getSelection();
+    const str = (sel?.toString() || '').trim();
+    if (str === '' && selectionLookupButton) {
+        hideSelectionLookupButton();
+    }
+}
 
 // 切換查閱模式
 function toggleReadingMode(): void {
@@ -354,13 +511,18 @@ async function showWordTooltip(word: string, x: number, y: number): Promise<void
 
     // 查詢單字詳情
     try {
-        const { apiKey } = await chrome.storage.local.get('apiKey');
-        if (!apiKey) {
-            updateTooltipContent(tooltip, word, '請先設定 API Key');
+        const { apiKey, wordLookupProvider } = await chrome.storage.local.get(['apiKey', 'wordLookupProvider']);
+        const useTranslationOnly = wordLookupProvider === 'translation-only';
+
+        if (!useTranslationOnly && !apiKey) {
+            updateTooltipContent(tooltip, word, '請先設定 API Key，或到設定中切換為「僅翻譯（免 API Key）」');
             return;
         }
 
-        const result = await queryWordInfo(word, apiKey as string);
+        const result = useTranslationOnly
+            ? await queryWordInfoWithTranslationOnly(word)
+            : await queryWordInfo(word, apiKey as string);
+
         updateTooltipContent(tooltip, word, result.html);
 
         // 如果查詢成功且有單字資料，加入到單字列表
@@ -609,7 +771,15 @@ function initReadingMode(): void {
         if (!target.closest('.lexitechly-tooltip') && !target.closest('#lexitechly-floating-logo')) {
             removeTooltip();
         }
+        // 點擊在非懸浮查詢按鈕處時隱藏選取查詢按鈕（剛顯示 250ms 內不隱藏，避免 mouseup 後的 click 立刻關閉）
+        if (!target.closest('.lexitechly-selection-lookup-btn') && (Date.now() - selectionButtonShowTime > 250)) {
+            hideSelectionLookupButton();
+        }
     });
+
+    // 選取英文後顯示懸浮查詢按鈕：選取結束時檢查
+    document.addEventListener('mouseup', handleSelectionEnd);
+    document.addEventListener('selectionchange', handleSelectionChange);
 
     console.log('LexiTechly: 查閱模式初始化完成');
 }

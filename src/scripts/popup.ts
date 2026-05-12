@@ -240,6 +240,43 @@ function initializeSettingsPage(): void {
         if (apiKeyInput && apiKey && typeof apiKey === 'string') apiKeyInput.value = apiKey;
     });
 
+    // 載入閱讀模式查單字來源
+    chrome.storage.local.get(['wordLookupProvider']).then(({ wordLookupProvider }) => {
+        const geminiRadio = document.getElementById('word-lookup-gemini') as HTMLInputElement;
+        const translationRadio = document.getElementById('word-lookup-translation-only') as HTMLInputElement;
+        const value = wordLookupProvider === 'translation-only' ? 'translation-only' : 'gemini';
+        if (geminiRadio) geminiRadio.checked = (value === 'gemini');
+        if (translationRadio) translationRadio.checked = (value === 'translation-only');
+    });
+    document.querySelectorAll('input[name="word-lookup-provider"]').forEach((radio) => {
+        radio.addEventListener('change', () => {
+            const el = radio as HTMLInputElement;
+            if (el.checked) {
+                chrome.storage.local.set({ wordLookupProvider: el.value });
+                UI.showToast(el.value === 'translation-only' ? '已切換為僅翻譯（免 API Key）' : '已切換為 Gemini API', false, false, true);
+            }
+        });
+    });
+    chrome.storage.local.get(['ttsProvider']).then((res) => {
+        const v = (res.ttsProvider === 'google-translate' || res.ttsProvider === 'browser') ? res.ttsProvider : 'gemini';
+        const g = document.getElementById('tts-provider-gemini') as HTMLInputElement;
+        const t = document.getElementById('tts-provider-google') as HTMLInputElement;
+        const b = document.getElementById('tts-provider-browser') as HTMLInputElement;
+        if (g) g.checked = (v === 'gemini');
+        if (t) t.checked = (v === 'google-translate');
+        if (b) b.checked = (v === 'browser');
+    });
+    document.querySelectorAll('input[name="tts-provider"]').forEach((r) => {
+        r.addEventListener('change', function(this: HTMLInputElement) {
+            if (this.checked) {
+                chrome.storage.local.set({ ttsProvider: this.value });
+                const msg = this.value === 'google-translate' ? '發音已切換為 Google 翻譯' : this.value === 'browser' ? '發音已切換為瀏覽器內建' : '發音已切換為 Gemini API';
+                UI.showToast(msg, false, false, true);
+            }
+        });
+    });
+
+
     // API Key 儲存按鈕
     const saveGeminiApiKeyButton = document.getElementById('save-gemini-api-key');
     if (saveGeminiApiKeyButton) {
@@ -255,6 +292,19 @@ function initializeSettingsPage(): void {
                     UI.showToast('請輸入有效的 API Key', false, true);
                 }
             }
+        });
+    }
+
+    // API Key 清除按鈕
+    const clearGeminiApiKeyButton = document.getElementById('clear-gemini-api-key');
+    if (clearGeminiApiKeyButton) {
+        clearGeminiApiKeyButton.addEventListener('click', () => {
+            chrome.storage.local.remove('apiKey').then(() => {
+                const apiKeyInput = document.getElementById('gemini-api-key') as HTMLInputElement;
+                if (apiKeyInput) apiKeyInput.value = '';
+                UI.showToast('API Key 已清除', false, false, true);
+                Storage.updateStorageUsage();
+            });
         });
     }
 
@@ -358,8 +408,8 @@ function initializeClearDataFeature(): void {
                 async () => {
                     try {
                         // 備份重要設定
-                        const { apiKey, darkMode, storageLimit } =
-                            await chrome.storage.local.get(['apiKey', 'darkMode', 'storageLimit']);
+                        const { apiKey, darkMode, storageLimit, wordLookupProvider, ttsProvider } =
+                            await chrome.storage.local.get(['apiKey', 'darkMode', 'storageLimit', 'wordLookupProvider', 'ttsProvider']);
 
                         await chrome.storage.local.clear();
 
@@ -368,6 +418,8 @@ function initializeClearDataFeature(): void {
                         if (apiKey) settingsToRestore.apiKey = apiKey;
                         if (darkMode !== undefined) settingsToRestore.darkMode = darkMode;
                         if (storageLimit !== undefined) settingsToRestore.storageLimit = storageLimit;
+                        if (wordLookupProvider !== undefined) settingsToRestore.wordLookupProvider = wordLookupProvider;
+                        if (ttsProvider !== undefined) settingsToRestore.ttsProvider = ttsProvider;
 
                         if (Object.keys(settingsToRestore).length > 0) {
                             await chrome.storage.local.set(settingsToRestore);
@@ -620,17 +672,13 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
             });
         });
 
-        // 分析按鈕監聽
+        // 分析按鈕監聽（無 API Key 時使用本地分析，不需 AI）
         const analyzeButton = document.getElementById('analyze');
         if (analyzeButton) {
             analyzeButton.addEventListener('click', async (): Promise<void> => {
                 const { apiKey }: { apiKey?: string } = await chrome.storage.local.get('apiKey');
-                if (!apiKey) {
-                    UI.showError('請先設定 API Key');
-                    return;
-                }
 
-                UI.showToast('正在分析頁面內容...', true, false);
+                UI.showToast(apiKey ? '正在分析頁面內容...' : '正在使用本地分析（免 API）...', true, false);
 
                 try {
                     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -641,7 +689,7 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
 
                     await ensureContentScriptInjected(tab.id);
 
-                    // 第一步：CEFR 分析
+                    // 第一步：CEFR 分析（有 API Key 用 AI，無則用本地規則）
                     const message: ChromeMessage = { action: 'analyze', apiKey };
                     const response: ChromeResponse = await chrome.tabs.sendMessage(tab.id, message);
 
@@ -671,7 +719,7 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
                         if (existingToast) existingToast.remove();
                         UI.showToast('CEFR 分析完成，正在分析單字...', true, false);
 
-                        // 第二步：單字分析
+                        // 第二步：單字分析（有 API Key 用 AI，無則用本地提取+翻譯）
                         try {
                             const vocabMessage: ChromeMessage = {
                                 action: 'analyzeVocabulary',

@@ -93,7 +93,10 @@
                                     <label for="gemini-api-key">Gemini API Key</label>
                                     <input type="password" id="gemini-api-key" class="api-key-input"
                                         placeholder="請輸入您的 API Key">
-                                    <button id="save-gemini-api-key" class="save-button">儲存</button>
+                                    <div class="api-key-buttons">
+                                        <button id="save-gemini-api-key" class="save-button">儲存</button>
+                                        <button id="clear-gemini-api-key" class="clear-button" type="button">清除</button>
+                                    </div>
                                 </div>
                                 <div class="help-text">
                                     <p>如何取得 API Key：</p>
@@ -107,6 +110,60 @@
                                     <p style="margin-top: 12px; color: #1a73e8; font-size: 13px;">
                                         <strong>注意：</strong>此 API Key 將同時用於文字分析和語音生成功能
                                     </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 閱讀模式查單字來源 -->
+                        <div class="settings-section collapsible" id="word-lookup-section">
+                            <div class="section-header" id="word-lookup-header">
+                                <h3>閱讀模式查單字</h3>
+                                <svg class="arrow-icon" viewBox="0 0 24 24">
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                            </div>
+                            <div class="section-content">
+                                <div class="appearance-option theme-toggle" style="flex-direction: column; align-items: flex-start;">
+                                    <label style="margin-bottom: 8px;">查單字來源（點選單字時顯示的翻譯）</label>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="radio" name="word-lookup-provider" value="gemini" id="word-lookup-gemini">
+                                            <span>Gemini API（完整解析：CEFR、詞性、例句，需 API Key）</span>
+                                        </label>
+                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="radio" name="word-lookup-provider" value="translation-only" id="word-lookup-translation-only">
+                                            <span>僅翻譯（免 API Key，使用 MyMemory + 免費字典）</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 發音來源（閱讀模式 / 單字卡片喇叭） -->
+                        <div class="settings-section collapsible" id="tts-provider-section">
+                            <div class="section-header" id="tts-provider-header">
+                                <h3>發音來源</h3>
+                                <svg class="arrow-icon" viewBox="0 0 24 24">
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                            </div>
+                            <div class="section-content">
+                                <div class="appearance-option theme-toggle" style="flex-direction: column; align-items: flex-start;">
+                                    <label style="margin-bottom: 8px;">單字與例句的發音（閱讀模式、單字列表）</label>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="radio" name="tts-provider" value="gemini" id="tts-provider-gemini">
+                                            <span>Gemini API（需 API Key，高品質）</span>
+                                        </label>
+                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="radio" name="tts-provider" value="google-translate" id="tts-provider-google">
+                                            <span>Google 翻譯（免 API Key）</span>
+                                        </label>
+                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="radio" name="tts-provider" value="browser" id="tts-provider-browser">
+                                            <span>瀏覽器內建語音</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

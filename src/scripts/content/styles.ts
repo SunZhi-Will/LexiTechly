@@ -608,6 +608,39 @@ export function injectStyles(): void {
             background: rgba(79, 70, 229, 0.9);
             box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
         }
+
+        /* 選取英文後的懸浮查詢按鈕（小圓點、半透明、無白底） */
+        .lexitechly-selection-lookup-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            width: 24px !important;
+            height: 24px !important;
+            border: none !important;
+            border-radius: 50% !important;
+            background: rgba(0, 0, 0, 0.45) !important;
+            color: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2) !important;
+            cursor: pointer !important;
+            user-select: none !important;
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s !important;
+            font-family: inherit !important;
+        }
+
+        .lexitechly-selection-lookup-btn:hover {
+            transform: scale(1.12) !important;
+            background: rgba(0, 0, 0, 0.55) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
+        }
+
+        .lexitechly-selection-lookup-btn:active {
+            transform: scale(0.95) !important;
+        }
+
+        .lexitechly-selection-lookup-btn .lexitechly-selection-lookup-icon {
+            flex-shrink: 0 !important;
+        }
     `;
 
     document.head.appendChild(style);

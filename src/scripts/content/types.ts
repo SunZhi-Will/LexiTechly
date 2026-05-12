@@ -23,6 +23,7 @@ export interface ChromeMessage {
 
 // Chrome 回應介面
 export interface ChromeResponse {
+    success?: boolean;
     level?: {
         level: CEFRLevel;
         analysis: {

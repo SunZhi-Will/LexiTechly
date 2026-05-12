@@ -4,6 +4,8 @@
 export class SettingsStorage {
   // API Key 儲存鍵名
   private readonly GEMINI_API_KEY = 'apiKey';
+  // 閱讀模式查單字來源：'gemini' | 'translation-only'
+  private readonly WORD_LOOKUP_PROVIDER = 'wordLookupProvider';
   
   // 快取期限（毫秒）
   private readonly CACHE_EXPIRATION = 30 * 24 * 60 * 60 * 1000; // 30天
@@ -30,6 +32,18 @@ export class SettingsStorage {
       await chrome.storage.local.set({ [this.GEMINI_API_KEY]: apiKey });
     } catch (error) {
       console.error('無法保存 Gemini API Key:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 清除 Gemini API Key
+   */
+  async clearGeminiApiKey(): Promise<void> {
+    try {
+      await chrome.storage.local.remove(this.GEMINI_API_KEY);
+    } catch (error) {
+      console.error('無法清除 Gemini API Key:', error);
       throw error;
     }
   }
@@ -84,6 +98,32 @@ export class SettingsStorage {
       await chrome.storage.local.set({ 'darkMode': enabled });
     } catch (error) {
       console.error('無法設置暗色模式:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 獲取閱讀模式查單字來源：'gemini'（需 API Key）| 'translation-only'（免 API Key）
+   */
+  async getWordLookupProvider(): Promise<'gemini' | 'translation-only'> {
+    try {
+      const result = await chrome.storage.local.get(this.WORD_LOOKUP_PROVIDER);
+      const v = result[this.WORD_LOOKUP_PROVIDER];
+      return (v === 'translation-only' ? 'translation-only' : 'gemini');
+    } catch (error) {
+      console.error('無法獲取查單字來源:', error);
+      return 'gemini';
+    }
+  }
+
+  /**
+   * 設置閱讀模式查單字來源
+   */
+  async setWordLookupProvider(provider: 'gemini' | 'translation-only'): Promise<void> {
+    try {
+      await chrome.storage.local.set({ [this.WORD_LOOKUP_PROVIDER]: provider });
+    } catch (error) {
+      console.error('無法設置查單字來源:', error);
       throw error;
     }
   }

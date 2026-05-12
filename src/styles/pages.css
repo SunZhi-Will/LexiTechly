@@ -232,6 +232,24 @@
     outline: none;
 }
 
+.api-key-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.api-key-buttons .save-button,
+.api-key-buttons .clear-button {
+    flex: 1;
+    font-size: 13px;
+    padding: 8px 12px;
+    text-align: center;
+}
+
+.api-key-buttons .save-button {
+    /* 覆蓋通用 .save-button 的 width:100%，避免在 flex 裡被壓扁 */
+    width: auto;
+}
+
 .save-button {
     width: 100%;
     padding: 8px;
@@ -245,6 +263,21 @@
 
 .save-button:hover {
     background-color: #1557b0;
+}
+
+.clear-button {
+    padding: 8px 14px;
+    background-color: transparent;
+    color: #5f6368;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.clear-button:hover {
+    background-color: #f1f3f4;
+    color: #3c4043;
 }
 
 .help-text {
