@@ -1,0 +1,25 @@
+---
+name: LexiTechly
+category: 學習教育
+description: Chrome 英文內容 CEFR 等級即時分析擴充
+stack: Chrome Extension + Vite + Tailwind
+status: 開發中
+---
+
+## 這是什麼
+
+Chrome 英文內容 CEFR 等級即時分析擴充
+
+## 核心功能
+
+- 網頁英文難度 CEFR 等級分析\n- 單字詞彙解釋\n- 學習進度記錄
+
+## 架構
+
+src/ (Chrome Extension + Vite 建置)
+
+## 快速啟動
+
+```bash
+npm run dev
+```
