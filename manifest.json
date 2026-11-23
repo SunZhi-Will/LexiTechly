@@ -9,11 +9,27 @@
         "activeTab",
         "scripting",
         "tabs",
-        "contextMenus"
+        "contextMenus",
+        "offscreen",
+        "alarms"
     ],
     "host_permissions": [
         "<all_urls>"
     ],
+    "commands": {
+        "translate-images": {
+            "suggested_key": {
+                "default": "Alt+Shift+T"
+            },
+            "description": "翻譯這頁的漫畫圖片（自動翻譯，換頁也會跟著翻）"
+        }
+    },
+    "cross_origin_embedder_policy": {
+        "value": "credentialless"
+    },
+    "cross_origin_opener_policy": {
+        "value": "same-origin"
+    },
     "background": {
         "service_worker": "src/scripts/background.ts"
     },

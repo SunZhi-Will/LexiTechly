@@ -1,6 +1,8 @@
 // Background Script for LexiTechly Extension
 // 處理擴充功能的訊息通訊和狀態管理
 
+import { createImageTranslateMenus, installImageTranslate } from './image-translate/image-translate';
+
 interface MessageRequest {
     action: string;
     source?: string;
@@ -21,6 +23,10 @@ chrome.runtime.onMessage.addListener((
     sender: chrome.runtime.MessageSender, 
     sendResponse: (response: MessageResponse) => void
 ) => {
+    // 圖片翻譯的訊息用 type 欄位、由 installImageTranslate 的監聽器處理（見檔案最下方）。
+    // 這裡不能替它們回應，否則下面的「未知的訊息類型」會搶先回覆，蓋掉圖片翻譯的非同步結果
+    if (typeof message?.action !== 'string') return false;
+
     console.log('Background script 收到訊息:', message, '來自:', sender);
 
     // 處理切換到單字列表頁面的請求
@@ -163,6 +169,8 @@ chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails
                 title: '用 LexiTechly 查詢「%s」',
                 contexts: ['selection']
             });
+            // 圖片翻譯的選單要在 removeAll 之後、同一個流程裡建立
+            createImageTranslateMenus();
         });
     } catch (error) {
         console.error('建立 contextMenus 失敗:', error);
@@ -209,6 +217,9 @@ chrome.action.onClicked.addListener((tab: chrome.tabs.Tab) => {
         }
     });
 });
+
+// 圖片翻譯（右鍵選單、Alt+Shift+T 自動翻譯）：監聽器要在頂層同步註冊，service worker 被喚醒時才接得到事件
+installImageTranslate();
 
 console.log('LexiTechly Background Script 已載入');
 
