@@ -1,0 +1,237 @@
+/* 設計變數與共用基礎：popup 與單字頁共用 */
+:root {
+    color-scheme: light;
+
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface-2: #f1f4f8;
+    --surface-3: #e7ebf1;
+    --border: #e2e6ec;
+    --border-strong: #cdd3dc;
+
+    --text: #18202e;
+    --text-2: #566072;
+    --text-3: #8791a1;
+
+    --primary: #2468e8;
+    --primary-hover: #1a56c9;
+    --primary-soft: #e8f0fe;
+    --primary-soft-hover: #d8e5fd;
+    --on-primary: #ffffff;
+    --focus-ring: rgba(36, 104, 232, 0.28);
+
+    --success: #17915a;
+    --success-soft: #e3f5ec;
+    --warning: #c2710c;
+    --warning-soft: #fdf1df;
+    --danger: #d43c3c;
+    --danger-hover: #b92f2f;
+    --danger-soft: #fdecec;
+    --violet: #7445d8;
+    --violet-soft: #f0eafd;
+
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-full: 999px;
+
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+    --shadow: 0 2px 8px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+    --shadow-lg: 0 16px 40px rgba(16, 24, 40, 0.18), 0 4px 12px rgba(16, 24, 40, 0.08);
+    --overlay: rgba(15, 20, 30, 0.5);
+
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dark-mode {
+    color-scheme: dark;
+
+    --bg: #101318;
+    --surface: #191d24;
+    --surface-2: #21262f;
+    --surface-3: #2b313c;
+    --border: #2c323d;
+    --border-strong: #3d4552;
+
+    --text: #e9ecf1;
+    --text-2: #a5adba;
+    --text-3: #727c8c;
+
+    --primary: #70a7ff;
+    --primary-hover: #8fbaff;
+    --primary-soft: rgba(112, 167, 255, 0.14);
+    --primary-soft-hover: rgba(112, 167, 255, 0.22);
+    --on-primary: #0c1524;
+    --focus-ring: rgba(112, 167, 255, 0.35);
+
+    --success: #4fca8d;
+    --success-soft: rgba(79, 202, 141, 0.14);
+    --warning: #f0a94a;
+    --warning-soft: rgba(240, 169, 74, 0.14);
+    --danger: #ff7070;
+    --danger-hover: #ff8c8c;
+    --danger-soft: rgba(255, 112, 112, 0.14);
+    --violet: #b094ff;
+    --violet-soft: rgba(176, 148, 255, 0.16);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+    --overlay: rgba(0, 0, 0, 0.65);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    background-color: var(--bg);
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+::selection {
+    background: var(--primary-soft-hover);
+}
+
+/* 捲軸 */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* CEFR 等級標籤：A 綠、B 藍、C 紫 */
+.word-level {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 2px 9px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    white-space: nowrap;
+    background: var(--surface-3);
+    color: var(--text-2);
+}
+
+.word-level[data-level^='A'] {
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+.word-level[data-level^='B'] {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.word-level[data-level^='C'] {
+    background: var(--violet-soft);
+    color: var(--violet);
+}
+
+/* 載入圈 */
+.spinner,
+.loading-spinner:empty {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--surface-3);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes popIn {
+    from {
+        transform: translateY(8px) scale(0.97);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>單字列表</title>
+    <title>單字列表 - LexiTechly</title>
+    <script type="module" src="../scripts/theme-init.ts"></script>
     <link rel="stylesheet" href="../styles/vocabulary.css">
     <link rel="stylesheet" href="../styles/shared/audio.css">
 </head>
@@ -12,15 +13,31 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>單字列表</h1>
+            <div class="header-brand">
+                <img class="brand-logo" src="/images/logo128.png" alt="">
+                <div>
+                    <h1>單字列表</h1>
+                    <p class="header-sub">LexiTechly 收集的單字，點卡片看相似詞、反義詞與例句</p>
+                </div>
+            </div>
             <div class="stats">
-                總計: <span id="total-count">0</span> 個單字
+                <span id="total-count">0</span> 個單字
             </div>
         </div>
 
         <div class="filters">
+            <div class="filter-group filter-search">
+                <label for="search-filter">搜尋</label>
+                <div class="search-field">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m20 20-3.5-3.5" />
+                    </svg>
+                    <input type="text" id="search-filter" placeholder="搜尋單字或翻譯...">
+                </div>
+            </div>
             <div class="filter-group">
-                <label>CEFR 等級</label>
+                <label for="level-filter">CEFR 等級</label>
                 <select id="level-filter">
                     <option value="">全部</option>
                     <option value="A1">A1</option>
@@ -32,11 +49,7 @@
                 </select>
             </div>
             <div class="filter-group">
-                <label>搜尋</label>
-                <input type="text" id="search-filter" placeholder="搜尋單字...">
-            </div>
-            <div class="filter-group">
-                <label>排序方式</label>
+                <label for="sort-filter">排序方式</label>
                 <select id="sort-filter">
                     <option value="level">依等級</option>
                     <option value="alphabet">依字母</option>
@@ -45,9 +58,7 @@
             </div>
         </div>
 
-        <div id="word-grid" class="word-grid">
-            <!-- 單字卡片將由 JavaScript 動態添加 -->
-        </div>
+        <div id="word-grid" class="word-grid"><!-- 單字卡片將由 JavaScript 動態添加 --></div>
     </div>
 
     <div class="analyzing-overlay">

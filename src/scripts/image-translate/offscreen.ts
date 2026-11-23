@@ -14,7 +14,7 @@ import {
     type OffscreenProgress
 } from './protocol';
 
-// 同一時間只跑一張：WASM 單執行緒，並行只會互相拖慢，模型初始化也不該重複
+// 同一時間只跑一張：一張圖已經用滿 WASM 的執行緒，並行只會互相拖慢，模型初始化也不該重複
 let queue: Promise<unknown> = Promise.resolve();
 
 function isAnalyzeRequest(message: unknown): message is AnalyzeRequest {

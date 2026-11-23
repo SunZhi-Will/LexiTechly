@@ -81,7 +81,7 @@ function createWordCard(word: Word): HTMLDivElement {
                     </svg>
                 </button>
             </div>
-            <span class="word-level" title="單字等級">${word.level || 'N/A'}</span>
+            <span class="word-level" data-level="${word.level || ''}" title="單字等級">${word.level || 'N/A'}</span>
         </div>
         ${word.example ? `<div class="word-details" title="例句">${word.example}</div>` : ''}
         ${word.translation ? `<div class="word-translation" title="翻譯">${word.translation}</div>` : ''}
@@ -110,7 +110,9 @@ function updateVocabularyUI(isLoading: boolean = false): void {
         <svg viewBox="0 0 24 24" width="20" height="20">
             <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
         </svg>
+        <span>完整單字頁</span>
     `;
+    popoutButton.title = '在新分頁開啟完整單字頁';
     popoutButton.onclick = () => {
         chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/vocabulary.html') });
     };
@@ -121,7 +123,7 @@ function updateVocabularyUI(isLoading: boolean = false): void {
         loadingCard.className = 'word-card loading-card';
         loadingCard.innerHTML = `
             <div class="loading-spinner"></div>
-            <p class="empty-state-text" style="margin-top: 16px;">正在分析單字...</p>
+            <p class="empty-state-text">正在分析單字...</p>
         `;
         vocabularyContainer.appendChild(loadingCard);
         return;
@@ -137,7 +139,7 @@ function updateVocabularyUI(isLoading: boolean = false): void {
                 <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8zm0-3h8v2h-8zm0 6h4v2h-4z"/>
             </svg>
             <p class="empty-state-text">尚未收集任何單字</p>
-            <p class="empty-state-subtext">請先進行頁面分析來收集單字</p>
+            <p class="empty-state-subtext">到「分析」分頁按「分析當前頁面」來收集單字</p>
         `;
         vocabularyContainer.appendChild(emptyCard);
         return;

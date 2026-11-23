@@ -184,11 +184,11 @@ function toggleReadingMode(): void {
     updateLogoAppearance(isReadingMode);
 
     if (isReadingMode) {
-        showToast('✨ 查閱模式已開啟！懸停單字後點選查看詳情', false, false, true);
+        showToast('查閱模式已開啟！懸停單字後點選查看詳情', false, false, true);
         enableWordHover();
         disabledElements = disableAllLinks();
     } else {
-        showToast('📖 查閱模式已關閉', false, false, false);
+        showToast('查閱模式已關閉', false, false, false);
         disableWordHover();
         clearAllTimersAndState();
         enableAllLinks(disabledElements);
@@ -575,7 +575,7 @@ async function addWordToList(wordData: any): Promise<void> {
 
         // 顯示成功通知
         setTimeout(() => {
-            showToast(`📝 "${wordData.word}" 已加入單字列表`, false, false, true);
+            showToast(`"${wordData.word}" 已加入單字列表`, false, false, true);
         }, 1000);
 
     } catch (error) {
@@ -1015,7 +1015,7 @@ function handleTooltipClose(event: Event): void {
     currentHighlight = null;
 
     // 顯示關閉通知
-    showToast('📖 字卡已關閉', false, false, false);
+    showToast('字卡已關閉', false, false, false);
 }
 
 // 添加跳轉到單字列表按鈕功能
@@ -1048,7 +1048,7 @@ function handleTooltipVocabulary(event: Event): void {
     // 檢查 chrome.runtime 是否可用
     if (typeof chrome === 'undefined' || !chrome.runtime) {
         console.error('chrome.runtime 不可用');
-        showToast('❌ 擴充功能環境不可用', false, true, false);
+        showToast('擴充功能環境不可用', false, true, false);
         return;
     }
 
@@ -1115,11 +1115,11 @@ function handleTooltipVocabulary(event: Event): void {
                 console.log('收到回應:', response);
                 if (response && response.success) {
                     const wordText = currentWord ? `「${currentWord}」` : '';
-                    showToast(`📚 已在新標籤頁開啟單字列表${wordText}`, false, false, true);
+                    showToast(`已在新標籤頁開啟單字列表${wordText}`, false, false, true);
                 } else if (response && response.error) {
-                    showToast(`❌ 無法打開單字列表: ${response.error}`, false, true, false);
+                    showToast(`無法打開單字列表: ${response.error}`, false, true, false);
                 } else {
-                    showToast('❌ 無法打開單字列表', false, true, false);
+                    showToast('無法打開單字列表', false, true, false);
                 }
             })
             .catch((error: any) => {
@@ -1129,21 +1129,21 @@ function handleTooltipVocabulary(event: Event): void {
                 if (errorMessage.includes('Could not establish connection')) {
                     // 針對 Gmail 的特殊處理
                     if (isGmail) {
-                        showToast('❌ Gmail 頁面限制，正在嘗試直接開啟單字列表...', false, true, false);
+                        showToast('Gmail 頁面限制，正在嘗試直接開啟單字列表...', false, true, false);
                     } else {
-                        showToast('❌ 連線問題，正在嘗試直接開啟單字列表...', false, true, false);
+                        showToast('連線問題，正在嘗試直接開啟單字列表...', false, true, false);
                     }
                 } else if (errorMessage.includes('Receiving end does not exist')) {
-                    showToast('❌ 擴充功能未回應，正在嘗試直接開啟單字列表...', false, true, false);
+                    showToast('擴充功能未回應，正在嘗試直接開啟單字列表...', false, true, false);
                 } else if (errorMessage.includes('超時')) {
-                    showToast('❌ 連線超時，正在嘗試直接開啟單字列表...', false, true, false);
+                    showToast('連線超時，正在嘗試直接開啟單字列表...', false, true, false);
                 } else {
-                    showToast(`❌ 無法打開單字列表: ${errorMessage}`, false, true, false);
+                    showToast(`無法打開單字列表: ${errorMessage}`, false, true, false);
                 }
             });
     } catch (error) {
         console.error('打開單字列表時發生錯誤:', error);
-        showToast('❌ 無法打開單字列表', false, true, false);
+        showToast('無法打開單字列表', false, true, false);
     }
 }
 

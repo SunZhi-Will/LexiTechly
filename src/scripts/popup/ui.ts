@@ -16,8 +16,10 @@ export function showToast(message: string, isLoading: boolean = false, isError: 
     toast.className = toastClass;
 
     let icon = '';
-    if (isError) icon = '<span class="toast-icon">❌</span>';
-    else if (isSuccess) icon = '<span class="toast-icon">✅</span>';
+    const svg = (path: string) =>
+        `<span class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${path}</svg></span>`;
+    if (isError) icon = svg('<circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3v.01"/>');
+    else if (isSuccess) icon = svg('<path d="m5 12.5 4.5 4.5L19 7.5"/>');
     else if (isLoading) icon = '<div class="loading-spinner"></div>';
 
     toast.innerHTML = `
@@ -130,11 +132,21 @@ export function showConfirmDialog(
     document.addEventListener('keydown', handleEsc);
 }
 
+let errorHideTimer: number | undefined;
+
 export function showError(message: string): void {
     const errorElement = document.getElementById('error-message');
     if (errorElement) {
         errorElement.textContent = message;
         errorElement.style.display = 'block';
+        // 幾秒後自動收起，點一下也能關掉
+        window.clearTimeout(errorHideTimer);
+        errorHideTimer = window.setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 6000);
+        errorElement.onclick = () => {
+            errorElement.style.display = 'none';
+        };
     }
 }
 

@@ -128,7 +128,7 @@ async function scrollToWord(targetWord: string): Promise<void> {
                 foundElement?.dispatchEvent(clickEvent);
                 
                 console.log('已點擊單字卡片:', targetWord);
-                showToast(`📖 已開啟單字「${targetWord}」的詳細資訊`, false, false);
+                showToast(`已開啟單字「${targetWord}」的詳細資訊`, false, false);
             }, 1000);
             
             // 移除高亮效果
@@ -139,7 +139,7 @@ async function scrollToWord(targetWord: string): Promise<void> {
             console.log('成功定位並開啟單字:', targetWord);
         } else {
             console.log('未找到單字:', targetWord);
-            showToast(`❌ 未找到單字「${targetWord}」`, false, true);
+            showToast(`未找到單字「${targetWord}」`, false, true);
         }
     } catch (error) {
         console.error('定位單字時發生錯誤:', error);
