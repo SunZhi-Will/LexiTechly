@@ -217,7 +217,7 @@ dist/
   - Clear vocabulary list
   - Clear chat history
   - Clear analysis results
-  - Clear all data (preserve settings)
+  - Clear all data (preserve settings; includes image translations and recognition models)
   - Image translation data is listed separately; clear saved translations or recognition models on their own
 
 ### 7. Immersive Reading Mode 🔍

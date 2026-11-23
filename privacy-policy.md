@@ -48,13 +48,13 @@ Image translation runs only when you start it: by right-clicking an image and ch
 - **Recognized text is sent to Google Translate.** Only the text found in the image, the source language, and the target language are sent to `translate.googleapis.com` to get the translation. No API key, account, or page address is attached by the extension. As with any web request, Google receives your IP address, and its handling of the request is governed by Google's own privacy policy.
 - **Recognition models are downloaded from Hugging Face.** The first time you use each source language, about 25 to 41 MB of model files are downloaded from `huggingface.co`, verified against a fixed checksum, and cached in your browser. This request does not include any information about the images or pages you translate.
 - **Translations are saved locally.** So that the same page does not need to be translated again, the extension keeps up to 3,000 translated images in your browser (a compressed copy of the image, the recognized text, and the translation), removing the oldest ones first. It also remembers that you accepted the first-use notice, the source language you chose per website, and the "pre-translate next page" switch.
-- **Removing this data.** In settings, under "Image translation data", you can see how many translations are saved and how much space the models use, and clear either one with its own button. Both are also removed when you uninstall the extension. The general "clear all stored data" button does not include them.
+- **Removing this data.** In settings, under "Image translation data", you can see how many translations are saved and how much space the models use, and clear either one with its own button. The "clear all data" button in settings also clears both, and they are removed when you uninstall the extension.
 
 ## User Controls
 
 - You can manage storage space in settings at any time
 - You can view detailed storage usage statistics
-- You can clear all stored data with one click (keeping API Key and appearance settings)
+- You can clear all stored data with one click (keeping API Key and appearance settings), including saved image translations and recognition models
 - You can clear saved image translations and downloaded recognition models separately
 - You can choose not to authorize data collection
 
@@ -147,13 +147,13 @@ Using this extension indicates your agreement to this Privacy Policy.
 - **辨識出的文字會送到 Google 翻譯。** 只有圖片中辨識出的文字、原文語言與目標語言會送到 `translate.googleapis.com` 取得譯文。擴充功能不會附上任何 API Key、帳號或網頁網址。和所有網路請求一樣，Google 會收到您的 IP 位址，後續處理依 Google 的隱私權政策。
 - **辨識模型從 Hugging Face 下載。** 每種原文語言第一次使用時，會從 `huggingface.co` 下載約 25 到 41 MB 的模型檔，比對固定的雜湊值後存在您的瀏覽器裡。這個請求不包含您翻譯的圖片或網頁的任何資訊。
 - **譯文存在本機。** 為了讓同一頁不必重翻，擴充功能會在您的瀏覽器中保存最多 3,000 張翻譯過的圖（壓縮後的圖片、辨識出的原文與譯文），超過時先刪最舊的。另外會記住您已看過第一次使用的說明、您為各網站選的原文語言，以及「預翻下一頁」開關。
-- **如何移除這些資料。** 在設定頁的「圖片翻譯資料」可以看到存了幾頁譯文、模型占多少空間，並用各自的按鈕清除。移除擴充功能時也會一併刪除。設定裡的「清除所有資料」按鈕不包含這兩項。
+- **如何移除這些資料。** 在設定頁的「圖片翻譯資料」可以看到存了幾頁譯文、模型占多少空間，並用各自的按鈕清除。設定裡的「清除所有資料」按鈕也會一併清除這兩項，移除擴充功能時同樣會刪除。
 
 ## 使用者控制權限
 
 - 您可以隨時在設定中管理儲存空間
 - 您可以查看詳細的儲存空間使用狀況
-- 您可以一鍵清除所有儲存資料（保留 API Key 和外觀設定）
+- 您可以一鍵清除所有儲存資料（保留 API Key 和外觀設定），包含圖片譯文與辨識模型
 - 您可以分別清除存下來的圖片譯文與已下載的辨識模型
 - 您可以選擇不提供數據授權
 

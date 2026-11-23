@@ -456,9 +456,13 @@ function initializeClearDataFeature(): void {
             UI.showConfirmDialog(
                 '確認清除所有資料',
                 '此操作將永久刪除以下資料：',
-                ['單字列表', '分析快取', '語音快取', '對話記錄'],
+                ['單字列表', '分析快取', '語音快取', '對話記錄', '圖片譯文', '圖片翻譯的辨識模型（下次翻譯時重新下載）'],
                 async () => {
                     try {
+                        // 圖片翻譯的資料不在 chrome.storage 裡（IndexedDB 與 Cache Storage），另外清
+                        const imageResults = await Promise.allSettled([clearSavedTranslations(), clearModelCache()]);
+                        const imageClearFailed = imageResults.some((result) => result.status === 'rejected');
+
                         // 備份重要設定
                         const { apiKey, darkMode, storageLimit, wordLookupProvider, ttsProvider } =
                             await chrome.storage.local.get(['apiKey', 'darkMode', 'storageLimit', 'wordLookupProvider', 'ttsProvider']);
@@ -490,8 +494,13 @@ function initializeClearDataFeature(): void {
 
                         updateVocabularyUI();
                         Storage.updateStorageUsage();
+                        await updateImageTranslateUsage();
 
-                        UI.showToast('資料已清除（保留設定）', false, false, true);
+                        if (imageClearFailed) {
+                            UI.showToast('資料已清除，但圖片翻譯資料清除失敗，請用下方按鈕再試一次', false, true);
+                        } else {
+                            UI.showToast('資料已清除（保留設定）', false, false, true);
+                        }
                     } catch (error) {
                         UI.showToast('清除資料失敗', false, true);
                     }
