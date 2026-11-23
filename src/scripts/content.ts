@@ -44,8 +44,8 @@ chrome.runtime.onMessage.addListener((
     if (request.action === 'analyze') {
         const content = getPageContent();
 
-        if (request.apiKey) {
-            analyzeContent(content, request.apiKey).then(result => {
+        if (request.useAi) {
+            analyzeContent(content).then(result => {
                 sendResponse(result);
             }).catch(error => {
                 console.error('LexiTechly: 分析失敗', error);
@@ -61,14 +61,14 @@ chrome.runtime.onMessage.addListener((
     } else if (request.action === 'chat') {
         const content = getPageContent();
 
-        if (!request.apiKey || !request.message) {
+        if (!request.useAi || !request.message) {
             sendResponse({
                 error: 'API Key 或訊息未提供'
             });
             return true;
         }
 
-        chatWithAI(content, request.message, request.apiKey, request.history || []).then(result => {
+        chatWithAI(content, request.message, request.history || []).then(result => {
             sendResponse(result);
         }).catch(error => {
             console.error('LexiTechly: 聊天失敗', error);
@@ -81,8 +81,8 @@ chrome.runtime.onMessage.addListener((
     } else if (request.action === 'analyzeVocabulary') {
         const content = getPageContent();
 
-        if (request.apiKey) {
-            analyzePageVocabulary(content, request.apiKey).then(result => {
+        if (request.useAi) {
+            analyzePageVocabulary(content).then(result => {
                 sendResponse(result);
             }).catch(error => {
                 console.error('LexiTechly: 單字分析失敗', error);

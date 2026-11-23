@@ -1,5 +1,5 @@
 /// <reference types="chrome"/>
-import { GEMINI_GENERATE_URL } from '../ai-models.js';
+import { AiError, generateText } from '../ai/client.js';
 
 import { speakWord } from '../vocabulary/audio.js';
 
@@ -137,8 +137,7 @@ export async function queryWordInfoWithTranslationOnly(word: string): Promise<Wo
 }
 
 // 查詢單字資訊（Gemini API）
-export async function queryWordInfo(word: string, apiKey: string): Promise<WordQueryResult> {
-    const API_URL = GEMINI_GENERATE_URL;
+export async function queryWordInfo(word: string): Promise<WordQueryResult> {
 
     const basePrompt = `
     只回傳 JSON，描述英文單字 "${word}"：
@@ -152,21 +151,6 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<WordQ
     }
     規則：繁體中文；無音標；確保 JSON 可解析；不要額外說明或 Markdown。
     `;
-
-    const buildRequest = (prompt: string, maxOutputTokens: number) => ({
-        contents: [{
-            role: "user",
-            parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-            temperature: 0.3,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens,
-            // 請求直接回傳 JSON，減少包裝文字造成解析失敗
-            responseMimeType: "application/json"
-        }
-    });
 
     // 嘗試從模型回應中擷取可解析的 JSON，並修復常見格式問題
     const parseJsonSafely = (text: string) => {
@@ -287,29 +271,21 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<WordQ
 
     // 先嘗試主要請求，若失敗再用縮短提示重試
     const tryRequest = async (prompt: string, maxTokens: number) => {
-        const response = await fetch(`${API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(buildRequest(prompt, maxTokens))
+        const { text, finishReason } = await generateText({
+            prompt,
+            temperature: 0.3,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: maxTokens,
+            // 請求直接回傳 JSON，減少包裝文字造成解析失敗
+            json: true
         });
 
-        if (!response.ok) {
-            throw new Error('API request failed');
-        }
-
-        const data = await response.json();
-        const candidate = data?.candidates?.[0];
-        const firstTextPart = candidate?.content?.parts?.find((p: any) => typeof p?.text === 'string' && p.text.trim());
-
-        if (candidate?.finishReason === 'MAX_TOKENS') {
+        if (finishReason === 'MAX_TOKENS') {
             throw new Error('Model output truncated (MAX_TOKENS)');
         }
-        if (!firstTextPart?.text) {
-            throw new Error('Invalid API response');
-        }
 
-        const result = firstTextPart.text.trim();
-        return parseJsonSafely(result);
+        return parseJsonSafely(text);
     };
 
     try {
@@ -372,6 +348,15 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<WordQ
         return { html, wordData };
 
     } catch (error) {
+        // 金鑰、額度、連線問題再試也沒用，直接把原因告訴使用者
+        if (error instanceof AiError && error.code !== 'bad-response') {
+            const reason = document.createElement('span');
+            reason.style.color = '#EF4444';
+            reason.textContent = error.message;
+            const title = document.createElement('strong');
+            title.textContent = word;
+            return { html: `<div class="lexitechly-error">${title.outerHTML}<br>${reason.outerHTML}</div>` };
+        }
         // 若主請求失敗，縮短提示再試一次
         try {
             const shortPrompt = `只回傳可解析的 JSON：{"word":"${word}","level":"","translation":"","partOfSpeech":"","example":"","exampleTranslation":""}`;

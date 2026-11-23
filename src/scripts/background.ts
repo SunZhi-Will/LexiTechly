@@ -1,6 +1,7 @@
 // Background Script for LexiTechly Extension
 // 處理擴充功能的訊息通訊和狀態管理
 
+import { handleAiMessage } from './ai/background';
 import { createImageTranslateMenus, installImageTranslate } from './image-translate/image-translate';
 
 interface MessageRequest {
@@ -27,7 +28,10 @@ chrome.runtime.onMessage.addListener((
     // 這裡不能替它們回應，否則下面的「未知的訊息類型」會搶先回覆，蓋掉圖片翻譯的非同步結果
     if (typeof message?.action !== 'string') return false;
 
-    console.log('Background script 收到訊息:', message, '來自:', sender);
+    // AI 請求（頁面分析、查詞、單字詳解）統一從這裡出去
+    if (handleAiMessage(message, sender, sendResponse)) return true;
+
+    console.log('Background script 收到訊息:', message.action);
 
     // 處理切換到單字列表頁面的請求
     if (message.action === 'switchToVocabularyPage') {

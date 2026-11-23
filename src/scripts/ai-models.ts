@@ -7,3 +7,7 @@ export const GEMINI_TEXT_MODEL = 'gemini-3.5-flash-lite';
 
 export const GEMINI_GENERATE_URL =
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent`;
+
+// 串流端點（SSE）。背景頁的 AI 請求走這個，見 ai/gemini-byok.ts。
+export const GEMINI_STREAM_URL =
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:streamGenerateContent?alt=sse`;

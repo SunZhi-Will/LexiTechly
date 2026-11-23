@@ -779,7 +779,7 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
                     await ensureContentScriptInjected(tab.id);
 
                     // 第一步：CEFR 分析（有 API Key 用 AI，無則用本地規則）
-                    const message: ChromeMessage = { action: 'analyze', apiKey };
+                    const message: ChromeMessage = { action: 'analyze', useAi: !!apiKey };
                     const response: ChromeResponse = await chrome.tabs.sendMessage(tab.id, message);
 
                     if (response.error) {
@@ -812,7 +812,7 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
                         try {
                             const vocabMessage: ChromeMessage = {
                                 action: 'analyzeVocabulary',
-                                apiKey: apiKey
+                                useAi: !!apiKey
                             };
 
                             const vocabResponse: ChromeResponse = await chrome.tabs.sendMessage(tab.id, vocabMessage);

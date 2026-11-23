@@ -521,7 +521,7 @@ async function showWordTooltip(word: string, x: number, y: number): Promise<void
 
         const result = useTranslationOnly
             ? await queryWordInfoWithTranslationOnly(word)
-            : await queryWordInfo(word, apiKey as string);
+            : await queryWordInfo(word);
 
         updateTooltipContent(tooltip, word, result.html);
 

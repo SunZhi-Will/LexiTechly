@@ -1,5 +1,5 @@
 /// <reference types="chrome"/>
-import { GEMINI_GENERATE_URL } from '../ai-models.js';
+import { AiError, generateText } from '../ai/client.js';
 
 // 獲取頁面內容
 export function getPageContent(): string {
@@ -128,7 +128,7 @@ export async function analyzePageVocabularyLocal(text: string): Promise<ChromeRe
 }
 
 // 分析內容
-export async function analyzeContent(content: string, apiKey: string): Promise<ChromeResponse> {
+export async function analyzeContent(content: string): Promise<ChromeResponse> {
     try {
         // 檢查文本是否為英文
         if (!checkIfEnglish(content)) {
@@ -139,7 +139,6 @@ export async function analyzeContent(content: string, apiKey: string): Promise<C
             };
         }
 
-        const API_URL = GEMINI_GENERATE_URL;
         const maxRetries = 3;
         let retryCount = 0;
         let lastError: Error | undefined;
@@ -174,49 +173,15 @@ export async function analyzeContent(content: string, apiKey: string): Promise<C
 
         while (retryCount < maxRetries) {
             try {
-                const requestBody: GeminiRequest = {
-                    contents: [{
-                        role: "user",
-                        parts: [{
-                            text: prompt
-                        }]
-                    }],
-                    generationConfig: {
-                        temperature: 1,
-                        topK: 40,
-                        topP: 0.95,
-                        maxOutputTokens: 8192,
-                        responseMimeType: "application/json"
-                    }
-                };
-
-                const response = await fetch(`${API_URL}?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody)
+                // 額度不足時的等待重試由背景頁的 AI 請求層處理
+                const { text: result } = await generateText({
+                    prompt,
+                    temperature: 1,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 8192,
+                    json: true
                 });
-
-                if (response.status === 429) {
-                    // 如果遇到限制,等待一段時間後重試
-                    const waitTime = Math.pow(2, retryCount) * 1000; // 指數退避
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                    retryCount++;
-                    continue;
-                }
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data: GeminiResponse = await response.json();
-
-                if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0]) {
-                    throw new Error('無效的 API 回應格式');
-                }
-
-                const result = data.candidates[0].content.parts[0].text.trim();
 
                 // 解析 JSON 回應並進行格式驗證
                 let analysisResult: {
@@ -423,7 +388,9 @@ export async function analyzeContent(content: string, apiKey: string): Promise<C
 
             } catch (error) {
                 lastError = error as Error;
-                if (retryCount >= maxRetries - 1) {
+                // 金鑰、額度、連線問題再試也沒用（額度已在背景頁重試過），直接回報；只有回應格式不對才重問
+                const retryable = !(error instanceof AiError) || error.code === 'bad-response';
+                if (!retryable || retryCount >= maxRetries - 1) {
                     throw error;
                 }
                 retryCount++;
@@ -446,11 +413,9 @@ export async function analyzeContent(content: string, apiKey: string): Promise<C
 export async function chatWithAI(
     content: string,
     message: string,
-    apiKey: string,
     history: Array<{ text: string; type: 'user' | 'ai' }> = []
 ): Promise<ChromeResponse> {
     try {
-        const API_URL = GEMINI_GENERATE_URL;
 
         // 建構對話歷史
         const conversationHistory = history.map(msg =>
@@ -476,40 +441,13 @@ export async function chatWithAI(
         3. 實用的例句或說明
     `;
 
-        const requestBody: GeminiRequest = {
-            contents: [{
-                role: "user",
-                parts: [{
-                    text: prompt
-                }]
-            }],
-            generationConfig: {
-                temperature: 0.7,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 2048
-            }
-        };
-
-        const response = await fetch(`${API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody)
+        const { text: aiResponse } = await generateText({
+            prompt,
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: GeminiResponse = await response.json();
-
-        if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0]) {
-            throw new Error('無效的 API 回應格式');
-        }
-
-        const aiResponse = data.candidates[0].content.parts[0].text.trim();
 
         return {
             response: aiResponse,
@@ -526,9 +464,8 @@ export async function chatWithAI(
 }
 
 // 分析頁面單字
-export async function analyzePageVocabulary(text: string, apiKey: string): Promise<ChromeResponse> {
+export async function analyzePageVocabulary(text: string): Promise<ChromeResponse> {
     try {
-        const API_URL = GEMINI_GENERATE_URL;
 
         const prompt = `
         請分析以下英文文本中的重要單字，並提供詳細資訊。
@@ -561,41 +498,14 @@ export async function analyzePageVocabulary(text: string, apiKey: string): Promi
         重要：請只回傳有效的 JSON 格式，不要有其他說明文字或註解。
     `;
 
-        const requestBody: GeminiRequest = {
-            contents: [{
-                role: "user",
-                parts: [{
-                    text: prompt
-                }]
-            }],
-            generationConfig: {
-                temperature: 0.3,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 4096,
-                responseMimeType: "application/json"
-            }
-        };
-
-        const response = await fetch(`${API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody)
+        let { text: result } = await generateText({
+            prompt,
+            temperature: 0.3,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 4096,
+            json: true
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: GeminiResponse = await response.json();
-
-        if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0]) {
-            throw new Error('無效的 API 回應格式');
-        }
-
-        let result = data.candidates[0].content.parts[0].text.trim();
 
         // 清理和修復 JSON 格式
         function cleanAndFixJSON(jsonString: string): string {

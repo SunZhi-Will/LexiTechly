@@ -16,7 +16,8 @@ export interface Word {
 // Chrome 訊息介面
 export interface ChromeMessage {
     action: 'analyze' | 'chat' | 'analyzeVocabulary';
-    apiKey?: string;
+    /** 有設定 API Key 時用 AI 分析，否則用本機規則。金鑰本身不經過訊息傳遞 */
+    useAi?: boolean;
     message?: string;
     history?: Array<{ text: string; type: 'user' | 'ai' }>;
 }

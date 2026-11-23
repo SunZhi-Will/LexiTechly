@@ -1,12 +1,11 @@
 /// <reference types="chrome"/>
-import { GEMINI_GENERATE_URL } from '../ai-models.js';
+import { generateText } from '../ai/client.js';
 
 import { Word, WordDetails } from './types.js';
 import { wordAnalysisCache, accumulatedVocabulary } from './storage.js';
 
 // AI 分析單字詳細資訊
-export async function analyzeWordDetails(word: string, apiKey: string): Promise<WordDetails> {
-    const API_URL = GEMINI_GENERATE_URL;
+export async function analyzeWordDetails(word: string): Promise<WordDetails> {
 
     const prompt = `
         分析英文單字 "${word}" 並提供以下資訊：
@@ -36,30 +35,13 @@ export async function analyzeWordDetails(word: string, apiKey: string): Promise<
     `;
 
     try {
-        const response = await fetch(`${API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 1024
-                }
-            })
+        const { text } = await generateText({
+            prompt,
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024
         });
-
-        if (!response.ok) {
-            throw new Error('API 請求失敗');
-        }
-
-        const data = await response.json();
-        if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-            throw new Error('無效的 AI 回應格式');
-        }
-
-        const text = data.candidates[0].content.parts[0].text.trim();
         
         // 清理和修復 JSON 格式
         const cleanAndFixJSON = (jsonString: string): string => {
@@ -362,7 +344,7 @@ export async function analyzeWordOnDemand(word: Word): Promise<WordDetails | nul
         }
 
         console.log(`開始分析單字: ${word.text}`);
-        const details = await analyzeWordDetails(word.text, apiKey);
+        const details = await analyzeWordDetails(word.text);
 
         wordAnalysisCache[word.text] = details;
         await chrome.storage.local.set({ wordAnalysisCache });

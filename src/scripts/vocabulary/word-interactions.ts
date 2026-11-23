@@ -55,7 +55,7 @@ async function showWordDetails(word: Word): Promise<void> {
 
         let details = wordAnalysisCache[word.text];
         if (!details) {
-            details = await analyzeWordDetails(word.text, apiKey);
+            details = await analyzeWordDetails(word.text);
             wordAnalysisCache[word.text] = details;
             await chrome.storage.local.set({ wordAnalysisCache });
         }
@@ -107,7 +107,7 @@ async function addWordToVocabulary(wordText: string, type: string, currentWord: 
 
         let details = wordAnalysisCache[wordText];
         if (!details) {
-            details = await analyzeWordDetails(wordText, apiKey);
+            details = await analyzeWordDetails(wordText);
             wordAnalysisCache[wordText] = details;
             await chrome.storage.local.set({ wordAnalysisCache });
         }
@@ -452,7 +452,7 @@ async function reanalyzeWord(detailsPage: HTMLElement, word: Word): Promise<void
         delete wordAnalysisCache[word.text];
         await chrome.storage.local.set({ wordAnalysisCache });
 
-        const newDetails = await analyzeWordDetails(word.text, apiKey);
+        const newDetails = await analyzeWordDetails(word.text);
 
         wordAnalysisCache[word.text] = newDetails;
         await chrome.storage.local.set({ wordAnalysisCache });
