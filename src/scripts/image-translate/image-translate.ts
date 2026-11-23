@@ -18,6 +18,7 @@ import { contentLogger } from './logger';
 import { getLocale, initI18n, t, type MessageKey } from './i18n';
 import { isFromContentScript, isFromExtensionPage } from './sender-guard';
 import { groupLines } from './group';
+import { mergeRegionBlock, regionBlock, selectionInCoverage, type Fraction } from './region';
 import { GeminiKeyError } from './gemini-translate';
 import { TranslateBusyError, getEngine, translateForImage, type ImageTranslateEngine } from './translate-engines';
 import { loadTranslation, saveTranslation } from './translation-store';
@@ -32,6 +33,7 @@ import {
     IMAGE_TRANSLATE_CAPTURE_PREPARE,
     IMAGE_TRANSLATE_ERROR,
     IMAGE_TRANSLATE_PROGRESS,
+    IMAGE_TRANSLATE_REGION,
     IMAGE_TRANSLATE_REQUEST,
     IMAGE_TRANSLATE_RESULT,
     IMAGE_TRANSLATE_START,
@@ -49,6 +51,7 @@ import {
     type ImageGeometry,
     type LangChoice,
     type ProgressMessage,
+    type RegionRequest,
     type ResultMessage,
     type SourceLang,
     type StartRequest,
@@ -240,10 +243,7 @@ async function runPipeline(input: PipelineInput): Promise<TranslateResponse> {
         try {
             translations = await translateForImage(blocks.map((block) => block.text), sourceLang, locale, engine);
         } catch (error) {
-            if (error instanceof TranslateBusyError) return { ok: false, code: 'translate-busy', retryAt: error.retryAt };
-            if (error instanceof GeminiKeyError) return { ok: false, code: 'translate-no-key' };
-            contentLogger.warn('圖片翻譯：翻譯失敗', error);
-            return { ok: false, code: 'translate-failed' };
+            return translateFailure(error);
         }
 
         const result: TranslatedImage = {
@@ -269,6 +269,117 @@ async function runPipeline(input: PipelineInput): Promise<TranslateResponse> {
     } finally {
         pending.delete(requestId);
     }
+}
+
+function translateFailure(error: unknown): TranslateResponse {
+    if (error instanceof TranslateBusyError) return { ok: false, code: 'translate-busy', retryAt: error.retryAt };
+    if (error instanceof GeminiKeyError) return { ok: false, code: 'translate-no-key' };
+    contentLogger.warn('圖片翻譯：翻譯失敗', error);
+    return { ok: false, code: 'translate-failed' };
+}
+
+/** 從圖裡裁出一塊（比例）；也回傳整張圖的像素大小 */
+async function cropImage(dataUrl: string, crop: Fraction): Promise<{ dataUrl: string; width: number; height: number }> {
+    const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
+    const { width, height } = bitmap;
+    const sx = Math.round(crop.left * width);
+    const sy = Math.round(crop.top * height);
+    const sw = Math.max(1, Math.min(width - sx, Math.round(crop.width * width)));
+    const sh = Math.max(1, Math.min(height - sy, Math.round(crop.height * height)));
+    const canvas = new OffscreenCanvas(sw, sh);
+    canvas.getContext('2d')!.drawImage(bitmap, sx, sy, sw, sh, 0, 0, sw, sh);
+    bitmap.close();
+    const blob = await canvas.convertToBlob({ type: 'image/png' });
+    return { dataUrl: bytesToDataUrl(new Uint8Array(await blob.arrayBuffer()), 'image/png'), width, height };
+}
+
+interface RegionInput {
+    tab: chrome.tabs.Tab;
+    frameId: number;
+    request: RegionRequest;
+}
+
+/**
+ * 框選翻譯：裁出框起來的那一塊 → 辨識 → 框裡的字當成一段翻譯 → 併回這張圖原本的譯文（大半在框裡的舊區塊換掉）。
+ * 有原本的譯文就從它的底圖裁（座標才對得上）；沒有就和整張翻譯一樣先抓原圖、抓不到再擷取畫面
+ */
+async function runRegion({ tab, frameId, request }: RegionInput): Promise<TranslateResponse> {
+    const { requestId, srcUrl, lang, hint, geometry, selection, base } = request;
+    const tabId = tab.id!;
+    pending.set(requestId, { tabId, frameId });
+    try {
+        let image: { dataUrl: string; coverage: ResultMessage['coverage'] } | null = base ? { dataUrl: base.image, coverage: base.coverage } : null;
+        if (!image) {
+            const fetched = await fetchImage(srcUrl);
+            if (fetched) image = { dataUrl: fetched.dataUrl, coverage: { left: 0, top: 0, width: 1, height: 1 } };
+            else if (geometry && frameId === 0 && typeof tab.windowId === 'number') image = await captureImage(tabId, tab.windowId, geometry).catch(() => null);
+        }
+        if (!image) return { ok: false, code: 'capture-failed' };
+        const crop = selectionInCoverage(selection, image.coverage);
+        if (!crop) return { ok: false, code: 'region-outside' };
+        const cropped = await cropImage(image.dataUrl, crop);
+        // 區塊座標：有原本的譯文就用它的（辨識時縮放過的）座標，沒有就用這張圖的像素
+        const target = base ? { width: base.width, height: base.height } : { width: cropped.width, height: cropped.height };
+
+        await ensureOffscreen();
+        sendToTab(tabId, frameId, { type: IMAGE_TRANSLATE_PROGRESS, requestId, phase: 'analyze' });
+        // 框起來的字很少，自動判斷語言不可靠：這張圖之前判斷過就直接用那個語言
+        const analyzeLang: LangChoice = lang === 'auto' && base ? base.sourceLang : lang;
+        const analyzeRequest: AnalyzeRequest = { target: OFFSCREEN_TARGET, type: OFFSCREEN_ANALYZE, requestId, dataUrl: cropped.dataUrl, lang: analyzeLang, hint };
+        const analysis = (await chrome.runtime.sendMessage(analyzeRequest)) as AnalyzeResponse | undefined;
+        if (!analysis?.ok) {
+            contentLogger.warn('框選翻譯：辨識失敗', analysis);
+            return { ok: false, code: analysis?.code ?? 'analyze-failed' };
+        }
+        const block = regionBlock(analysis, crop, target, analysis.lang);
+        if (!block) return { ok: false, code: 'no-text' };
+
+        sendToTab(tabId, frameId, { type: IMAGE_TRANSLATE_PROGRESS, requestId, phase: 'translate' });
+        await initI18n();
+        const locale = getLocale();
+        const engine = await getEngine();
+        let translation: string;
+        try {
+            [translation = ''] = await translateForImage([block.text], analysis.lang, locale, engine);
+        } catch (error) {
+            return translateFailure(error);
+        }
+
+        const result: TranslatedImage = {
+            requestId,
+            image: image.dataUrl,
+            coverage: image.coverage,
+            width: target.width,
+            height: target.height,
+            blocks: mergeRegionBlock(base?.blocks ?? [], { ...block, translation }),
+            targetLang: locale,
+            sourceLang: base?.sourceLang ?? analysis.lang,
+            diagnostics: base?.diagnostics
+        };
+        const key = translationKey(srcUrl);
+        if (key) {
+            await storeResult(storeKey(locale, engine, key), result).catch((error) => contentLogger.debug('框選翻譯：存譯文失敗', error));
+        }
+        return { ok: true, result };
+    } catch (error) {
+        contentLogger.warn('框選翻譯失敗', error);
+        return { ok: false, code: 'analyze-failed' };
+    } finally {
+        pending.delete(requestId);
+    }
+}
+
+const isFraction = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
+
+function isRegionRequest(message: unknown): message is RegionRequest {
+    const m = message as Partial<RegionRequest> | null;
+    if (m?.type !== IMAGE_TRANSLATE_REGION || typeof m.srcUrl !== 'string' || typeof m.requestId !== 'string' || !MENU_LANGS.includes(m.lang as LangChoice)) return false;
+    if (m.hint !== undefined && !SOURCE_LANGS.includes(m.hint)) return false;
+    const sel = m.selection;
+    if (!sel || ![sel.left, sel.top, sel.width, sel.height].every(isFraction)) return false;
+    const base = m.base;
+    return base === undefined || (typeof base.image === 'string' && base.image.startsWith('data:image/') && Array.isArray(base.blocks)
+        && SOURCE_LANGS.includes(base.sourceLang) && typeof base.width === 'number' && typeof base.height === 'number' && typeof base.coverage === 'object');
 }
 
 /** 存之前把擷取到的圖壓成 JPEG（PNG 一頁動輒一兩 MB），只用來當譯文層的底圖 */
@@ -446,6 +557,11 @@ export function installImageTranslate(): void {
         if (message?.type === IMAGE_TRANSLATE_BATCH_PROGRESS && isFromContentScript(sender) && sender.tab?.id !== undefined) {
             if ((message as BatchProgress).finished) void setBatchSession(sender.tab.id, null);
             return false;
+        }
+        // 框選翻譯：翻一張圖裡框起來的一塊
+        if (isRegionRequest(message) && isFromContentScript(sender) && sender.tab) {
+            runRegion({ tab: sender.tab, frameId: sender.frameId ?? 0, request: message }).then(sendResponse);
+            return true;
         }
         // 自動翻譯模式：內容腳本請求翻譯一張圖
         if (isTranslateRequest(message) && isFromContentScript(sender) && sender.tab) {

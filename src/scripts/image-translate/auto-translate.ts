@@ -17,9 +17,13 @@
 
 import { t } from './i18n';
 import { TranslationOverlay } from './overlay';
+import type { MessageKey } from './i18n';
+import type { Fraction } from './region';
 import {
     IMAGE_TRANSLATE_LOOKUP,
+    IMAGE_TRANSLATE_REGION,
     IMAGE_TRANSLATE_REQUEST,
+    type RegionRequest,
     translationKey,
     type ImageGeometry,
     type LookupRequest,
@@ -133,6 +137,8 @@ export class AutoTranslator {
     private readonly overlays = new Map<HTMLImageElement, { url: string; overlay: TranslationOverlay }>();
     private readonly prefetchUrls: string[] = [];
     private readonly requestIds = new Set<string>();
+    // 框選翻譯進行中的請求 → 那張圖的譯文層（顯示辨識中／翻譯中）
+    private readonly regionRequests = new Map<string, TranslationOverlay>();
     private mutationObserver: MutationObserver | null = null;
     private performanceObserver: PerformanceObserver | null = null;
     private scrollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -254,11 +260,81 @@ export class AutoTranslator {
     }
 
     ownsRequest(requestId: string): boolean {
-        return this.requestIds.has(requestId);
+        return this.requestIds.has(requestId) || this.regionRequests.has(requestId);
+    }
+
+    /**
+     * 框選翻譯：只翻這張圖裡框起來的一塊，併進它原本的譯文（框到翻錯的地方就是重翻那一塊）。
+     * 失敗時在圖上標出原因幾秒鐘，原本的譯文保留
+     */
+    async translateRegion(img: HTMLImageElement, selection: Fraction): Promise<void> {
+        const url = imageUrl(img);
+        const entry = this.cache.get(url);
+        const base = entry?.status === 'done' ? entry.result : undefined;
+        const existing = this.overlays.get(img)?.overlay;
+        const layer = existing && !existing.isRemoved ? existing : new TranslationOverlay(img, { toolbar: false });
+        if (layer !== existing) this.overlays.set(img, { url, overlay: layer });
+        layer.setVisible(true);
+        layer.setStatus(t('manga.status.preparing'));
+
+        const requestId = crypto.randomUUID();
+        this.regionRequests.set(requestId, layer);
+        const request: RegionRequest = {
+            type: IMAGE_TRANSLATE_REGION,
+            requestId,
+            srcUrl: url,
+            lang: this.lang,
+            hint: this.detected,
+            geometry: visibleGeometry(img),
+            selection,
+            base
+        };
+        let response: TranslateResponse | undefined;
+        try {
+            response = (await chrome.runtime.sendMessage(request)) as TranslateResponse | undefined;
+        } catch {
+            response = undefined;
+        } finally {
+            this.regionRequests.delete(requestId);
+        }
+        if (this.stopped || layer.isRemoved) return;
+
+        if (response?.ok) {
+            this.cache.set(url, { status: 'done', result: response.result });
+            this.show(img, url, response.result, layer);
+            return;
+        }
+        const code = response && !response.ok ? response.code : 'analyze-failed';
+        const keys: Partial<Record<typeof code, MessageKey>> = {
+            'no-text': 'manga.error.noText',
+            'capture-failed': 'manga.error.capture',
+            'translate-failed': 'manga.error.translate',
+            'translate-busy': 'manga.error.busy',
+            'translate-no-key': 'manga.error.noKey',
+            'model-download-failed': 'manga.error.download',
+            'region-outside': 'manga.error.regionOutside'
+        };
+        layer.setStatus(t(keys[code] ?? 'manga.error.analyze'), true);
+        setTimeout(() => {
+            if (layer.isRemoved) return;
+            if (base) {
+                layer.clearStatus();
+                layer.setVisible(!this.showOriginal);
+            } else {
+                layer.remove();
+                this.overlays.delete(img);
+            }
+        }, FAILURE_BADGE_MS + 1500);
     }
 
     /** 背景頁回報這張的進度：第一次下載模型、辨識中、翻譯中 */
     onProgress(message: ProgressMessage): void {
+        const region = this.regionRequests.get(message.requestId);
+        if (region) {
+            if (message.phase === 'analyze') region.setStatus(t('manga.status.analyzing'));
+            else if (message.phase === 'translate') region.setStatus(t('manga.status.translating'));
+            return;
+        }
         const run = this.running.get(message.requestId);
         if (!run) return;
         if (message.phase === 'download' && message.total) {
