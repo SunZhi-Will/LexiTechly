@@ -231,6 +231,53 @@ function glyphSizeOf(mask: Uint8Array, width: number, height: number, col: Span,
     return Math.max(4, Math.min(columnWidth, Math.max(p75, columnWidth * 0.35)));
 }
 
+// 一欄比一般的欄寬這麼多倍，才考慮它其實是黏在一起的幾欄
+const WIDE_COLUMN_RATIO = 1.6;
+// 切開的地方墨跡要少到這一欄墨跡量中位數的這個比例以下（真的有欄間空隙），不然不切（大字的欄本來就寬）
+const SPLIT_VALLEY_RATIO = 0.25;
+
+/**
+ * 欄距很窄（字小、或圖片解析度低）時，兩欄之間的空隙會被反鋸齒填掉，投影切不開，兩欄被當成一欄，
+ * 讀出來是兩欄的字交錯在一起（使用者框的對話框：「普段一人で」「するときは」讀成「す誓とる段き人はて」）。
+ * 比一般的欄寬很多、而且中間有墨跡很少的低谷時，在低谷切開。
+ */
+export function splitWideColumns(mask: Uint8Array, width: number, height: number, columns: Span[]): Span[] {
+    if (columns.length === 0) return columns;
+    const widths = columns.map((col) => col.end - col.start).sort((a, b) => a - b);
+    const reference = widths[Math.floor((widths.length - 1) / 2)];
+    const profile = columnProfile(mask, width, height);
+    const out: Span[] = [];
+    for (const col of columns) {
+        const w = col.end - col.start;
+        const parts = Math.round(w / reference);
+        if (columns.length < 2 || w < reference * WIDE_COLUMN_RATIO || parts < 2) {
+            out.push(col);
+            continue;
+        }
+        const inside = profile.slice(col.start, col.end);
+        const median = [...inside].sort((a, b) => a - b)[Math.floor(inside.length / 2)];
+        const cuts: number[] = [];
+        for (let i = 1; i < parts; i++) {
+            // 在預期的位置附近（前後四分之一欄）找墨跡最少的那一條
+            const expected = col.start + (w * i) / parts;
+            const from = Math.max(col.start + 1, Math.round(expected - w / parts / 4));
+            const to = Math.min(col.end - 1, Math.round(expected + w / parts / 4));
+            let best = -1;
+            for (let x = from; x <= to; x++) if (best < 0 || profile[x] < profile[best]) best = x;
+            if (best >= 0 && profile[best] <= median * SPLIT_VALLEY_RATIO) cuts.push(best);
+        }
+        let start = col.start;
+        for (const cut of cuts) {
+            if (cut - start >= 3) {
+                out.push({ start, end: cut });
+                start = cut + 1;
+            }
+        }
+        out.push({ start, end: col.end });
+    }
+    return out;
+}
+
 /**
  * 直排：切成欄（由右而左），每欄切成字（由上而下）
  */
@@ -250,7 +297,7 @@ export function verticalColumns(mask: Uint8Array, width: number, height: number)
     }
 
     const result: Column[] = [];
-    for (const col of columns.reverse()) {
+    for (const col of splitWideColumns(mask, width, height, columns).reverse()) {
         const runs = spans(rowProfile(mask, width, col.start, col.end), 1, 0, 1);
         const size = glyphSizeOf(mask, width, height, col, runs);
         const center = inkCenter(mask, width, height, col);

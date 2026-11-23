@@ -79,3 +79,14 @@ test('框住整張圖的寬度時，比例不會因為浮點誤差超過 1', () 
         assert.ok(value >= 0 && value <= 1, String(value));
     }
 });
+
+test('讀法評分：完整的句子勝過碎成一個個字的讀法', async () => {
+    const { readingScore } = await import('../src/scripts/image-translate/region');
+    const line = (text: string, confidence: number) => ({ text, confidence, box: [0, 0, 10, 10] as [number, number, number, number] });
+    // 直排的字用橫排讀：碎成很多一兩個字的小段
+    const sideways = ['盛', '竟', 'なな', '', 'い', 'に', 'ほ', 'き', 'て'].map((text) => line(text, 0.95));
+    const columns = ['普段一人で', 'するときは', 'こんなに', '感じないのに'].map((text) => line(text, 0.9));
+    assert.ok(readingScore(columns) > readingScore(sideways));
+    assert.equal(readingScore([]), 0);
+    assert.equal(readingScore([line('  ', 1)]), 0);
+});

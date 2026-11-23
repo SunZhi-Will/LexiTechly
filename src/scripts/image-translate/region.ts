@@ -9,7 +9,7 @@
 
 import { groupLines } from './group';
 import { boxArea, intersection } from './tiles';
-import type { Box, ImageAnalysis, SourceLang, TextBlock, TranslatedBlock, ViewportRect } from './protocol';
+import type { Box, ImageAnalysis, OcrLine, SourceLang, TextBlock, TranslatedBlock, ViewportRect } from './protocol';
 
 /** 一塊範圍占某張圖的比例 */
 export interface Fraction {
@@ -102,4 +102,15 @@ export function mergeRegionBlock(blocks: TranslatedBlock[], block: TranslatedBlo
         return area === 0 || intersection(old.box, selection) / area < REPLACE_IF_INSIDE;
     });
     return [...kept, block];
+}
+
+/**
+ * 一種讀法讀得好不好：讀到的字數乘上信心，再除以「碎成幾段」的平方根。
+ * 用橫排去讀直排的字（或反過來），會碎成一大堆一兩個字的小段，字數也少；讀對方向時是幾段完整的句子。
+ */
+export function readingScore(lines: OcrLine[]): number {
+    const kept = lines.filter((line) => line.text.trim());
+    if (kept.length === 0) return 0;
+    const weighted = kept.reduce((sum, line) => sum + [...line.text.replace(/\s/g, '')].length * line.confidence, 0);
+    return weighted / Math.sqrt(kept.length);
 }

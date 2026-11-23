@@ -13,6 +13,7 @@ import * as ort from 'onnxruntime-web/wasm';
 import { PaddleOcrService, type RecognitionOptions } from 'ppu-paddle-ocr/web';
 import { DETECTOR_MODEL, MODEL_CACHE, ModelFile, OCR_MODELS } from './models';
 import { groupLines } from './group';
+import { readingScore } from './region';
 import { judge, nextCandidate, type LangVerdict } from './lang-detect';
 import type { Box, ImageAnalysis, OcrLine, Region, RegionLabel, SourceLang } from './protocol';
 import { boxArea, dedupeBoxes, dedupeOverlapping, intersection, planTiles, shiftBox } from './tiles';
@@ -232,12 +233,13 @@ interface VerticalPlan {
 }
 
 /** 判斷一個文字區塊是不是直排；是就切好欄（還不辨識），不是回傳 null */
-function planVertical(tile: OffscreenCanvas, region: Region): VerticalPlan | null {
+// force：不判斷方向，直接切欄（框選翻譯會直排、橫排都讀一次再挑好的）
+function planVertical(tile: OffscreenCanvas, region: Region, force = false): VerticalPlan | null {
     const [rx0, ry0, rx1, ry1] = region.box;
     const crop: Box = [Math.max(0, rx0 - VERTICAL_PAD), Math.max(0, ry0 - VERTICAL_PAD), Math.min(tile.width, rx1 + VERTICAL_PAD), Math.min(tile.height, ry1 + VERTICAL_PAD)];
     const gray = grayOf(tile, crop);
     const mask = inkMask(gray);
-    if (orientation(mask, gray.width, gray.height) !== 'vertical') return null;
+    if (!force && orientation(mask, gray.width, gray.height) !== 'vertical') return null;
     const columns = verticalColumns(mask, gray.width, gray.height);
     if (columns.length === 0) return null;
     // 字太小（擷取畫面時常只有二十幾像素）就把排出來的橫行放大再辨識：實測把「ちキ」讀對成「ちゃ」
@@ -430,8 +432,9 @@ export async function analyzeImage(dataUrl: string, lang: SourceLang | 'auto', h
 
 /**
  * 框選翻譯：使用者框起來的那一塊。不跑對話框偵測（框很小、又被拉伸成正方形，偵測模型常常什麼都找不到，
- * 直排的字就只能交給橫排 OCR，讀出來是空的），整塊直接當成一個文字區塊：
- * 先看是不是直排、是就切欄辨識；不是直排或切欄讀不到字，再用整塊 OCR。
+ * 直排的字就只能交給橫排 OCR，讀出來是空的），整塊直接當成一個文字區塊。
+ * 直排、橫排各讀一次，留讀得比較好的（見 region.ts 的 readingScore）：日文的字是方的、排得整整齊齊，
+ * 投影法判斷方向時直排和橫排的分數幾乎一樣，常把直排判成橫排（實測使用者框的對話框就是這樣讀不到）。
  * lang 為 'auto' 時和整頁一樣依讀到的字換語言試。
  */
 export async function analyzeRegion(dataUrl: string, lang: SourceLang | 'auto', hint: SourceLang | undefined, onProgress: ProgressFn): Promise<ImageAnalysis & { lang: SourceLang }> {
@@ -439,9 +442,10 @@ export async function analyzeRegion(dataUrl: string, lang: SourceLang | 'auto', 
     const region: Region = { label: 'text_bubble', score: 1, box: [0, 0, canvas.width, canvas.height] };
     const readWith = async (candidate: SourceLang): Promise<ImageAnalysis> => {
         const { ocr } = await prepare(candidate, onProgress);
-        const plan = planVertical(canvas, region);
-        let lines = plan ? await recognizeColumns(ocr, canvas, [plan]) : [];
-        if (lines.length === 0) lines = await recognizeLines(ocr, copyCanvas(canvas));
+        const plan = planVertical(canvas, region, true);
+        const vertical = plan ? await recognizeColumns(ocr, canvas, [plan]) : [];
+        const horizontal = await recognizeLines(ocr, copyCanvas(canvas));
+        const lines = readingScore(vertical) > readingScore(horizontal) ? vertical : horizontal;
         return { width: canvas.width, height: canvas.height, regions: [region], lines };
     };
     if (lang !== 'auto') return { ...(await readWith(lang)), lang };
