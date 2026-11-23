@@ -79,6 +79,7 @@ export default defineConfig({
                 'src/pages/vocabulary': resolve(__dirname, 'src/pages/vocabulary.html'),
                 'src/pages/popup': resolve(__dirname, 'src/pages/popup.html'),
                 'src/pages/offscreen': resolve(__dirname, 'src/pages/offscreen.html'),
+                'src/pages/welcome': resolve(__dirname, 'src/pages/welcome.html'),
                 'src/scripts/content': resolve(__dirname, 'src/scripts/content.ts'),
                 'src/scripts/background': resolve(__dirname, 'src/scripts/background.ts')
             },

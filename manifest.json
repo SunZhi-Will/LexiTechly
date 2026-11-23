@@ -1,8 +1,9 @@
 {
     "manifest_version": 3,
-    "name": "LexiTechly - 智慧英文內容分析",
+    "default_locale": "zh_TW",
+    "name": "__MSG_extName__",
     "version": "1.4.1",
-    "description": "使用 Google Gemini AI 分析英文網頁內容，提供 CEFR 等級評估、單字解析、AI 互動對話與語音發音功能，提升您的英文閱讀與學習體驗！",
+    "description": "__MSG_extDescription__",
     "permissions": [
         "storage",
         "unlimitedStorage",
@@ -20,7 +21,7 @@
             "suggested_key": {
                 "default": "Alt+Shift+T"
             },
-            "description": "翻譯這頁的漫畫圖片（自動翻譯，換頁也會跟著翻）"
+            "description": "__MSG_commandTranslateImages__"
         }
     },
     "cross_origin_embedder_policy": {

@@ -2,6 +2,7 @@
 // 處理擴充功能的訊息通訊和狀態管理
 
 import { handleAiMessage } from './ai/background';
+import { t } from './i18n';
 import { createImageTranslateMenus, installImageTranslate } from './image-translate/image-translate';
 
 interface MessageRequest {
@@ -116,6 +117,11 @@ chrome.runtime.onMessage.addListener((
 // 監聽擴充功能安裝事件
 chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails) => {
     console.log('LexiTechly 擴充功能已安裝/更新:', details);
+
+    // 第一次安裝時開歡迎頁：說明免設定就能用的功能，並讓使用者選擇要不要填 API Key
+    if (details.reason === 'install') {
+        chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/welcome.html') });
+    }
     
     // 初始化擴充功能設定
     chrome.storage.local.get(['apiKey', 'settings'], (result) => {
@@ -137,7 +143,7 @@ chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails
         chrome.contextMenus.removeAll(() => {
             chrome.contextMenus.create({
                 id: 'lexitechly-lookup-selection',
-                title: '用 LexiTechly 查詢「%s」',
+                title: t('menuLookupSelection'),
                 contexts: ['selection']
             });
             // 圖片翻譯的選單要在 removeAll 之後、同一個流程裡建立

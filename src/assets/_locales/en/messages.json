@@ -1,0 +1,35 @@
+{
+    "extName": { "message": "LexiTechly - Smart English Content Analysis" },
+    "extDescription": { "message": "Analyze English web pages with Gemini AI: CEFR level, word lookup, pronunciation, and on-device manga image translation." },
+    "commandTranslateImages": { "message": "Translate the manga images on this page (keeps translating as you turn pages)" },
+    "menuLookupSelection": { "message": "Look up \"%s\" with LexiTechly" },
+
+    "welcomeTitle": { "message": "Welcome to LexiTechly" },
+    "welcomeLead": { "message": "Look up words and check difficulty while you read English pages, and translate images while you read manga. Three steps and you are ready in a minute." },
+
+    "welcomeStep1Title": { "message": "What works with no setup" },
+    "welcomeStep1Images": { "message": "Translate images: right-click an image and choose \"Translate this image\", or press $1 to translate a whole manga page automatically. Text recognition runs on your computer and images are never uploaded." },
+    "welcomeStep1Lookup": { "message": "Look up words: click the LexiTechly icon at the top right of a page to turn on lookup mode. Hover over a word to highlight it, then click to see its translation." },
+    "welcomeStep1Analyze": { "message": "Analyze a page: click the LexiTechly icon in the toolbar, then \"Analyze current page\" to estimate the article's CEFR level and list its vocabulary." },
+    "welcomeShortcutUnset": { "message": "the shortcut (not set yet)" },
+
+    "welcomeStep2Title": { "message": "Add a Gemini API key for richer explanations (optional)" },
+    "welcomeStep2Body": { "message": "With an API key, each word also shows its CEFR level, part of speech, examples, synonyms and antonyms, and page analysis is done by AI. Google offers a free tier, and getting a key costs nothing." },
+    "welcomeStep2How1": { "message": "Go to Google AI Studio and sign in with your Google account" },
+    "welcomeStep2How2": { "message": "Click \"Get API key\" to create a key" },
+    "welcomeStep2How3": { "message": "Paste the key below and click \"Save and test\"" },
+    "welcomeOpenAiStudio": { "message": "Open Google AI Studio" },
+    "welcomeKeyLabel": { "message": "Gemini API key" },
+    "welcomeKeyPlaceholder": { "message": "Paste your API key" },
+    "welcomeKeySave": { "message": "Save and test" },
+    "welcomeKeyTesting": { "message": "Testing..." },
+    "welcomeKeyEmpty": { "message": "Paste an API key first" },
+    "welcomeKeyOk": { "message": "The key works and has been saved." },
+    "welcomeKeyFailed": { "message": "The key was saved, but the test did not succeed: $1" },
+    "welcomeKeyAlreadySet": { "message": "You have already set an API key. To replace it, paste a new one and save." },
+    "welcomeKeyPrivacy": { "message": "The key is stored only in this browser on this computer. When you use AI features, page text is sent directly to Google's Gemini API." },
+
+    "welcomeStep3Title": { "message": "Start reading" },
+    "welcomeStep3Body": { "message": "Open any English article and try it. To change settings later, click the LexiTechly icon in the toolbar and open the Settings tab." },
+    "welcomeDone": { "message": "Got it, close this tab" }
+}
