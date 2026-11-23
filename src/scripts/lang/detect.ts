@@ -71,6 +71,33 @@ function detectLatinLanguage(sample: string): LearningLang | null {
 }
 
 /**
+ * 一小段文字（一個單字、一句選取的話）要當成哪種語言。
+ *
+ * 短文字沒辦法靠統計判斷，所以只看文字系統：假名一定是日文、諺文一定是韓文；
+ * 只有漢字或只有拉丁字母時分不出來，就看使用者指定的語言，再看所在頁面的語言。
+ */
+export function langOfSnippet(text: string, pageLang: LearningLang, setting: LearningLang | 'auto'): LearningLang {
+    let hasHan = false;
+    let hasLatin = false;
+    for (const char of text) {
+        const kind = scriptOfChar(char);
+        if (kind === 'kana') return 'ja';
+        if (kind === 'hangul') return 'ko';
+        if (kind === 'han') hasHan = true;
+        if (kind === 'latin') hasLatin = true;
+    }
+
+    const candidates = setting === 'auto' ? [pageLang] : [setting, pageLang];
+    if (hasHan) {
+        return candidates.find((lang) => lang === 'ja' || lang === 'zh') ?? 'zh';
+    }
+    if (hasLatin) {
+        return candidates.find((lang) => LEARNING_LANGUAGES[lang].script === 'latin') ?? 'en';
+    }
+    return candidates[0];
+}
+
+/**
  * 判斷一段文字主要是哪種學習語言；判斷不出來（太短、沒有文字、不是支援的語言）回傳 null。
  *
  * 日文的判斷依據是假名：日文文章一定有假名，中文沒有；所以只要假名占一定比例就是日文，

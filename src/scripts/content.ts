@@ -54,7 +54,7 @@ chrome.runtime.onMessage.addListener((
                 });
             });
         } else {
-            sendResponse(analyzeContentLocal(content));
+            analyzeContentLocal(content).then(result => sendResponse(result));
         }
         return true;
 

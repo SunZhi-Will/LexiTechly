@@ -2,6 +2,8 @@
 
 import { audioCache, cacheAudioData } from './storage.js';
 import { showToast } from './ui.js';
+import { langOfSnippet } from '../lang/detect.js';
+import { LEARNING_LANGUAGES, isLearningLang, type LearningLang } from '../lang/languages.js';
 
 // 全域音訊變數
 let currentAudio: HTMLAudioElement | null = null;
@@ -58,7 +60,9 @@ function syncButtonStates(text: string, isPlaying: boolean, isLoading: boolean =
  * @param text 要播放的文字
  * @param button 播放按鈕元素
  */
-export async function speakWord(text: string, button?: HTMLElement): Promise<void> {
+export async function speakWord(text: string, button?: HTMLElement, lang?: string): Promise<void> {
+    // 沒有指定語言時看文字本身（舊資料沒有記語言）
+    const speechLang = isLearningLang(lang) ? lang : langOfSnippet(text, 'en', 'auto');
     try {
         // 防止重複觸發
         if (button && button.classList.contains('loading')) {
@@ -90,7 +94,7 @@ export async function speakWord(text: string, button?: HTMLElement): Promise<voi
         }
 
         // 如果快取中沒有，嘗試獲取並播放音頻
-        await playAudio(text, speed, button);
+        await playAudio(text, speed, button, speechLang);
 
     } catch (error) {
         console.error('語音播放失敗:', error);
@@ -124,7 +128,7 @@ export async function speakWord(text: string, button?: HTMLElement): Promise<voi
 /**
  * 音頻播放實現 - 包含多層降級策略
  */
-async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button?: HTMLElement): Promise<void> {
+async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button: HTMLElement | undefined, lang: LearningLang): Promise<void> {
     try {
         const storageData = await chrome.storage.local.get(['apiKey', 'ttsProvider']) as {
             apiKey?: string;
@@ -137,7 +141,7 @@ async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button
         const useBrowserOnly = ttsProvider === 'browser' || ttsProvider === 'google-translate';
 
         if (useBrowserOnly) {
-            await fallbackSpeak(text, text, speed);
+            await fallbackSpeak(text, text, speed, lang);
             return;
         }
 
@@ -196,7 +200,7 @@ async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button
 
         // 如果 Gemini API 失敗，使用瀏覽器內建語音
         console.warn('Gemini 語音 API 失敗，使用瀏覽器內建語音');
-        await fallbackSpeak(text, text, speed);
+        await fallbackSpeak(text, text, speed, lang);
     } catch (error) {
         throw error;
     }
@@ -263,12 +267,12 @@ async function blobToBase64(blob: Blob): Promise<string> {
 /**
  * 降級使用瀏覽器內建語音
  */
-async function fallbackSpeak(text: string, displayText: string, speed: 'slow' | 'normal' | 'fast' = 'normal'): Promise<void> {
+async function fallbackSpeak(text: string, displayText: string, speed: 'slow' | 'normal' | 'fast' = 'normal', lang: LearningLang = 'en'): Promise<void> {
     return new Promise((resolve, reject) => {
         try {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = speed === 'slow' ? 0.7 : speed === 'fast' ? 1.3 : 1;
-            utterance.lang = 'en-US';
+            utterance.lang = LEARNING_LANGUAGES[lang].ttsLang;
 
             utterance.onend = () => {
                 syncButtonStates(displayText, false);

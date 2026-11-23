@@ -48,7 +48,8 @@ test('manifest、歡迎頁與程式用到的 key 都有定義', () => {
         ...matches(readText('manifest.json'), /__MSG_(\w+)__/g),
         ...matches(readText('src/pages/welcome.html'), /data-i18n(?:-placeholder|-title)?="(\w+)"/g),
         ...matches(readText('src/scripts/welcome.ts'), /\bt\('(\w+)'/g),
-        ...matches(readText('src/scripts/background.ts'), /\bt\('(\w+)'/g)
+        ...matches(readText('src/scripts/background.ts'), /\bt\('(\w+)'/g),
+        ...matches(readText('src/scripts/lang/settings-ui.ts'), /\bt\('(\w+)'/g)
     ];
     assert.ok(used.length > 0);
     for (const key of used) {
@@ -57,7 +58,7 @@ test('manifest、歡迎頁與程式用到的 key 都有定義', () => {
 });
 
 test('字串檔裡沒有用不到的 key', () => {
-    const sources = ['manifest.json', 'src/pages/welcome.html', 'src/scripts/welcome.ts', 'src/scripts/background.ts']
+    const sources = ['manifest.json', 'src/pages/welcome.html', 'src/scripts/welcome.ts', 'src/scripts/background.ts', 'src/scripts/lang/settings-ui.ts']
         .map(readText)
         .join('\n');
     for (const key of defaultKeys) {

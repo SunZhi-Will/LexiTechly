@@ -1,7 +1,8 @@
 /// <reference types="chrome"/>
 
 // CEFR 等級類型
-export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+// 名稱沿用舊的，實際上是各語言分級系統的等級（CEFR、JLPT、TOPIK、HSK），見 lang/languages.ts
+export type CEFRLevel = string;
 
 // 單字介面
 export interface Word {
@@ -10,6 +11,8 @@ export interface Word {
     translation: string;
     example: string;
     phonetic?: string;
+    /** 這個單字的語言；舊資料沒有這個欄位，視為英文 */
+    lang?: string;
     addedTime: number;
 }
 
@@ -34,6 +37,8 @@ export interface ChromeResponse {
         };
     };
     text?: string;
+    /** 分析時採用的學習語言 */
+    lang?: string;
     error?: string;
     response?: string;
     vocabulary?: Word[];

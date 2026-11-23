@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { charBelongsToLang, detectLearningLang } from '../src/scripts/lang/detect';
+import { charBelongsToLang, detectLearningLang, langOfSnippet } from '../src/scripts/lang/detect';
 import {
     LEARNING_LANGUAGES,
     LEVELS,
@@ -167,4 +167,24 @@ test('prompt: 帶入學習語言、解說語言與該語言的等級', () => {
     assert.ok(buildWordQueryPrompt('学生', 'zh', 'en').includes('pinyin'));
     assert.ok(!buildWordQueryPrompt('casa', 'es', 'en').includes('hiragana'));
     assert.ok(buildWordDetailsPrompt('Haus', 'de', 'ko').includes('German word "Haus"'));
+});
+
+test('langOfSnippet: 假名與諺文直接決定語言，漢字與拉丁字母看設定與頁面', () => {
+    assert.equal(langOfSnippet('たべる', 'en', 'auto'), 'ja');
+    assert.equal(langOfSnippet('食べる', 'zh', 'zh'), 'ja');
+    assert.equal(langOfSnippet('학생', 'en', 'auto'), 'ko');
+
+    // 只有漢字：日文頁面上是日文，其他情況是中文
+    assert.equal(langOfSnippet('学生', 'ja', 'auto'), 'ja');
+    assert.equal(langOfSnippet('学生', 'en', 'auto'), 'zh');
+    assert.equal(langOfSnippet('学生', 'en', 'ja'), 'ja');
+
+    // 只有拉丁字母：優先用指定的語言，再看頁面，最後當成英文
+    assert.equal(langOfSnippet('casa', 'es', 'auto'), 'es');
+    assert.equal(langOfSnippet('maison', 'en', 'fr'), 'fr');
+    assert.equal(langOfSnippet('hello', 'ja', 'auto'), 'en');
+    assert.equal(langOfSnippet('hello', 'ja', 'ko'), 'en');
+
+    // 沒有文字時跟著設定或頁面
+    assert.equal(langOfSnippet('123', 'de', 'auto'), 'de');
 });

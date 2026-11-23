@@ -11,6 +11,7 @@ import { audioCache } from './vocabulary/storage.js';
 import { convertToCSV, downloadCSV } from './vocabulary/export.js';
 import { clearModelCache, clearSavedTranslations, getImageTranslateUsage } from './image-translate/storage-admin.js';
 import { initImageTranslateButton } from './image-translate/popup-button.js';
+import { initLanguageSelects } from './lang/settings-ui.js';
 
 export { }; // 使此檔案成為模組
 
@@ -760,6 +761,11 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
 
         // 分析按鈕監聽（無 API Key 時使用本地分析，不需 AI）
         initImageTranslateButton();
+        void initLanguageSelects(
+            document.getElementById('learning-lang') as HTMLSelectElement | null,
+            document.getElementById('native-lang') as HTMLSelectElement | null,
+            () => UI.showToast('語言設定已儲存', false, false, true)
+        );
 
         const analyzeButton = document.getElementById('analyze');
         if (analyzeButton) {

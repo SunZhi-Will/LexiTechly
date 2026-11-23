@@ -4,6 +4,7 @@
 
 import { AiError, generateText, hasApiKey } from './ai/client';
 import { localizePage, t } from './i18n';
+import { initLanguageSelects } from './lang/settings-ui';
 
 const TRANSLATE_COMMAND = 'translate-images';
 
@@ -64,6 +65,10 @@ async function init(): Promise<void> {
     localizePage();
     document.title = t('welcomeTitle');
     await renderImagesStep();
+    await initLanguageSelects(
+        document.getElementById('learning-lang') as HTMLSelectElement | null,
+        document.getElementById('native-lang') as HTMLSelectElement | null
+    );
 
     if (await hasApiKey()) setStatus(t('welcomeKeyAlreadySet'));
 

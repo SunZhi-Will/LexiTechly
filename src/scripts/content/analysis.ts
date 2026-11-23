@@ -1,5 +1,9 @@
 /// <reference types="chrome"/>
 import { AiError, generateText } from '../ai/client.js';
+import { LEARNING_LANGUAGES, NATIVE_LANGUAGES, middleLevel, normalizeLevel, type LearningLang, type NativeLang } from '../lang/languages.js';
+import { buildChatPrompt, buildPageAnalysisPrompt, buildPageVocabularyPrompt } from '../lang/prompts.js';
+import { wordsIn } from '../lang/segment.js';
+import { getLanguageSettings, resolveLearningLang } from '../lang/settings.js';
 
 // 獲取頁面內容
 export function getPageContent(): string {
@@ -9,29 +13,31 @@ export function getPageContent(): string {
     return text;
 }
 
-// 檢查是否為英文內容
-export function checkIfEnglish(text: string): boolean {
-    // 移除標點符號和數字
-    const cleanText = text.replace(/[^\p{L}\s]/gu, '');
+const UNKNOWN_LANGUAGE_ERROR = '看不出這個頁面是哪種語言。請到設定指定要學習的語言後再試。';
 
-    // 計算英文字母的比例
-    const englishChars = cleanText.match(/[a-zA-Z]/g);
-    const totalChars = cleanText.replace(/\s/g, '');
-
-    if (!englishChars || totalChars.length === 0) {
-        return false;
-    }
-
-    const englishRatio = englishChars.length / totalChars.length;
-
-    // 如果英文字母比例超過 70%，認為是英文內容
-    return englishRatio > 0.7;
+/** 這段內容要當成哪種語言來學，以及說明要用哪種語言寫；判斷不出內容的語言時 lang 為 null */
+async function resolvePageLanguages(content: string): Promise<{ lang: LearningLang | null; native: NativeLang }> {
+    const settings = await getLanguageSettings();
+    return { lang: resolveLearningLang(settings.learningLang, content), native: settings.nativeLang };
 }
 
-/** MyMemory 英→繁中翻譯（免 API Key），供本地單字分析使用 */
-async function translateWithMyMemory(word: string): Promise<string> {
+/** 整理 AI 回傳的單字：等級改成該語言分級系統的寫法，並記下語言與加入時間 */
+function finishWord(word: Word, lang: LearningLang): Word {
+    return {
+        ...word,
+        level: normalizeLevel(lang, word.level) ?? middleLevel(lang),
+        lang,
+        addedTime: Date.now()
+    };
+}
+
+/** MyMemory 翻譯（免 API Key），供本地單字分析使用；學習語言和解說語言相同時不翻 */
+async function translateWithMyMemory(word: string, lang: LearningLang, native: NativeLang): Promise<string> {
+    const from = LEARNING_LANGUAGES[lang].translateCode;
+    const to = NATIVE_LANGUAGES[native].translateCode;
+    if (from === to) return '';
     try {
-        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word.trim())}&langpair=en|zh-TW`;
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word.trim())}&langpair=${encodeURIComponent(`${from}|${to}`)}`;
         const res = await fetch(url);
         if (!res.ok) return '';
         const data = await res.json();
@@ -42,11 +48,15 @@ async function translateWithMyMemory(word: string): Promise<string> {
     }
 }
 
-/** 本地內容難度分析（不需 API Key）：依字長、句長等簡單規則估計 CEFR */
-export function analyzeContentLocal(content: string): ChromeResponse {
-    if (!checkIfEnglish(content)) {
+/** 本地內容難度分析（不需 API Key）：依字長、句長等簡單規則估計 CEFR。規則是為英文訂的，其他語言不適用 */
+export async function analyzeContentLocal(content: string): Promise<ChromeResponse> {
+    const { lang } = await resolvePageLanguages(content);
+    if (!lang) {
+        return { error: UNKNOWN_LANGUAGE_ERROR, level: undefined, text: undefined };
+    }
+    if (lang !== 'en') {
         return {
-            error: '此頁面似乎不是英文內容。請選擇英文文章進行分析。',
+            error: `沒有 API Key 時只能估算英文文章的難度。要分析${LEARNING_LANGUAGES[lang].nativeName}文章，請先到設定填入 Gemini API Key。`,
             level: undefined,
             text: undefined
         };
@@ -89,22 +99,24 @@ export function analyzeContentLocal(content: string): ChromeResponse {
             }
         },
         text: content,
+        lang,
         error: undefined
     };
 }
 
-/** 本地單字提取與翻譯（不需 API Key）：擷取英文單字並以 MyMemory 翻譯 */
+/** 本地單字提取與翻譯（不需 API Key）：擷取頁面上最常出現的單字並以 MyMemory 翻譯 */
 export async function analyzePageVocabularyLocal(text: string): Promise<ChromeResponse> {
-    if (!checkIfEnglish(text)) {
-        return { error: '此頁面似乎不是英文內容', vocabulary: undefined };
+    const { lang, native } = await resolvePageLanguages(text);
+    if (!lang) {
+        return { error: UNKNOWN_LANGUAGE_ERROR, vocabulary: undefined };
     }
 
-    const wordPattern = /\b[a-zA-Z]{4,}\b/g;
+    // 太短的字多半是虛詞：拉丁字母的語言至少 4 個字母，其他語言至少 2 個字
+    const minLength = LEARNING_LANGUAGES[lang].script === 'latin' ? 4 : 2;
     const count = new Map<string, number>();
-    let m;
-    while ((m = wordPattern.exec(text)) !== null) {
-        const w = m[0].toLowerCase();
-        count.set(w, (count.get(w) || 0) + 1);
+    for (const { word } of wordsIn(text, lang)) {
+        if ([...word].length < minLength) continue;
+        count.set(word, (count.get(word) || 0) + 1);
     }
 
     const sorted = [...count.entries()]
@@ -114,62 +126,34 @@ export async function analyzePageVocabularyLocal(text: string): Promise<ChromeRe
 
     const vocabulary: Word[] = [];
     for (const word of sorted) {
-        const translation = await translateWithMyMemory(word);
+        const translation = await translateWithMyMemory(word, lang, native);
         vocabulary.push({
             text: word,
-            level: 'B1',
+            // 沒有 AI 就無從判斷等級，先放該語言的中間等級
+            level: middleLevel(lang),
             translation: translation || '—',
             example: '',
+            lang,
             addedTime: Date.now()
         });
     }
 
-    return { vocabulary, error: undefined };
+    return { vocabulary, lang, error: undefined };
 }
 
 // 分析內容
 export async function analyzeContent(content: string): Promise<ChromeResponse> {
     try {
-        // 檢查文本是否為英文
-        if (!checkIfEnglish(content)) {
-            return {
-                error: '此頁面似乎不是英文內容。請選擇英文文章進行分析。',
-                level: undefined,
-                text: undefined
-            };
+        const { lang, native } = await resolvePageLanguages(content);
+        if (!lang) {
+            return { error: UNKNOWN_LANGUAGE_ERROR, level: undefined, text: undefined };
         }
 
         const maxRetries = 3;
         let retryCount = 0;
         let lastError: Error | undefined;
 
-        const prompt = `
-        你是一個英文程度分析專家。請分析以下英文文本的難度等級。
-        請使用 JSON 格式回應，格式如下：
-        {
-            "level": "B2",  // 必須是 A1、A2、B1、B2、C1、C2 其中之一
-            "analysis": {
-                "vocabulary": "簡短的難度說明",  // 20字以內
-                "grammar": "簡短的結構說明",     // 20字以內
-                "topic": "簡短的難度說明"        // 20字以內
-            }
-        }
-
-        分析重點：
-        1. 詞彙：單字難度和專業術語比例
-        2. 語法：句型複雜度和時態使用
-        3. 主題：內容專業程度
-
-        文本內容：
-        ---
-        ${content}
-        ---
-
-        請注意：
-        1. 只回傳 JSON 格式的分析結果，不要有其他說明文字
-        2. 所有說明文字必須使用繁體中文
-        3. 分析內容要簡潔有力，每項不超過20個字
-    `;
+        const prompt = buildPageAnalysisPrompt(content, lang, native);
 
         while (retryCount < maxRetries) {
             try {
@@ -367,10 +351,11 @@ export async function analyzeContent(content: string): Promise<ChromeResponse> {
                     }
                 }
 
-                const validLevels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-                if (!validLevels.includes(analysisResult.level)) {
-                    throw new Error(`無效的 CEFR 等級: ${analysisResult.level}`);
+                const normalizedLevel = normalizeLevel(lang, analysisResult.level);
+                if (!normalizedLevel) {
+                    throw new Error(`無效的等級: ${analysisResult.level}`);
                 }
+                analysisResult.level = normalizedLevel;
 
                 // 確保回傳格式正確
                 return {
@@ -417,29 +402,9 @@ export async function chatWithAI(
 ): Promise<ChromeResponse> {
     try {
 
-        // 建構對話歷史
-        const conversationHistory = history.map(msg =>
-            `${msg.type === 'user' ? '使用者' : 'AI'}：${msg.text}`
-        ).join('\n');
-
-        const prompt = `
-        你是一個英文學習助手。基於以下英文文章內容，回答使用者的問題。
-        請用繁體中文回答，並提供實用的英文學習建議。
-
-        文章內容：
-        ---
-        ${content}
-        ---
-
-        ${conversationHistory ? `對話歷史：\n${conversationHistory}\n` : ''}
-
-        使用者問題：${message}
-
-        請提供詳細且有幫助的回答，包括：
-        1. 直接回答問題
-        2. 相關的英文學習要點
-        3. 實用的例句或說明
-    `;
+        const { lang, native } = await resolvePageLanguages(content);
+        // 對話是針對已經分析過的頁面，判斷不出語言時當成英文
+        const prompt = buildChatPrompt(content, message, history, lang ?? 'en', native);
 
         const { text: aiResponse } = await generateText({
             prompt,
@@ -467,36 +432,11 @@ export async function chatWithAI(
 export async function analyzePageVocabulary(text: string): Promise<ChromeResponse> {
     try {
 
-        const prompt = `
-        請分析以下英文文本中的重要單字，並提供詳細資訊。
-        請以 JSON 格式回應，包含最多 20 個重要單字：
-
-        {
-            "vocabulary": [
-                {
-                    "text": "單字",
-                    "level": "CEFR等級(A1-C2)",
-                    "translation": "中文翻譯",
-                    "example": "例句",
-                    "phonetic": "音標(可選)"
-                }
-            ]
+        const { lang, native } = await resolvePageLanguages(text);
+        if (!lang) {
+            return { error: UNKNOWN_LANGUAGE_ERROR, vocabulary: undefined };
         }
-
-        分析重點：
-        1. 選擇對學習者有價值的單字
-        2. 避免過於簡單的基礎單字
-        3. 提供準確的 CEFR 等級
-        4. 翻譯使用繁體中文
-        5. 確保回應是有效的 JSON 格式
-
-        文本內容：
-        ---
-        ${text}
-        ---
-
-        重要：請只回傳有效的 JSON 格式，不要有其他說明文字或註解。
-    `;
+        const prompt = buildPageVocabularyPrompt(text, lang, native);
 
         let { text: result } = await generateText({
             prompt,
@@ -657,13 +597,11 @@ export async function analyzePageVocabulary(text: string): Promise<ChromeRespons
             }
 
             // 為每個單字添加時間戳記
-            const vocabularyWithTimestamp = parsedResult.vocabulary.map(word => ({
-                ...word,
-                addedTime: Date.now()
-            }));
+            const vocabularyWithTimestamp = parsedResult.vocabulary.map(word => finishWord(word, lang));
 
             return {
                 vocabulary: vocabularyWithTimestamp,
+                lang,
                 error: undefined
             };
 
@@ -678,13 +616,11 @@ export async function analyzePageVocabulary(text: string): Promise<ChromeRespons
                 }
 
                 // 為每個單字添加時間戳記
-                const vocabularyWithTimestamp = parsedResult.vocabulary.map(word => ({
-                    ...word,
-                    addedTime: Date.now()
-                }));
+                const vocabularyWithTimestamp = parsedResult.vocabulary.map(word => finishWord(word, lang));
 
                 return {
                     vocabulary: vocabularyWithTimestamp,
+                lang,
                     error: undefined
                 };
 

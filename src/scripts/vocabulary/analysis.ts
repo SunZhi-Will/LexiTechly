@@ -2,37 +2,18 @@
 import { generateText } from '../ai/client.js';
 
 import { Word, WordDetails } from './types.js';
+import { langOfSnippet } from '../lang/detect.js';
+import { isLearningLang } from '../lang/languages.js';
+import { buildWordDetailsPrompt } from '../lang/prompts.js';
+import { getLanguageSettings } from '../lang/settings.js';
 import { wordAnalysisCache, accumulatedVocabulary } from './storage.js';
 
 // AI 分析單字詳細資訊
-export async function analyzeWordDetails(word: string): Promise<WordDetails> {
-
-    const prompt = `
-        分析英文單字 "${word}" 並提供以下資訊：
-        1. 相似詞（最多5個，每個包含英文單字和中文翻譯）
-        2. 反義詞（最多5個，每個包含英文單字和中文翻譯）
-        3. 例句（3個，包含中文翻譯）
-        4. 用法說明（中文說明，100字以內）
-
-        ⚠️ 重要：請只回傳純 JSON 格式，不要包含任何其他文字、解釋或 markdown 標記（如 \`\`\`json）。
-        必須嚴格遵守以下 JSON 格式，確保所有陣列元素之間都有逗號分隔：
-        {
-            "synonyms": [
-                {"text": "相似詞1", "translation": "中文翻譯1"},
-                {"text": "相似詞2", "translation": "中文翻譯2"}
-            ],
-            "antonyms": [
-                {"text": "反義詞1", "translation": "中文翻譯1"},
-                {"text": "反義詞2", "translation": "中文翻譯2"}
-            ],
-            "examples": [
-                {"sentence": "英文例句1", "translation": "中文翻譯1"},
-                {"sentence": "英文例句2", "translation": "中文翻譯2"}
-            ],
-            "usage": "用法說明（中文）",
-            "translation": "單字的中文翻譯"
-        }
-    `;
+export async function analyzeWordDetails(word: string, lang?: string): Promise<WordDetails> {
+    // 舊資料沒有記語言，就看單字本身的文字
+    const learningLang = isLearningLang(lang) ? lang : langOfSnippet(word, 'en', 'auto');
+    const { nativeLang } = await getLanguageSettings();
+    const prompt = buildWordDetailsPrompt(word, learningLang, nativeLang);
 
     try {
         const { text } = await generateText({
@@ -344,7 +325,7 @@ export async function analyzeWordOnDemand(word: Word): Promise<WordDetails | nul
         }
 
         console.log(`開始分析單字: ${word.text}`);
-        const details = await analyzeWordDetails(word.text);
+        const details = await analyzeWordDetails(word.text, word.lang);
 
         wordAnalysisCache[word.text] = details;
         await chrome.storage.local.set({ wordAnalysisCache });

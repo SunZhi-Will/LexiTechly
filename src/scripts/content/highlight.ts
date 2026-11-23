@@ -1,3 +1,6 @@
+import { wordAt, wordsIn } from '../lang/segment';
+import { getActiveLang } from './page-lang';
+
 /// <reference types="chrome"/>
 
 // 高亮單字
@@ -43,20 +46,13 @@ function tryRangeHighlight(element: HTMLElement, event: MouseEvent, word: string
     const fullText = textNode.textContent || '';
     const offset = range.startOffset;
 
-    // 找到單字邊界
-    let start = offset;
-    let end = offset;
+    // 找到單字邊界（依目前頁面的學習語言斷詞）
+    const span = wordAt(fullText, offset, getActiveLang());
+    const start = span ? span.start : offset;
+    const end = span ? span.end : offset;
 
-    while (start > 0 && /[a-zA-Z]/.test(fullText[start - 1])) {
-        start--;
-    }
-
-    while (end < fullText.length && /[a-zA-Z]/.test(fullText[end])) {
-        end++;
-    }
-
-    const foundWord = fullText.substring(start, end).toLowerCase();
-    if (foundWord !== word || foundWord.length < 3) {
+    const foundWord = span ? span.word : '';
+    if (!foundWord || foundWord !== word) {
         return false;
     }
 
@@ -201,20 +197,12 @@ function getWordFromElement(element: HTMLElement, event: MouseEvent): string {
 function extractWordFromTextNode(textNode: Node, offset: number): string {
     const fullText = textNode.textContent || '';
 
-    // 找到單字邊界
-    let start = offset;
-    let end = offset;
+    // 找到單字邊界（依目前頁面的學習語言斷詞）
+    const span = wordAt(fullText, offset, getActiveLang());
+    const start = span ? span.start : offset;
+    const end = span ? span.end : offset;
 
-    while (start > 0 && /[a-zA-Z]/.test(fullText[start - 1])) {
-        start--;
-    }
-
-    while (end < fullText.length && /[a-zA-Z]/.test(fullText[end])) {
-        end++;
-    }
-
-    const word = fullText.substring(start, end).toLowerCase();
-    return word.length > 2 ? word : '';
+    return span ? span.word : '';
 }
 
 // 在元素中搜尋單字
@@ -226,6 +214,7 @@ function findWordInElement(element: HTMLElement, event: MouseEvent): string {
     );
 
     let textNode;
+    const lang = getActiveLang();
     const mouseX = event.clientX;
     const mouseY = event.clientY;
     let closestWord = '';
@@ -233,21 +222,16 @@ function findWordInElement(element: HTMLElement, event: MouseEvent): string {
 
     while (textNode = walker.nextNode()) {
         const text = textNode.textContent || '';
-        if (!/[a-zA-Z]/.test(text)) continue;
-
-        // 使用正則表達式找到所有單字及其位置
-        const wordPattern = /\b[a-zA-Z]{3,}\b/g;
-        let match;
-
-        while ((match = wordPattern.exec(text)) !== null) {
-            const word = match[0];
-            const wordIndex = match.index;
+        // 依目前頁面的學習語言找出所有單字及其位置
+        for (const span of wordsIn(text, lang)) {
+            const word = span.word;
+            const wordIndex = span.start;
 
             // 創建單字範圍
             const range = document.createRange();
             try {
                 range.setStart(textNode, wordIndex);
-                range.setEnd(textNode, wordIndex + word.length);
+                range.setEnd(textNode, span.end);
 
                 const rect = range.getBoundingClientRect();
 
@@ -285,9 +269,9 @@ function findWordInElement(element: HTMLElement, event: MouseEvent): string {
 // 提取最近的單字（備用方法）
 function extractNearestWord(element: HTMLElement, event: MouseEvent): string {
     const text = element.textContent || '';
-    const words = text.match(/\b[a-zA-Z]{3,}\b/g);
+    const words = wordsIn(text, getActiveLang()).map(span => span.word);
 
-    if (!words || words.length === 0) return '';
+    if (words.length === 0) return '';
 
     // 如果只有一個單字，檢查滑鼠是否在元素範圍內
     if (words.length === 1) {
