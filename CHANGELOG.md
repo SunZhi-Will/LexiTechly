@@ -27,9 +27,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 擴充功能頁面啟用跨來源隔離（COEP `credentialless`、COOP `same-origin`），讓文字辨識可以用多執行緒
 - 背景頁的訊息監聽器不再回應沒有 `action` 欄位的訊息
 - 隱私權政策補上圖片翻譯的資料流向
+- 第一次安裝時開啟歡迎頁：說明不用設定就能用的功能，並可選擇填入 Gemini API Key（會當場測試金鑰能不能用）
+- 擴充功能名稱、說明、快捷鍵說明與右鍵選單支援英文（`_locales`）；popup、單字頁與網頁上的文字仍只有繁體中文
+- Gemini 文字模型改為 `gemini-3.5-flash-lite`（`gemini-2.5-flash` 於 2026-12-01 起被 Google 導向它），語音模型改為 `gemini-3.8-live`
+- Gemini 的文字請求改由背景頁統一送出：API Key 放在標頭、不再出現在網址上，遇到額度限制會自動等待重試，錯誤訊息會說明是金鑰、額度還是連線問題
+- 移除 `tabs` 權限；`web_accessible_resources` 只留下必要的檔案，不再對網頁公開原始碼
+- 網頁不再一開始就載入 Gemini 語音元件（每頁少載入約 258 KB），第一次播放發音時才載入
+
+### Removed
+- 發音來源的「Google 翻譯（免 API Key）」選項：它用的是非官方端點。選過它的人會改用瀏覽器內建語音
 
 ### Technical
 - TypeScript 4.9.5 升到 5.9.2
+- 新增 GitHub Actions：每次 push 與 pull request 都會建置並跑測試
+- 單元測試增加 AI 請求層與語系檔的檢查
 
 ## [1.4.1] - 2025-12-17
 
