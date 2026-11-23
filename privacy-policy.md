@@ -86,7 +86,7 @@ The extension requests the following permissions:
 - Google Gemini API: For AI analysis and conversation features, and for image translation when you choose Gemini as its engine
 - Google Gemini API: Provides word and sentence audio playback
 - API Keys are provided by users and we do not store or share them
-- Google Translate: Provides word pronunciation audio, and translates the text recognized in images when it is the image translation engine (the default)
+- Google Translate: Translates the text recognized in images when it is the image translation engine (the default)
 - Hugging Face: Hosts the text recognition models downloaded on first use of image translation
 
 ## Children's Privacy
@@ -188,7 +188,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 - Google Gemini API：用於 AI 分析與對話功能，以及您把圖片翻譯來源設為 Gemini 時的翻譯
 - Google Gemini API：提供單字和例句的語音播放
 - API Key 由用戶自行提供，我們不會存儲或分享該金鑰
-- Google 翻譯：提供單字發音音檔，以及在圖片翻譯來源為 Google 翻譯（預設）時翻譯圖片中辨識出的文字
+- Google 翻譯：在圖片翻譯來源為 Google 翻譯（預設）時翻譯圖片中辨識出的文字
 - Hugging Face：存放圖片翻譯第一次使用時下載的文字辨識模型
 
 ## 兒童隱私

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LexiTechly</title>
+    <script type="module" src="../scripts/theme-init.ts"></script>
+    <link rel="stylesheet" href="../styles/sidepanel.css">
+</head>
+
+<body>
+    <header class="panel-header">
+        <div class="page-info">
+            <div class="page-label" data-i18n="panelReading"></div>
+            <div class="page-title" id="page-title"></div>
+        </div>
+        <span class="lang-badge" id="lang-badge" hidden></span>
+        <button type="button" id="clear" class="icon-button" data-i18n-title="panelClear">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+            </svg>
+        </button>
+    </header>
+
+    <p class="notice" id="notice" role="status" hidden></p>
+
+    <main class="messages" id="messages" aria-live="polite">
+        <div class="empty" id="empty">
+            <p data-i18n="panelEmpty"></p>
+        </div>
+    </main>
+
+    <footer class="composer">
+        <div class="quick-actions">
+            <button type="button" class="chip" data-mode="summary" data-i18n="panelActionSummary"></button>
+            <button type="button" class="chip" data-mode="explain" data-i18n="panelActionExplain"></button>
+            <button type="button" class="chip" data-mode="quiz" data-i18n="panelActionQuiz"></button>
+        </div>
+        <form id="ask-form" class="ask-form">
+            <textarea id="question" rows="2" data-i18n-placeholder="panelPlaceholder"></textarea>
+            <button type="submit" id="send" data-i18n-title="panelSend">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                    <path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
+            </button>
+        </form>
+    </footer>
+    <script type="module" src="../scripts/sidepanel.ts"></script>
+</body>
+
+</html>

@@ -27,7 +27,7 @@
   - Detailed usage explanations
 - 🔍 **Immersive Reading Mode**
   - Floating logo in top-right corner for one-click mode toggle
-  - Hover over any word for 3 seconds to see detailed information
+  - Hover to highlight any word, then click it to see detailed information
   - Word highlighting effects for visual learning experience
   - Beautiful word cards showing: translation, part of speech, CEFR level, examples
 - 🖼️ **Image Translation**
@@ -228,7 +228,7 @@ dist/
   - logo 位置會自動儲存，下次訪問時會保持在相同位置
 - **即時單字查詢**：
   - 啟用閱讀模式後，將滑鼠懸停在任何英文單字上
-  - 單字資訊會在 3 秒後自動顯示
+  - 單字會立即高亮，點一下就顯示單字資訊
   - 單字會以選擇效果高亮顯示，提供視覺回饋
 - **精美資訊卡片**：
   - 單字標題配有 CEFR 等級標章

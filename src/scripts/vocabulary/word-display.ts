@@ -83,7 +83,7 @@ function createWordCard(word: Word): HTMLElement {
     if (speakBtn) {
         speakBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // 防止觸發卡片點擊
-            speakWord(word.text, speakBtn);
+            speakWord(word.text, speakBtn, word.lang);
         });
     }
 

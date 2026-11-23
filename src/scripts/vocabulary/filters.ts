@@ -1,3 +1,4 @@
+import { LEVELS } from '../lang/languages.js';
 import { Word, FilteredWordArray, FilterOptions } from './types.js';
 
 // 搜尋和排序功能
@@ -19,7 +20,11 @@ export function filterAndSortWords(words: Word[], filters: FilterOptions): Filte
     if (filters.sort) {
         switch (filters.sort) {
             case 'level':
-                const levelOrder: Record<string, number> = { 'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4, 'C1': 5, 'C2': 6 };
+                // 各分級系統（CEFR、JLPT、TOPIK、HSK）都由易到難排好，位置就是排序依據
+                const levelOrder: Record<string, number> = {};
+                for (const levels of Object.values(LEVELS)) {
+                    levels.forEach((level, index) => { levelOrder[level] = index + 1; });
+                }
                 filteredWords.sort((a, b) => {
                     const levelA = levelOrder[a.level || ''] || 0;
                     const levelB = levelOrder[b.level || ''] || 0;

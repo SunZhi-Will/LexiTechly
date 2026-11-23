@@ -11,6 +11,7 @@ import { audioCache } from './vocabulary/storage.js';
 import { convertToCSV, downloadCSV } from './vocabulary/export.js';
 import { clearModelCache, clearSavedTranslations, getImageTranslateUsage } from './image-translate/storage-admin.js';
 import { initImageTranslateButton } from './image-translate/popup-button.js';
+import { initLanguageSelects } from './lang/settings-ui.js';
 
 export { }; // 使此檔案成為模組
 
@@ -286,19 +287,18 @@ function initializeSettingsPage(): void {
     });
 
     chrome.storage.local.get(['ttsProvider']).then((res) => {
-        const v = (res.ttsProvider === 'google-translate' || res.ttsProvider === 'browser') ? res.ttsProvider : 'gemini';
+        // 舊版的「Google 翻譯」發音已移除，選過它的人改顯示為瀏覽器內建語音
+        const v = (res.ttsProvider === 'google-translate' || res.ttsProvider === 'browser') ? 'browser' : 'gemini';
         const g = document.getElementById('tts-provider-gemini') as HTMLInputElement;
-        const t = document.getElementById('tts-provider-google') as HTMLInputElement;
         const b = document.getElementById('tts-provider-browser') as HTMLInputElement;
         if (g) g.checked = (v === 'gemini');
-        if (t) t.checked = (v === 'google-translate');
         if (b) b.checked = (v === 'browser');
     });
     document.querySelectorAll('input[name="tts-provider"]').forEach((r) => {
         r.addEventListener('change', function(this: HTMLInputElement) {
             if (this.checked) {
                 chrome.storage.local.set({ ttsProvider: this.value });
-                const msg = this.value === 'google-translate' ? '發音已切換為 Google 翻譯' : this.value === 'browser' ? '發音已切換為瀏覽器內建' : '發音已切換為 Gemini API';
+                const msg = this.value === 'browser' ? '發音已切換為瀏覽器內建' : '發音已切換為 Gemini API';
                 UI.showToast(msg, false, false, true);
             }
         });
@@ -746,10 +746,17 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
         }
 
         // 底部導航監聽
+        let popupWindowId: number | undefined;
+        void chrome.windows.getCurrent().then((current) => { popupWindowId = current.id; });
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const element = item as HTMLElement;
                 const pageId = element.dataset.page;
+                if (pageId === 'chat-page' && popupWindowId !== undefined) {
+                    // sidePanel.open 必須在點擊的當下直接呼叫，所以視窗 id 要事先取好
+                    void chrome.sidePanel.open({ windowId: popupWindowId }).then(() => window.close());
+                    return;
+                }
                 if (pageId) {
                     UI.switchPage(pageId);
                     if (pageId === 'vocabulary-page') {
@@ -763,6 +770,11 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
 
         // 分析按鈕監聽（無 API Key 時使用本地分析，不需 AI）
         initImageTranslateButton();
+        void initLanguageSelects(
+            document.getElementById('learning-lang') as HTMLSelectElement | null,
+            document.getElementById('native-lang') as HTMLSelectElement | null,
+            () => UI.showToast('語言設定已儲存', false, false, true)
+        );
 
         const analyzeButton = document.getElementById('analyze');
         if (analyzeButton) {
@@ -781,7 +793,7 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
                     await ensureContentScriptInjected(tab.id);
 
                     // 第一步：CEFR 分析（有 API Key 用 AI，無則用本地規則）
-                    const message: ChromeMessage = { action: 'analyze', apiKey };
+                    const message: ChromeMessage = { action: 'analyze', useAi: !!apiKey };
                     const response: ChromeResponse = await chrome.tabs.sendMessage(tab.id, message);
 
                     if (response.error) {
@@ -814,7 +826,7 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
                         try {
                             const vocabMessage: ChromeMessage = {
                                 action: 'analyzeVocabulary',
-                                apiKey: apiKey
+                                useAi: !!apiKey
                             };
 
                             const vocabResponse: ChromeResponse = await chrome.tabs.sendMessage(tab.id, vocabMessage);

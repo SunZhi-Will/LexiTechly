@@ -7,6 +7,8 @@ export interface Word {
     addedTime?: number;
     translation?: string;
     example?: string;
+    /** 這個單字的語言；舊資料沒有這個欄位，視為英文 */
+    lang?: string;
 }
 
 // 單字詳細資訊介面

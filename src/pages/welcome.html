@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LexiTechly</title>
+    <script type="module" src="../scripts/theme-init.ts"></script>
+    <link rel="stylesheet" href="../styles/welcome.css">
+</head>
+
+<body>
+    <main class="welcome">
+        <header class="welcome-header">
+            <img src="/images/logo128.png" alt="" width="56" height="56">
+            <div>
+                <h1 data-i18n="welcomeTitle"></h1>
+                <p class="lead" data-i18n="welcomeLead"></p>
+            </div>
+        </header>
+
+        <section class="step language-step">
+            <h2 data-i18n="welcomeLangTitle"></h2>
+            <div class="language-row">
+                <label>
+                    <span data-i18n="welcomeLangLearning"></span>
+                    <select id="learning-lang"></select>
+                </label>
+                <label>
+                    <span data-i18n="welcomeLangNative"></span>
+                    <select id="native-lang"></select>
+                </label>
+            </div>
+            <p class="note" data-i18n="welcomeLangHint"></p>
+        </section>
+
+        <section class="step">
+            <h2><span class="step-number">1</span><span data-i18n="welcomeStep1Title"></span></h2>
+            <ul>
+                <li id="step1-images"></li>
+                <li data-i18n="welcomeStep1Lookup"></li>
+                <li data-i18n="welcomeStep1Analyze"></li>
+            </ul>
+        </section>
+
+        <section class="step">
+            <h2><span class="step-number">2</span><span data-i18n="welcomeStep2Title"></span></h2>
+            <p data-i18n="welcomeStep2Body"></p>
+            <ol>
+                <li>
+                    <span data-i18n="welcomeStep2How1"></span>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+                        data-i18n="welcomeOpenAiStudio"></a>
+                </li>
+                <li data-i18n="welcomeStep2How2"></li>
+                <li data-i18n="welcomeStep2How3"></li>
+            </ol>
+            <form id="key-form" class="key-form">
+                <label for="api-key" data-i18n="welcomeKeyLabel"></label>
+                <div class="key-row">
+                    <input type="password" id="api-key" autocomplete="off" spellcheck="false"
+                        data-i18n-placeholder="welcomeKeyPlaceholder">
+                    <button type="submit" id="save-key" data-i18n="welcomeKeySave"></button>
+                </div>
+                <p id="key-status" class="key-status" role="status" aria-live="polite"></p>
+                <p class="note" data-i18n="welcomeKeyPrivacy"></p>
+            </form>
+        </section>
+
+        <section class="step">
+            <h2><span class="step-number">3</span><span data-i18n="welcomeStep3Title"></span></h2>
+            <p data-i18n="welcomeStep3Body"></p>
+            <button type="button" id="done" class="secondary" data-i18n="welcomeDone"></button>
+        </section>
+    </main>
+    <script type="module" src="../scripts/welcome.ts"></script>
+</body>
+
+</html>

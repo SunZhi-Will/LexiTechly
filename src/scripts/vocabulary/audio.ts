@@ -2,7 +2,8 @@
 
 import { audioCache, cacheAudioData } from './storage.js';
 import { showToast } from './ui.js';
-import { textToSpeech, VOICE_OPTIONS, LANGUAGE_OPTIONS } from '../audio/geminiSpeech.js';
+import { langOfSnippet } from '../lang/detect.js';
+import { LEARNING_LANGUAGES, isLearningLang, type LearningLang } from '../lang/languages.js';
 
 // 全域音訊變數
 let currentAudio: HTMLAudioElement | null = null;
@@ -54,118 +55,14 @@ function syncButtonStates(text: string, isPlaying: boolean, isLoading: boolean =
     });
 }
 
-const GOOGLE_TTS_MAX_CHARS = 200;
-
-function chunkTextForGoogleTts(text: string): string[] {
-    const t = text.trim();
-    if (!t) return [];
-    if (t.length <= GOOGLE_TTS_MAX_CHARS) return [t];
-    const chunks: string[] = [];
-    let rest = t;
-    while (rest.length > 0) {
-        if (rest.length <= GOOGLE_TTS_MAX_CHARS) {
-            chunks.push(rest);
-            break;
-        }
-        const slice = rest.slice(0, GOOGLE_TTS_MAX_CHARS);
-        const lastSpace = slice.lastIndexOf(' ');
-        const cut = lastSpace > 0 ? lastSpace + 1 : GOOGLE_TTS_MAX_CHARS;
-        chunks.push(rest.slice(0, cut).trim());
-        rest = rest.slice(cut).trim();
-    }
-    return chunks.filter(Boolean);
-}
-
-function fetchGoogleTranslateTtsChunk(chunk: string, lang: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage(
-            { action: 'getGoogleTranslateTts', text: chunk, lang },
-            (response: { success?: boolean; data?: string; contentType?: string; error?: string }) => {
-                if (chrome.runtime.lastError) {
-                    reject(new Error(chrome.runtime.lastError?.message || 'Extension error'));
-                    return;
-                }
-                if (!response?.success || !response.data) {
-                    reject(new Error(response?.error || 'Google TTS failed'));
-                    return;
-                }
-                try {
-                    const binary = atob(response.data);
-                    const bytes = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                    const blob = new Blob([bytes], { type: response.contentType || 'audio/mp3' });
-                    resolve(URL.createObjectURL(blob));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-        );
-    });
-}
-
-async function playGoogleTranslateTts(
-    text: string,
-    displayText: string,
-    speed: 'slow' | 'normal' | 'fast'
-): Promise<void> {
-    const lang = 'en';
-    const chunks = chunkTextForGoogleTts(text);
-    if (chunks.length === 0) {
-        await fallbackSpeak(text, displayText, speed);
-        return;
-    }
-    const urls: string[] = [];
-    try {
-        for (const ch of chunks) {
-            const url = await fetchGoogleTranslateTtsChunk(ch, lang);
-            urls.push(url);
-        }
-        await playAudioUrlSequence(urls, displayText, speed);
-    } finally {
-        urls.forEach(u => URL.revokeObjectURL(u));
-    }
-}
-
-function playAudioUrlSequence(
-    urls: string[],
-    displayText: string,
-    speed: 'slow' | 'normal' | 'fast'
-): Promise<void> {
-    if (urls.length === 0) return Promise.resolve();
-    const playbackRate = speed === 'slow' ? 0.7 : speed === 'fast' ? 1.3 : 1;
-    let index = 0;
-    return new Promise((resolve, reject) => {
-        function playNext() {
-            if (index >= urls.length) {
-                syncButtonStates(displayText, false);
-                currentAudio = null;
-                resolve();
-                return;
-            }
-            const audio = new Audio(urls[index]);
-            currentAudio = audio;
-            audio.playbackRate = playbackRate;
-            audio.onended = () => {
-                index++;
-                playNext();
-            };
-            audio.onerror = () => {
-                syncButtonStates(displayText, false);
-                currentAudio = null;
-                reject(new Error('Google TTS playback failed'));
-            };
-            audio.play().then(() => syncButtonStates(displayText, true)).catch(reject);
-        }
-        playNext();
-    });
-}
-
 /**
  * 語音播放功能 - 使用 Gemini API 優先，失敗時使用瀏覽器內建 TTS
  * @param text 要播放的文字
  * @param button 播放按鈕元素
  */
-export async function speakWord(text: string, button?: HTMLElement): Promise<void> {
+export async function speakWord(text: string, button?: HTMLElement, lang?: string): Promise<void> {
+    // 沒有指定語言時看文字本身（舊資料沒有記語言）
+    const speechLang = isLearningLang(lang) ? lang : langOfSnippet(text, 'en', 'auto');
     try {
         // 防止重複觸發
         if (button && button.classList.contains('loading')) {
@@ -190,16 +87,14 @@ export async function speakWord(text: string, button?: HTMLElement): Promise<voi
         syncButtonStates(text, true, true);
 
         // 先檢查快取中是否已有此語音
-        const { ttsProvider } = await chrome.storage.local.get('ttsProvider');
-        const useCache = ttsProvider !== 'google-translate';
-        if (useCache && audioCache[text]) {
+        if (audioCache[text]) {
             currentAudio = new Audio(audioCache[text]);
             await setupAndPlayAudio(currentAudio, speed, text);
             return;
         }
 
         // 如果快取中沒有，嘗試獲取並播放音頻
-        await playAudio(text, speed, button);
+        await playAudio(text, speed, button, speechLang);
 
     } catch (error) {
         console.error('語音播放失敗:', error);
@@ -233,7 +128,7 @@ export async function speakWord(text: string, button?: HTMLElement): Promise<voi
 /**
  * 音頻播放實現 - 包含多層降級策略
  */
-async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button?: HTMLElement): Promise<void> {
+async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button: HTMLElement | undefined, lang: LearningLang): Promise<void> {
     try {
         const storageData = await chrome.storage.local.get(['apiKey', 'ttsProvider']) as {
             apiKey?: string;
@@ -242,27 +137,18 @@ async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button
 
         const apiKey = storageData.apiKey;
         const ttsProvider = storageData.ttsProvider;
-        const useGoogleTranslate = ttsProvider === 'google-translate';
-        const useBrowserOnly = ttsProvider === 'browser';
-
-        if (useGoogleTranslate) {
-            try {
-                await playGoogleTranslateTts(text, text, speed);
-                return;
-            } catch (e) {
-                console.warn('Google 翻譯 TTS 失敗，改用瀏覽器內建:', e);
-                await fallbackSpeak(text, text, speed);
-                return;
-            }
-        }
+        // 舊版的「Google 翻譯」發音走非官方端點，已移除；選過它的人改用瀏覽器內建語音
+        const useBrowserOnly = ttsProvider === 'browser' || ttsProvider === 'google-translate';
 
         if (useBrowserOnly) {
-            await fallbackSpeak(text, text, speed);
+            await fallbackSpeak(text, text, speed, lang);
             return;
         }
 
         if (typeof apiKey === 'string' && apiKey.trim()) {
             try {
+                // Gemini 語音 SDK 很大，用到時才載入；這個檔案會被內容腳本匯入，靜態匯入會讓每個網頁都載入它
+                const { textToSpeech, VOICE_OPTIONS, LANGUAGE_OPTIONS } = await import('../audio/geminiSpeech.js');
                 // 獲取語音設定
                 const speechSettings = localStorage.getItem('speechSettings');
                 const settings = speechSettings ? JSON.parse(speechSettings) : {
@@ -314,7 +200,7 @@ async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button
 
         // 如果 Gemini API 失敗，使用瀏覽器內建語音
         console.warn('Gemini 語音 API 失敗，使用瀏覽器內建語音');
-        await fallbackSpeak(text, text, speed);
+        await fallbackSpeak(text, text, speed, lang);
     } catch (error) {
         throw error;
     }
@@ -381,12 +267,12 @@ async function blobToBase64(blob: Blob): Promise<string> {
 /**
  * 降級使用瀏覽器內建語音
  */
-async function fallbackSpeak(text: string, displayText: string, speed: 'slow' | 'normal' | 'fast' = 'normal'): Promise<void> {
+async function fallbackSpeak(text: string, displayText: string, speed: 'slow' | 'normal' | 'fast' = 'normal', lang: LearningLang = 'en'): Promise<void> {
     return new Promise((resolve, reject) => {
         try {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = speed === 'slow' ? 0.7 : speed === 'fast' ? 1.3 : 1;
-            utterance.lang = 'en-US';
+            utterance.lang = LEARNING_LANGUAGES[lang].ttsLang;
 
             utterance.onend = () => {
                 syncButtonStates(displayText, false);

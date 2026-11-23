@@ -6,11 +6,12 @@
  * 一次送一整張圖的所有區塊，要求回傳同樣長度、同樣順序的 JSON 字串陣列，對不上就當作失敗。
  */
 
+import { GEMINI_GENERATE_URL } from '../ai-models';
 import type { Locale } from './i18n';
 import type { SourceLang } from './protocol';
 
 // 和 LexiTechly 其他功能用同一個模型
-const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const ENDPOINT = GEMINI_GENERATE_URL;
 
 const SOURCE_NAMES: Record<SourceLang, string> = { ko: 'Korean', ja: 'Japanese', zh: 'Chinese' };
 const TARGET_NAMES: Record<Locale, string> = {

@@ -1,5 +1,6 @@
 // 全域型別定義
-type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+// 名稱沿用舊的，實際上是各語言分級系統的等級（CEFR、JLPT、TOPIK、HSK），見 scripts/lang/languages.ts
+type CEFRLevel = string;
 
 interface AnalysisResult {
     level: {
@@ -11,6 +12,8 @@ interface AnalysisResult {
         };
     };
     text: string;
+    /** 分析時採用的學習語言；舊資料沒有這個欄位，視為英文 */
+    lang?: string;
     error?: string;
 }
 
@@ -20,6 +23,8 @@ interface Word {
     translation?: string;
     example?: string;
     phonetic?: string;
+    /** 這個單字的語言；舊資料沒有這個欄位，視為英文 */
+    lang?: string;
     addedTime?: number;
 }
 
@@ -44,7 +49,8 @@ interface StorageData {
 
 interface ChromeMessage {
     action: string;
-    apiKey?: string;
+    /** 有設定 API Key 時用 AI 分析，否則用本機規則。金鑰本身不經過訊息傳遞 */
+    useAi?: boolean;
     message?: string;
     history?: Array<{ text: string; type: 'user' | 'ai' }>;
 }
@@ -54,6 +60,8 @@ interface ChromeResponse {
     error?: string;
     level?: AnalysisResult['level'];
     text?: string;
+    /** 分析時採用的學習語言 */
+    lang?: string;
     response?: string;
     vocabulary?: Word[];
 }

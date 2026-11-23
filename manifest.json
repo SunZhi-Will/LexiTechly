@@ -1,17 +1,18 @@
 {
     "manifest_version": 3,
-    "name": "LexiTechly - 智慧英文內容分析",
+    "default_locale": "zh_TW",
+    "name": "__MSG_extName__",
     "version": "1.4.1",
-    "description": "使用 Google Gemini AI 分析英文網頁內容，提供 CEFR 等級評估、單字解析、AI 互動對話與語音發音功能，提升您的英文閱讀與學習體驗！",
+    "description": "__MSG_extDescription__",
     "permissions": [
         "storage",
         "unlimitedStorage",
         "activeTab",
         "scripting",
-        "tabs",
         "contextMenus",
         "offscreen",
-        "alarms"
+        "alarms",
+        "sidePanel"
     ],
     "host_permissions": [
         "<all_urls>"
@@ -21,7 +22,7 @@
             "suggested_key": {
                 "default": "Alt+Shift+T"
             },
-            "description": "翻譯這頁的漫畫圖片（自動翻譯，換頁也會跟著翻）"
+            "description": "__MSG_commandTranslateImages__"
         }
     },
     "cross_origin_embedder_policy": {
@@ -41,6 +42,9 @@
             "48": "images/logo48.png",
             "128": "images/logo128.png"
         }
+    },
+    "side_panel": {
+        "default_path": "src/pages/sidepanel.html"
     },
     "icons": {
         "16": "images/logo16.png",
@@ -62,14 +66,7 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "libs/marked.min.js",
-                "images/logo128.png",
-                "assets/*.js",
-                "assets/*.css",
-                "scripts/*.js",
-                "styles/*.css",
-                "src/scripts/*.ts",
-                "src/scripts/content/*.ts"
+                "images/logo128.png"
             ],
             "matches": [
                 "<all_urls>"

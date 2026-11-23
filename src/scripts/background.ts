@@ -1,6 +1,11 @@
 // Background Script for LexiTechly Extension
 // 處理擴充功能的訊息通訊和狀態管理
 
+import { handleAiMessage } from './ai/background';
+import { t } from './i18n';
+import { PENDING_ASK_KEY, type PendingAsk } from './sidepanel/protocol';
+
+const EXPLAIN_MENU_ID = 'lexitechly-explain-selection';
 import { createImageTranslateMenus, installImageTranslate } from './image-translate/image-translate';
 
 interface MessageRequest {
@@ -27,7 +32,10 @@ chrome.runtime.onMessage.addListener((
     // 這裡不能替它們回應，否則下面的「未知的訊息類型」會搶先回覆，蓋掉圖片翻譯的非同步結果
     if (typeof message?.action !== 'string') return false;
 
-    console.log('Background script 收到訊息:', message, '來自:', sender);
+    // AI 請求（頁面分析、查詞、單字詳解）統一從這裡出去
+    if (handleAiMessage(message, sender, sendResponse)) return true;
+
+    console.log('Background script 收到訊息:', message.action);
 
     // 處理切換到單字列表頁面的請求
     if (message.action === 'switchToVocabularyPage') {
@@ -104,39 +112,6 @@ chrome.runtime.onMessage.addListener((
         return true; // 保持訊息通道開啟
     }
 
-    // 由 background 代為請求 Google 翻譯 TTS 音檔（避免 CORS）
-    if (message.action === 'getGoogleTranslateTts') {
-        const text = typeof message.text === 'string' ? message.text.trim() : '';
-        const lang = typeof message.lang === 'string' ? message.lang : 'en';
-        if (!text) {
-            sendResponse({ success: false, error: 'Missing text' });
-            return false;
-        }
-        const MAX_CHARS = 200;
-        const chunk = text.length > MAX_CHARS ? text.slice(0, MAX_CHARS) : text;
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(lang)}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                'Referer': 'https://translate.google.com/',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-        })
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.arrayBuffer();
-            })
-            .then(buf => {
-                const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-                const contentType = 'audio/mp3';
-                sendResponse({ success: true, data: base64, contentType });
-            })
-            .catch(err => {
-                sendResponse({ success: false, error: err instanceof Error ? err.message : 'Fetch failed' });
-            });
-        return true; // 非同步回應
-    }
-
     // 處理其他訊息
     console.log('未處理的訊息類型:', message.action);
     sendResponse({ success: false, error: '未知的訊息類型' });
@@ -145,6 +120,11 @@ chrome.runtime.onMessage.addListener((
 // 監聽擴充功能安裝事件
 chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails) => {
     console.log('LexiTechly 擴充功能已安裝/更新:', details);
+
+    // 第一次安裝時開歡迎頁：說明免設定就能用的功能，並讓使用者選擇要不要填 API Key
+    if (details.reason === 'install') {
+        chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/welcome.html') });
+    }
     
     // 初始化擴充功能設定
     chrome.storage.local.get(['apiKey', 'settings'], (result) => {
@@ -166,7 +146,12 @@ chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails
         chrome.contextMenus.removeAll(() => {
             chrome.contextMenus.create({
                 id: 'lexitechly-lookup-selection',
-                title: '用 LexiTechly 查詢「%s」',
+                title: t('menuLookupSelection'),
+                contexts: ['selection']
+            });
+            chrome.contextMenus.create({
+                id: EXPLAIN_MENU_ID,
+                title: t('menuExplainSelection'),
                 contexts: ['selection']
             });
             // 圖片翻譯的選單要在 removeAll 之後、同一個流程裡建立
@@ -179,43 +164,19 @@ chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails
 
 // 監聽右鍵選單點擊
 chrome.contextMenus?.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === EXPLAIN_MENU_ID && info.selectionText && tab?.id) {
+        // sidePanel.open 必須在使用者操作的當下直接呼叫，前面不能先 await 別的東西
+        void chrome.sidePanel.open({ tabId: tab.id }).catch((error) => console.error('無法開啟側邊面板:', error));
+        const pending: PendingAsk = { text: info.selectionText, tabId: tab.id, createdAt: Date.now() };
+        void chrome.storage.session.set({ [PENDING_ASK_KEY]: pending });
+        return;
+    }
     if (info.menuItemId === 'lexitechly-lookup-selection' && info.selectionText && tab?.id) {
         chrome.tabs.sendMessage(tab.id, {
             action: 'lookupSelection',
             text: info.selectionText
         });
     }
-});
-
-// 監聽標籤頁更新事件
-chrome.tabs.onUpdated.addListener((
-    tabId: number, 
-    changeInfo: any, 
-    tab: chrome.tabs.Tab
-) => {
-    if (changeInfo.status === 'complete' && tab.url) {
-        console.log('標籤頁已更新:', tab.url);
-        
-        // 檢查是否為 Gmail 頁面
-        if (tab.url.includes('mail.google.com')) {
-            console.log('檢測到 Gmail 頁面，可能需要特殊處理');
-        }
-    }
-});
-
-// 監聽擴充功能圖示點擊事件
-chrome.action.onClicked.addListener((tab: chrome.tabs.Tab) => {
-    console.log('擴充功能圖示被點擊，標籤頁:', tab);
-    
-    // 如果 popup 未定義，則打開新標籤頁
-    chrome.action.getPopup({}, (popup) => {
-        if (chrome.runtime.lastError || !popup) {
-            console.log('Popup 未定義，打開新標籤頁');
-            chrome.tabs.create({
-                url: chrome.runtime.getURL('src/pages/popup.html')
-            });
-        }
-    });
 });
 
 // 圖片翻譯（右鍵選單、Alt+Shift+T 自動翻譯）：監聽器要在頂層同步註冊，service worker 被喚醒時才接得到事件

@@ -4,6 +4,7 @@ import { highlightWord, removeWordHighlight, highlightWordInElement } from './hi
 import { createFloatingLogo, updateLogoAppearance } from './floating-logo';
 import { queryWordInfo, queryWordInfoWithTranslationOnly, checkPageTheme, updateTooltipTheme } from './word-query';
 import { getWordFromElement, disableAllLinks, enableAllLinks } from './word-utils';
+import { refreshPageLanguage, shouldOfferLookup } from './page-lang';
 
 // 查閱模式相關變數
 let isReadingMode = false;
@@ -25,7 +26,8 @@ let selectionButtonShowTime = 0; // 上次顯示按鈕的時間，用於避免 m
 function isEnglishText(text: string): boolean {
     const t = text.trim();
     if (!t || t.length > 500) return false; // 過長不顯示按鈕
-    return (t.match(/[a-zA-Z]/g) || []).length >= 1;
+    // 名稱沿用舊的：現在是「這段文字值不值得查」，依學習語言與母語判斷
+    return shouldOfferLookup(t);
 }
 
 // 從選取範圍查詢（供右鍵選單或懸浮按鈕使用，閱讀模式開關狀態不影響）
@@ -290,6 +292,8 @@ function clearAllHighlights(): void {
 
 // 啟用單字懸停功能
 function enableWordHover(): void {
+    // 開啟查閱模式時才判斷這個頁面的語言，斷詞要用
+    void refreshPageLanguage();
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseout', handleMouseOut);
     document.addEventListener('click', handleDocumentClick);
@@ -321,7 +325,7 @@ function handleMouseMove(event: MouseEvent): void {
     }
 
     const word = getWordFromElement(target, event);
-    if (word && word.length > 2) {
+    if (word) {
         // 如果是不同的單字，立即切換
         if (currentWord !== word) {
             // 清除之前的計時器
@@ -521,7 +525,7 @@ async function showWordTooltip(word: string, x: number, y: number): Promise<void
 
         const result = useTranslationOnly
             ? await queryWordInfoWithTranslationOnly(word)
-            : await queryWordInfo(word, apiKey as string);
+            : await queryWordInfo(word);
 
         updateTooltipContent(tooltip, word, result.html);
 
@@ -550,6 +554,7 @@ async function addWordToList(wordData: any): Promise<void> {
             level: wordData.level,
             translation: wordData.translation,
             example: wordData.example,
+            lang: wordData.lang,
             addedTime: Date.now()
         };
 

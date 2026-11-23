@@ -1,7 +1,10 @@
 /// <reference types="chrome"/>
-import { GEMINI_GENERATE_URL } from '../ai-models.js';
+import { AiError, generateText } from '../ai/client.js';
 
 import { speakWord } from '../vocabulary/audio.js';
+import { LEARNING_LANGUAGES, NATIVE_LANGUAGES, normalizeLevel } from '../lang/languages.js';
+import { buildShortWordQueryPrompt, buildWordQueryPrompt } from '../lang/prompts.js';
+import { languagesForSnippet } from './page-lang.js';
 import { isDarkTheme, themeVars } from './styles';
 
 // 查單字結果型別（與 Gemini 回傳格式相容）
@@ -14,6 +17,10 @@ export interface WordQueryResult {
         partOfSpeech: string;
         example: string;
         exampleTranslation: string;
+        /** 讀音（日文的假名、中文的拼音），其他語言沒有 */
+        reading?: string;
+        /** 這個單字的語言 */
+        lang?: string;
     };
 }
 
@@ -24,15 +31,20 @@ export async function queryWordInfoWithTranslationOnly(word: string): Promise<Wo
         return { html: '<div class="lexitechly-error">請輸入單字</div>' };
     }
 
+    const { lang, native } = await languagesForSnippet(safeWord);
+    const fromCode = LEARNING_LANGUAGES[lang].translateCode;
+    const toCode = NATIVE_LANGUAGES[native].translateCode;
+
     let translation = '';
     let partOfSpeech = '';
     let example = '';
     let exampleTranslation = '';
 
-    // 1) MyMemory：英 → 繁中翻譯（免 API Key）
+    // 1) MyMemory：學習語言 → 解說語言的翻譯（免 API Key）；兩者相同時沒有東西可翻
     try {
+        if (fromCode === toCode) throw new Error('same language');
         const encoded = encodeURIComponent(safeWord);
-        const url = `https://api.mymemory.translated.net/get?q=${encoded}&langpair=en|zh-TW`;
+        const url = `https://api.mymemory.translated.net/get?q=${encoded}&langpair=${encodeURIComponent(`${fromCode}|${toCode}`)}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error('Translation request failed');
         const data = await res.json();
@@ -44,9 +56,9 @@ export async function queryWordInfoWithTranslationOnly(word: string): Promise<Wo
         console.warn('MyMemory translation failed:', e);
     }
 
-    // 2) Free Dictionary API：詞性與例句（僅支援「單字」，片語會 404，免 API Key）
+    // 2) Free Dictionary API：詞性與例句（只有英文，而且僅支援「單字」，片語會 404，免 API Key）
     const isPhrase = /\s/.test(safeWord);
-    if (!isPhrase) {
+    if (!isPhrase && lang === 'en') {
         try {
             const dictUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(safeWord.toLowerCase())}`;
             const res = await fetch(dictUrl);
@@ -80,14 +92,15 @@ export async function queryWordInfoWithTranslationOnly(word: string): Promise<Wo
         translation: translation || '（無翻譯）',
         partOfSpeech: partOfSpeech || '—',
         example: example || '—',
-        exampleTranslation: exampleTranslation || (example ? '（見例句）' : '—')
+        exampleTranslation: exampleTranslation || (example ? '（見例句）' : '—'),
+        lang
     };
 
     const html = `
         <div class="word-header">
             <div class="word-title-container">
                 <strong class="word-title">${wordData.word}</strong>
-                <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.word}">
+                <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.word}" data-lang="${wordData.lang ?? ''}">
                     <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
                         <path d="M8 5v14l11-7z"/>
                     </svg>
@@ -99,13 +112,13 @@ export async function queryWordInfoWithTranslationOnly(word: string): Promise<Wo
             ${wordData.level ? `<span class="word-level">${wordData.level}</span>` : ''}
         </div>
         <div class="word-info">
-            <div class="translation"><strong>中文：</strong>${wordData.translation}</div>
+            <div class="translation"><strong>翻譯：</strong>${wordData.translation}</div>
             <div class="part-of-speech"><strong>詞性：</strong>${wordData.partOfSpeech}</div>
             <div class="example">
                 <div class="example-header">
                     <strong>例句：</strong>${wordData.example}
                     ${wordData.example !== '—' ? `
-                    <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.example}">
+                    <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.example}" data-lang="${wordData.lang ?? ''}">
                         <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
                             <path d="M8 5v14l11-7z"/>
                         </svg>
@@ -128,7 +141,7 @@ export async function queryWordInfoWithTranslationOnly(word: string): Promise<Wo
                 button.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const text = button.dataset.text;
-                    if (text) await speakWord(text, button);
+                    if (text) await speakWord(text, button, button.dataset.lang);
                 });
             }
         });
@@ -138,36 +151,10 @@ export async function queryWordInfoWithTranslationOnly(word: string): Promise<Wo
 }
 
 // 查詢單字資訊（Gemini API）
-export async function queryWordInfo(word: string, apiKey: string): Promise<WordQueryResult> {
-    const API_URL = GEMINI_GENERATE_URL;
+export async function queryWordInfo(word: string): Promise<WordQueryResult> {
 
-    const basePrompt = `
-    只回傳 JSON，描述英文單字 "${word}"：
-    {
-      "word": "${word}",
-      "level": "CEFR等級(或專有名詞)",
-      "translation": "主要中文翻譯",
-      "partOfSpeech": "詞性",
-      "example": "簡短英文例句(<=15字)",
-      "exampleTranslation": "例句中文翻譯"
-    }
-    規則：繁體中文；無音標；確保 JSON 可解析；不要額外說明或 Markdown。
-    `;
-
-    const buildRequest = (prompt: string, maxOutputTokens: number) => ({
-        contents: [{
-            role: "user",
-            parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-            temperature: 0.3,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens,
-            // 請求直接回傳 JSON，減少包裝文字造成解析失敗
-            responseMimeType: "application/json"
-        }
-    });
+    const { lang, native } = await languagesForSnippet(word);
+    const basePrompt = buildWordQueryPrompt(word, lang, native);
 
     // 嘗試從模型回應中擷取可解析的 JSON，並修復常見格式問題
     const parseJsonSafely = (text: string) => {
@@ -288,41 +275,37 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<WordQ
 
     // 先嘗試主要請求，若失敗再用縮短提示重試
     const tryRequest = async (prompt: string, maxTokens: number) => {
-        const response = await fetch(`${API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(buildRequest(prompt, maxTokens))
+        const { text, finishReason } = await generateText({
+            prompt,
+            temperature: 0.3,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: maxTokens,
+            // 請求直接回傳 JSON，減少包裝文字造成解析失敗
+            json: true
         });
 
-        if (!response.ok) {
-            throw new Error('API request failed');
-        }
-
-        const data = await response.json();
-        const candidate = data?.candidates?.[0];
-        const firstTextPart = candidate?.content?.parts?.find((p: any) => typeof p?.text === 'string' && p.text.trim());
-
-        if (candidate?.finishReason === 'MAX_TOKENS') {
+        if (finishReason === 'MAX_TOKENS') {
             throw new Error('Model output truncated (MAX_TOKENS)');
         }
-        if (!firstTextPart?.text) {
-            throw new Error('Invalid API response');
-        }
 
-        const result = firstTextPart.text.trim();
-        return parseJsonSafely(result);
+        return parseJsonSafely(text);
     };
 
     try {
         // 主請求：較高 token 上限，降低截斷風險
         const { wordData } = await tryRequest(basePrompt, 900);
+        wordData.lang = lang;
+        // 專有名詞等不在分級系統裡的，保留模型原本的寫法
+        wordData.level = normalizeLevel(lang, wordData.level) ?? wordData.level;
 
         // 生成自訂 HTML
         const html = `
             <div class="word-header">
                 <div class="word-title-container">
                     <strong class="word-title">${wordData.word}</strong>
-                    <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.word}">
+                    ${wordData.reading ? `<span class="word-reading">${wordData.reading}</span>` : ''}
+                    <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.word}" data-lang="${wordData.lang ?? ''}">
                         <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
                             <path d="M8 5v14l11-7z"/>
                         </svg>
@@ -334,12 +317,12 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<WordQ
                 <span class="word-level">${wordData.level}</span>
             </div>
             <div class="word-info">
-                <div class="translation"><strong>中文：</strong>${wordData.translation}</div>
+                <div class="translation"><strong>翻譯：</strong>${wordData.translation}</div>
                 <div class="part-of-speech"><strong>詞性：</strong>${wordData.partOfSpeech}</div>
                 <div class="example">
                     <div class="example-header">
                         <strong>例句：</strong>${wordData.example}
-                        <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.example}">
+                        <button class="speak-btn small elegant" title="播放發音" data-text="${wordData.example}" data-lang="${wordData.lang ?? ''}">
                             <svg class="play-icon" viewBox="0 0 24 24" width="16" height="16">
                                 <path d="M8 5v14l11-7z"/>
                             </svg>
@@ -363,7 +346,7 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<WordQ
                         e.stopPropagation();
                         const text = button.dataset.text;
                         if (text) {
-                            await speakWord(text, button);
+                            await speakWord(text, button, button.dataset.lang);
                         }
                     });
                 }
@@ -373,10 +356,21 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<WordQ
         return { html, wordData };
 
     } catch (error) {
+        // 金鑰、額度、連線問題再試也沒用，直接把原因告訴使用者
+        if (error instanceof AiError && error.code !== 'bad-response') {
+            const reason = document.createElement('span');
+            reason.style.color = '#EF4444';
+            reason.textContent = error.message;
+            const title = document.createElement('strong');
+            title.textContent = word;
+            return { html: `<div class="lexitechly-error">${title.outerHTML}<br>${reason.outerHTML}</div>` };
+        }
         // 若主請求失敗，縮短提示再試一次
         try {
-            const shortPrompt = `只回傳可解析的 JSON：{"word":"${word}","level":"","translation":"","partOfSpeech":"","example":"","exampleTranslation":""}`;
+            const shortPrompt = buildShortWordQueryPrompt(word, lang, native);
             const { wordData } = await tryRequest(shortPrompt, 900);
+            wordData.lang = lang;
+            wordData.level = normalizeLevel(lang, wordData.level) ?? wordData.level;
 
             const html = `
                 <div class="word-header">
@@ -386,7 +380,7 @@ export async function queryWordInfo(word: string, apiKey: string): Promise<WordQ
                     <span class="word-level">${wordData.level}</span>
                 </div>
                 <div class="word-info">
-                    <div class="translation"><strong>中文：</strong>${wordData.translation}</div>
+                    <div class="translation"><strong>翻譯：</strong>${wordData.translation}</div>
                     <div class="part-of-speech"><strong>詞性：</strong>${wordData.partOfSpeech}</div>
                     <div class="example">
                         <strong>例句：</strong>${wordData.example}

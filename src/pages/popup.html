@@ -136,6 +136,20 @@
                             </div>
                         </div>
 
+                        <!-- 語言設定 -->
+                        <div class="settings-section collapsible" id="language-section">
+                            <div class="section-header" id="language-header">
+                                <h3>語言</h3>
+                                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="section-content">
+                                <p class="section-hint"><label for="learning-lang">要學的語言（決定斷詞方式與分級系統）</label></p>
+                                <select id="learning-lang"></select>
+                                <p class="section-hint"><label for="native-lang">翻譯與說明使用的語言</label></p>
+                                <select id="native-lang"></select>
+                            </div>
+                        </div>
+
                         <!-- 閱讀模式查單字來源 -->
                         <div class="settings-section collapsible" id="word-lookup-section">
                             <div class="section-header" id="word-lookup-header">
@@ -177,13 +191,6 @@
                                         <span class="option-text">
                                             <span class="option-title">Gemini API</span>
                                             <span class="option-desc">高品質，需 API Key</span>
-                                        </span>
-                                    </label>
-                                    <label class="radio-label">
-                                        <input type="radio" name="tts-provider" value="google-translate" id="tts-provider-google">
-                                        <span class="option-text">
-                                            <span class="option-title">Google 翻譯</span>
-                                            <span class="option-desc">免 API Key</span>
                                         </span>
                                     </label>
                                     <label class="radio-label">

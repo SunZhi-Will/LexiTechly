@@ -3,6 +3,7 @@
 // 導入所有需要的模組
 import { initReadingMode, lookupSelectionFromContextMenu } from './content/reading-mode';
 import { injectStyles } from './content/styles';
+import { PAGE_CONTEXT_ACTION, type PageContext } from './sidepanel/protocol';
 import { getPageContent, analyzeContent, chatWithAI, analyzePageVocabulary, analyzeContentLocal, analyzePageVocabularyLocal } from './content/analysis';
 
 // 等待 DOM 載入完成後再初始化
@@ -44,8 +45,8 @@ chrome.runtime.onMessage.addListener((
     if (request.action === 'analyze') {
         const content = getPageContent();
 
-        if (request.apiKey) {
-            analyzeContent(content, request.apiKey).then(result => {
+        if (request.useAi) {
+            analyzeContent(content).then(result => {
                 sendResponse(result);
             }).catch(error => {
                 console.error('LexiTechly: 分析失敗', error);
@@ -54,21 +55,21 @@ chrome.runtime.onMessage.addListener((
                 });
             });
         } else {
-            sendResponse(analyzeContentLocal(content));
+            analyzeContentLocal(content).then(result => sendResponse(result));
         }
         return true;
 
     } else if (request.action === 'chat') {
         const content = getPageContent();
 
-        if (!request.apiKey || !request.message) {
+        if (!request.useAi || !request.message) {
             sendResponse({
                 error: 'API Key 或訊息未提供'
             });
             return true;
         }
 
-        chatWithAI(content, request.message, request.apiKey, request.history || []).then(result => {
+        chatWithAI(content, request.message, request.history || []).then(result => {
             sendResponse(result);
         }).catch(error => {
             console.error('LexiTechly: 聊天失敗', error);
@@ -81,8 +82,8 @@ chrome.runtime.onMessage.addListener((
     } else if (request.action === 'analyzeVocabulary') {
         const content = getPageContent();
 
-        if (request.apiKey) {
-            analyzePageVocabulary(content, request.apiKey).then(result => {
+        if (request.useAi) {
+            analyzePageVocabulary(content).then(result => {
                 sendResponse(result);
             }).catch(error => {
                 console.error('LexiTechly: 單字分析失敗', error);
@@ -94,6 +95,15 @@ chrome.runtime.onMessage.addListener((
             analyzePageVocabularyLocal(content).then(result => sendResponse(result));
         }
         return true;
+    } else if (request.action === PAGE_CONTEXT_ACTION) {
+        // 側邊面板要目前頁面的文章、選取的文字與標題
+        const context: PageContext = {
+            text: getPageContent(),
+            selection: window.getSelection()?.toString() ?? '',
+            title: document.title
+        };
+        (sendResponse as (response: unknown) => void)(context);
+        return false;
     } else if (request.action === 'lookupSelection') {
         lookupSelectionFromContextMenu((request as any).text || '');
         sendResponse({ success: true });
