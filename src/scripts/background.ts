@@ -3,6 +3,9 @@
 
 import { handleAiMessage } from './ai/background';
 import { t } from './i18n';
+import { PENDING_ASK_KEY, type PendingAsk } from './sidepanel/protocol';
+
+const EXPLAIN_MENU_ID = 'lexitechly-explain-selection';
 import { createImageTranslateMenus, installImageTranslate } from './image-translate/image-translate';
 
 interface MessageRequest {
@@ -146,6 +149,11 @@ chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails
                 title: t('menuLookupSelection'),
                 contexts: ['selection']
             });
+            chrome.contextMenus.create({
+                id: EXPLAIN_MENU_ID,
+                title: t('menuExplainSelection'),
+                contexts: ['selection']
+            });
             // 圖片翻譯的選單要在 removeAll 之後、同一個流程裡建立
             createImageTranslateMenus();
         });
@@ -156,6 +164,13 @@ chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails
 
 // 監聽右鍵選單點擊
 chrome.contextMenus?.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === EXPLAIN_MENU_ID && info.selectionText && tab?.id) {
+        // sidePanel.open 必須在使用者操作的當下直接呼叫，前面不能先 await 別的東西
+        void chrome.sidePanel.open({ tabId: tab.id }).catch((error) => console.error('無法開啟側邊面板:', error));
+        const pending: PendingAsk = { text: info.selectionText, tabId: tab.id, createdAt: Date.now() };
+        void chrome.storage.session.set({ [PENDING_ASK_KEY]: pending });
+        return;
+    }
     if (info.menuItemId === 'lexitechly-lookup-selection' && info.selectionText && tab?.id) {
         chrome.tabs.sendMessage(tab.id, {
             action: 'lookupSelection',

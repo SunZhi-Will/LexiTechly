@@ -11,7 +11,8 @@
         "scripting",
         "contextMenus",
         "offscreen",
-        "alarms"
+        "alarms",
+        "sidePanel"
     ],
     "host_permissions": [
         "<all_urls>"
@@ -38,6 +39,9 @@
         "default_icon": {
             "128": "images/logo128.png"
         }
+    },
+    "side_panel": {
+        "default_path": "src/pages/sidepanel.html"
     },
     "icons": {
         "128": "images/logo128.png"

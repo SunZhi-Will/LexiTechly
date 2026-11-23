@@ -744,10 +744,17 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
         }
 
         // 底部導航監聽
+        let popupWindowId: number | undefined;
+        void chrome.windows.getCurrent().then((current) => { popupWindowId = current.id; });
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const element = item as HTMLElement;
                 const pageId = element.dataset.page;
+                if (pageId === 'chat-page' && popupWindowId !== undefined) {
+                    // sidePanel.open 必須在點擊的當下直接呼叫，所以視窗 id 要事先取好
+                    void chrome.sidePanel.open({ windowId: popupWindowId }).then(() => window.close());
+                    return;
+                }
                 if (pageId) {
                     UI.switchPage(pageId);
                     if (pageId === 'vocabulary-page') {

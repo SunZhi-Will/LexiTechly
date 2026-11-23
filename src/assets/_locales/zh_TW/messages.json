@@ -32,5 +32,22 @@
     "welcomeLangTitle": { "message": "你想學什麼語言？" },
     "welcomeLangLearning": { "message": "要學的語言" },
     "welcomeLangNative": { "message": "翻譯與說明使用的語言" },
-    "welcomeLangHint": { "message": "選「自動偵測」的話，會依每個網頁的內容判斷。之後可以在設定裡更改。" }
+    "welcomeLangHint": { "message": "選「自動偵測」的話，會依每個網頁的內容判斷。之後可以在設定裡更改。" },
+    "menuExplainSelection": { "message": "用 LexiTechly 解說「%s」" },
+    "panelReading": { "message": "正在讀" },
+    "panelClear": { "message": "清除這一頁的對話" },
+    "panelEmpty": { "message": "針對這篇文章提問，或用下面的按鈕整理重點、解說選取的句子、出題考自己。" },
+    "panelActionSummary": { "message": "整理重點與單字" },
+    "panelActionExplain": { "message": "解說選取的文字" },
+    "panelActionQuiz": { "message": "出題考我" },
+    "panelPlaceholder": { "message": "問這篇文章的任何問題（Enter 送出，Shift+Enter 換行）" },
+    "panelSend": { "message": "送出" },
+    "panelThinking": { "message": "思考中..." },
+    "panelErrorGeneric": { "message": "這次沒有成功，請再試一次。" },
+    "panelNoticeUnsupported": { "message": "這個頁面無法讀取內容。請切換到一般的網頁。" },
+    "panelNoticeReload": { "message": "讀不到這個頁面的內容。請重新整理網頁後再試。" },
+    "panelNoticeEmpty": { "message": "這個頁面上沒有找到文章內容。" },
+    "panelNoticeNoKey": { "message": "對話需要 Gemini API Key。請到 LexiTechly 的設定填入。" },
+    "panelNoticeClipped": { "message": "這篇文章很長，只會參考前面的部分。" },
+    "panelNoticeNoSelection": { "message": "請先在網頁上選取一段文字，再按「解說選取的文字」。" }
 }

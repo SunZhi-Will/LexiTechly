@@ -3,6 +3,7 @@
 // 導入所有需要的模組
 import { initReadingMode, lookupSelectionFromContextMenu } from './content/reading-mode';
 import { injectStyles } from './content/styles';
+import { PAGE_CONTEXT_ACTION, type PageContext } from './sidepanel/protocol';
 import { getPageContent, analyzeContent, chatWithAI, analyzePageVocabulary, analyzeContentLocal, analyzePageVocabularyLocal } from './content/analysis';
 
 // 等待 DOM 載入完成後再初始化
@@ -94,6 +95,15 @@ chrome.runtime.onMessage.addListener((
             analyzePageVocabularyLocal(content).then(result => sendResponse(result));
         }
         return true;
+    } else if (request.action === PAGE_CONTEXT_ACTION) {
+        // 側邊面板要目前頁面的文章、選取的文字與標題
+        const context: PageContext = {
+            text: getPageContent(),
+            selection: window.getSelection()?.toString() ?? '',
+            title: document.title
+        };
+        (sendResponse as (response: unknown) => void)(context);
+        return false;
     } else if (request.action === 'lookupSelection') {
         lookupSelectionFromContextMenu((request as any).text || '');
         sendResponse({ success: true });
