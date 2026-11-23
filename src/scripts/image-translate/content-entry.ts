@@ -16,7 +16,15 @@ import { imageUnder, selectRegion } from './region-select';
 import {
     IMAGE_TRANSLATE_AUTO_TOGGLE,
     IMAGE_TRANSLATE_BATCH_BEGIN,
+    IMAGE_TRANSLATE_BOOK_RUN,
+    IMAGE_TRANSLATE_BOOK_START,
+    IMAGE_TRANSLATE_BOOK_STATUS,
+    IMAGE_TRANSLATE_BOOK_STOP,
     type BatchBeginRequest,
+    type BookRunMessage,
+    type BookStartRequest,
+    type BookStartResponse,
+    type BookStatusMessage,
     IMAGE_TRANSLATE_CAPTURE_DONE,
     IMAGE_TRANSLATE_CAPTURE_PREPARE,
     IMAGE_TRANSLATE_ERROR,
@@ -125,7 +133,65 @@ function showOurUi(): void {
     hiddenForCapture = [];
 }
 
-// ---------- 整本翻譯（在這個分頁自動翻頁） ----------
+// ---------- 整本翻譯：背景（另開一個不切換過去的分頁翻頁，這頁不動） ----------
+
+let bookPill: BatchPill | null = null;
+
+/** 狀態列的「整本翻譯」：請背景頁另開分頁翻，這頁照常看、自動翻譯照常開著 */
+async function startBook(): Promise<void> {
+    await initI18n();
+    if (batch) return;
+    const lang = auto?.lang ?? (await rememberedLanguage());
+    const request: BookStartRequest = { type: IMAGE_TRANSLATE_BOOK_START, lang };
+    showBookPill();
+    bookPill?.updateBackground({ page: 0, translated: 0, saved: 0 });
+    const response = (await chrome.runtime.sendMessage(request).catch(() => null)) as BookStartResponse | null;
+    if (!response?.ok) {
+        bookPill?.remove();
+        bookPill = null;
+        auto?.pill.flash(t('manga.auto.batchFailed'));
+    }
+}
+
+function showBookPill(): void {
+    if (bookPill && !bookPill.isRemoved) return;
+    bookPill = new BatchPill(() => {
+        void chrome.runtime.sendMessage({ type: IMAGE_TRANSLATE_BOOK_STOP }).catch(() => undefined);
+    }, Boolean(auto));
+}
+
+function onBookStatus(status: BookStatusMessage): void {
+    showBookPill();
+    const pill = bookPill!;
+    if (!status.finished) {
+        pill.updateBackground(status);
+        return;
+    }
+    const { page, translated, saved, needsVisible = 0 } = status;
+    if (status.reason === 'capture-only') {
+        // 這個網站的圖要顯示在畫面上才讀得到：背景翻不了，讓使用者自己決定要不要改在這頁翻頁
+        pill.showFinal(t('manga.book.captureOnly'), t('manga.book.captureOnlyDesc'), { label: t('manga.book.inTab'), run: () => void startBatch() });
+        return;
+    }
+    const title = status.busy ? t('manga.batch.busy', { page }) : status.reason === 'stopped' ? t('manga.book.stopped', { page }) : t('manga.batch.done');
+    const stats = t('manga.batch.stats', { translated, saved });
+    pill.showFinal(title, needsVisible > 0 ? `${stats}\n${t('manga.book.needsVisible', { count: needsVisible })}` : stats);
+}
+
+/** 背景分頁裡：背景頁叫這份內容腳本開始一頁一頁翻（沒有介面，進度送回背景頁轉給使用者的分頁） */
+async function runBookHere(message: BookRunMessage): Promise<void> {
+    if (batch) return;
+    await initI18n();
+    if (/^#\d+$/.test(location.hash) && location.hash !== '#1') location.hash = '#1';
+    batch = new BatchRunner(message.lang, { update: () => undefined, finish: () => undefined }, true);
+    try {
+        await batch.run();
+    } finally {
+        batch = null;
+    }
+}
+
+// ---------- 整本翻譯：在這個分頁自動翻頁（背景翻不了的網站才用） ----------
 
 let batch: BatchRunner | null = null;
 
@@ -133,7 +199,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * 在這個分頁一頁一頁翻完整本、每頁存起來；翻完回到原本那頁，重新開自動翻譯（翻過的頁直接從本機貼上譯文）。
- * 要在使用者自己的分頁做，因為擴充功能只有這個分頁的 activeTab，能擷取畫面
+ * 只用在圖片要顯示在畫面上才讀得到的網站：擴充功能只能擷取使用者正在看的分頁
  */
 async function startBatch(): Promise<void> {
     if (batch) return;
@@ -256,7 +322,7 @@ async function toggleAuto(): Promise<void> {
         onStop: stopAuto,
         onRetranslate: () => auto?.translator.retranslateVisible(),
         onSelectRegion: () => void selectAndTranslate(),
-        onBatch: () => void startBatch(),
+        onBatch: () => void startBook(),
         onTogglePrefetch: (enabled) => {
             auto?.translator.setPrefetchNext(enabled);
             void chrome.storage.local.set({ [PREFETCH_NEXT_KEY]: enabled });
@@ -326,6 +392,19 @@ function install(): void {
         if (message?.type === IMAGE_TRANSLATE_CAPTURE_DONE) {
             showOurUi();
             auto?.translator.onCaptureDone();
+            return false;
+        }
+        if (message?.type === IMAGE_TRANSLATE_BOOK_STATUS) {
+            onBookStatus(message as BookStatusMessage);
+            return false;
+        }
+        if (message?.type === IMAGE_TRANSLATE_BOOK_RUN) {
+            void runBookHere(message as BookRunMessage);
+            sendResponse(true);
+            return false;
+        }
+        if (message?.type === IMAGE_TRANSLATE_BOOK_STOP) {
+            batch?.stop();
             return false;
         }
         if (message?.type === IMAGE_TRANSLATE_AUTO_TOGGLE) {

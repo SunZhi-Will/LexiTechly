@@ -27,6 +27,11 @@ import {
     IMAGE_TRANSLATE_BATCH_KEY,
     IMAGE_TRANSLATE_BATCH_BEGIN,
     IMAGE_TRANSLATE_BATCH_PROGRESS,
+    IMAGE_TRANSLATE_BOOK_RUN,
+    IMAGE_TRANSLATE_BOOK_START,
+    IMAGE_TRANSLATE_BOOK_STATUS,
+    IMAGE_TRANSLATE_BOOK_STOP,
+    IMAGE_TRANSLATE_WAIT,
     IMAGE_TRANSLATE_LOOKUP,
     IMAGE_TRANSLATE_PAGE_TOGGLE,
     IMAGE_TRANSLATE_CAPTURE_DONE,
@@ -45,6 +50,9 @@ import {
     translationKey,
     type AnalyzeRequest,
     type BatchProgress,
+    type BookRunMessage,
+    type BookStartResponse,
+    type BookStatusMessage,
     type AnalyzeResponse,
     type AutoToggleMessage,
     type ErrorMessage,
@@ -120,7 +128,9 @@ interface FetchedImage {
 async function fetchImage(srcUrl: string): Promise<FetchedImage | null> {
     if (!/^(https?:|data:)/.test(srcUrl)) return null;
     try {
-        const response = await fetch(srcUrl, { credentials: 'omit' });
+        let response = await fetch(srcUrl, { credentials: 'omit' });
+        // 要登入才看得到的圖：帶上使用者在那個網站的登入狀態再試一次（跟使用者自己打開那張圖一樣）
+        if (!response.ok && /^https?:/.test(srcUrl)) response = await fetch(srcUrl, { credentials: 'include' });
         if (!response.ok) return null;
         const blob = await response.blob();
         if (!blob.type.startsWith('image/') || blob.size > MAX_IMAGE_BYTES) return null;
@@ -432,6 +442,117 @@ async function setBatchSession(tabId: number, url: string | null): Promise<void>
     await chrome.storage.session.set({ [BATCH_SESSIONS_KEY]: sessions });
 }
 
+// ---------- 背景整本翻譯（另開一個不切換過去的分頁翻頁，使用者看的分頁不動） ----------
+
+// 背景分頁 → 誰開的、網址（載入完才填）、最近一次進度；存在 session，service worker 重啟後還記得
+const BOOKS_KEY = 'imageTranslate.books';
+const BOOK_LOAD_TIMEOUT_MS = 30000;
+const MAX_WAIT_MS = 10000;
+
+type BookProgress = Omit<BatchProgress, 'type'>;
+
+interface Book {
+    owner: number;
+    url: string;
+    last: BookProgress;
+}
+
+const EMPTY_PROGRESS: BookProgress = { page: 0, translated: 0, saved: 0, needsVisible: 0, finished: false };
+
+async function books(): Promise<Record<string, Book>> {
+    const stored = await chrome.storage.session.get(BOOKS_KEY);
+    return (stored[BOOKS_KEY] ?? {}) as Record<string, Book>;
+}
+
+async function setBook(tabId: number, book: Book | null): Promise<void> {
+    const all = await books();
+    if (book === null) delete all[tabId];
+    else all[tabId] = book;
+    await chrome.storage.session.set({ [BOOKS_KEY]: all });
+}
+
+async function bookOf(owner: number): Promise<[number, Book] | null> {
+    const entry = Object.entries(await books()).find(([, book]) => book.owner === owner);
+    return entry ? [Number(entry[0]), entry[1]] : null;
+}
+
+function sendBookStatus(owner: number, progress: BookProgress): void {
+    const message: BookStatusMessage = { type: IMAGE_TRANSLATE_BOOK_STATUS, ...progress };
+    chrome.tabs.sendMessage(owner, message, { frameId: 0 }).catch(() => undefined);
+}
+
+function waitForTabLoaded(tabId: number): Promise<boolean> {
+    return new Promise((resolve) => {
+        const done = (ok: boolean) => {
+            clearTimeout(timer);
+            chrome.tabs.onUpdated.removeListener(listener);
+            resolve(ok);
+        };
+        const listener = (id: number, changeInfo: { status?: string }) => {
+            if (id === tabId && changeInfo.status === 'complete') done(true);
+        };
+        const timer = setTimeout(() => done(false), BOOK_LOAD_TIMEOUT_MS);
+        chrome.tabs.onUpdated.addListener(listener);
+        chrome.tabs.get(tabId).then((tab) => {
+            if (tab.status === 'complete') done(true);
+        }, () => done(false));
+    });
+}
+
+/** 收掉背景分頁並告訴使用者的分頁結果 */
+async function finishBook(tabId: number, progress: BookProgress, closeTab = true): Promise<void> {
+    const book = (await books())[tabId];
+    if (!book) return;
+    await setBook(tabId, null);
+    await setBatchSession(tabId, null);
+    sendBookStatus(book.owner, { ...progress, finished: true });
+    if (closeTab) await chrome.tabs.remove(tabId).catch(() => undefined);
+}
+
+/**
+ * 開始背景整本翻譯：在使用者分頁旁邊開一個不切換過去的分頁（靜音、不讓瀏覽器為了省記憶體把它丟掉），
+ * 載入完注入內容腳本叫它一頁一頁翻。背景分頁擷取不了畫面，只能直接抓原圖（見 batch-translate.ts）
+ */
+async function startBook(owner: chrome.tabs.Tab, lang: LangChoice): Promise<BookStartResponse> {
+    const ownerId = owner.id!;
+    const existing = await bookOf(ownerId);
+    if (existing) {
+        sendBookStatus(ownerId, existing[1].last);
+        return { ok: true, running: true };
+    }
+    if (!owner.url || !/^https?:/.test(owner.url)) return { ok: false };
+    let tabId: number | undefined;
+    try {
+        const created = await chrome.tabs.create({ windowId: owner.windowId, index: owner.index + 1, url: owner.url, active: false });
+        tabId = created.id!;
+        await setBook(tabId, { owner: ownerId, url: '', last: EMPTY_PROGRESS });
+        await chrome.tabs.update(tabId, { muted: true, autoDiscardable: false }).catch(() => undefined);
+        if (!(await waitForTabLoaded(tabId))) throw new Error('背景分頁沒有載入完');
+        const loaded = await chrome.tabs.get(tabId);
+        const url = loaded.url ?? owner.url;
+        const book = (await books())[tabId];
+        // 載入時被使用者關掉或按了停止：已經回報過結果
+        if (!book) return { ok: true };
+        await setBook(tabId, { ...book, url: withoutHash(url) });
+        await setBatchSession(tabId, url);
+        if (!(await injectContentScript(tabId, 0))) throw new Error('背景分頁不能注入內容腳本');
+        const run: BookRunMessage = { type: IMAGE_TRANSLATE_BOOK_RUN, lang };
+        const started = await chrome.tabs.sendMessage(tabId, run, { frameId: 0 }).catch(() => false);
+        if (!started) throw new Error('背景分頁沒有回應');
+        return { ok: true };
+    } catch (error) {
+        // 載入時被使用者關掉或按了停止：已經回報過結果，不算失敗
+        if (tabId !== undefined && !(await books())[tabId]) return { ok: true };
+        contentLogger.warn('背景整本翻譯沒能開始', error);
+        if (tabId !== undefined) {
+            await setBook(tabId, null);
+            await setBatchSession(tabId, null);
+            await chrome.tabs.remove(tabId).catch(() => undefined);
+        }
+        return { ok: false };
+    }
+}
+
 /** 在網頁本身的環境按一個鍵（閱讀器的鍵盤處理多半看 keyCode，內容腳本送的事件設不了這個欄位） */
 async function pressKeyInPage(tabId: number, key: string, keyCode: number): Promise<void> {
     await chrome.scripting.executeScript({
@@ -514,13 +635,28 @@ export function installImageTranslate(): void {
         if (command === TRANSLATE_COMMAND) void handleCommand(tab);
     });
 
-    // 整本翻譯中的分頁被關掉
-    chrome.tabs.onRemoved.addListener((tabId) => void setBatchSession(tabId, null));
-    // 整本翻譯中的分頁被帶到別頁：整本翻譯已經跟著網頁一起停了，把分頁帶回原本的漫畫
+    // 整本翻譯中的分頁被關掉；背景整本翻譯的分頁被使用者關掉就告訴開它的分頁，開它的分頁被關掉就收掉背景分頁
+    chrome.tabs.onRemoved.addListener((tabId) => {
+        void setBatchSession(tabId, null);
+        void books().then(async (all) => {
+            const book = all[tabId];
+            if (book) await finishBook(tabId, { ...book.last, reason: 'stopped' }, false);
+            const owned = await bookOf(tabId);
+            if (owned) await finishBook(owned[0], owned[1].last);
+        });
+    });
+    // 整本翻譯中的分頁被帶到別頁：整本翻譯已經跟著網頁一起停了。
+    // 背景分頁就直接收掉、回報翻到哪；使用者自己的分頁則帶回原本的漫畫
     chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
         if (!changeInfo.url) return;
         const url = changeInfo.url;
-        void batchSessions().then(async (sessions) => {
+        void books().then(async (all) => {
+            const book = all[tabId];
+            if (book) {
+                if (book.url && withoutHash(url) !== book.url) await finishBook(tabId, book.last);
+                return;
+            }
+            const sessions = await batchSessions();
             const start = sessions[tabId];
             if (start === undefined || withoutHash(url) === start) return;
             await setBatchSession(tabId, null);
@@ -553,10 +689,37 @@ export function installImageTranslate(): void {
             });
             return true;
         }
-        // 整本翻譯做完：不再接受這個分頁的翻頁鍵
+        // 整本翻譯的進度：背景分頁送來的轉給開它的分頁；做完就不再接受這個分頁的翻頁鍵（背景分頁順便收掉）
         if (message?.type === IMAGE_TRANSLATE_BATCH_PROGRESS && isFromContentScript(sender) && sender.tab?.id !== undefined) {
-            if ((message as BatchProgress).finished) void setBatchSession(sender.tab.id, null);
+            const tabId = sender.tab.id;
+            const { type: _type, ...progress } = message as BatchProgress;
+            void books().then(async (all) => {
+                const book = all[tabId];
+                if (!book) {
+                    if (progress.finished) await setBatchSession(tabId, null);
+                    return;
+                }
+                if (progress.finished) return finishBook(tabId, progress);
+                await setBook(tabId, { ...book, last: progress });
+                sendBookStatus(book.owner, progress);
+            });
             return false;
+        }
+        // 背景整本翻譯：開始、停止（只接受使用者自己的分頁送來的）
+        if (message?.type === IMAGE_TRANSLATE_BOOK_START && isFromContentScript(sender) && sender.tab) {
+            const lang = MENU_LANGS.includes(message.lang) ? (message.lang as LangChoice) : 'auto';
+            startBook(sender.tab, lang).then(sendResponse, () => sendResponse({ ok: false } satisfies BookStartResponse));
+            return true;
+        }
+        if (message?.type === IMAGE_TRANSLATE_BOOK_STOP && isFromContentScript(sender) && sender.tab?.id !== undefined) {
+            void bookOf(sender.tab.id).then((owned) => owned && finishBook(owned[0], { ...owned[1].last, reason: 'stopped' }));
+            return false;
+        }
+        // 背景分頁的計時：背景頁等完再回覆（背景分頁自己的計時器會被瀏覽器放慢）
+        if (message?.type === IMAGE_TRANSLATE_WAIT && isFromContentScript(sender)) {
+            const ms = Math.min(MAX_WAIT_MS, Math.max(0, Number(message.ms) || 0));
+            setTimeout(() => sendResponse(true), ms);
+            return true;
         }
         // 框選翻譯：翻一張圖裡框起來的一塊
         if (message?.type === IMAGE_TRANSLATE_REGION && isFromContentScript(sender) && sender.tab) {

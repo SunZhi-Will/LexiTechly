@@ -231,6 +231,43 @@ export interface BatchProgress {
     saved: number;
     finished: boolean;
     busy?: boolean;
+    // 背景整本翻譯：抓不到原圖、要顯示在畫面上才能翻的頁數
+    needsVisible?: number;
+    // 背景整本翻譯停下的原因：capture-only 是這個網站的圖都要顯示在畫面上才讀得到，背景翻不了
+    reason?: 'capture-only' | 'stopped';
+}
+
+// ---------- 背景整本翻譯（另開一個不切換過去的分頁翻頁，使用者看的這頁不動） ----------
+
+// 使用者的分頁 → 背景頁：開始背景整本翻譯（已經在翻就回傳 running，讓重新注入的內容腳本把進度卡片接回來）
+export const IMAGE_TRANSLATE_BOOK_START = 'READLOOP_IMAGE_TRANSLATE_BOOK_START';
+// 使用者的分頁 → 背景頁：停下背景整本翻譯
+export const IMAGE_TRANSLATE_BOOK_STOP = 'READLOOP_IMAGE_TRANSLATE_BOOK_STOP';
+// 背景頁 → 背景分頁的內容腳本：開始一頁一頁翻
+export const IMAGE_TRANSLATE_BOOK_RUN = 'READLOOP_IMAGE_TRANSLATE_BOOK_RUN';
+// 背景頁 → 使用者的分頁：進度（內容同 BatchProgress）
+export const IMAGE_TRANSLATE_BOOK_STATUS = 'READLOOP_IMAGE_TRANSLATE_BOOK_STATUS';
+// 背景分頁的內容腳本 → 背景頁：等 ms 毫秒再回覆。背景分頁的計時器會被瀏覽器大幅放慢（藏起來 5 分鐘後一分鐘才跑一次），
+// 改由背景頁計時，訊息回覆不受這個限制
+export const IMAGE_TRANSLATE_WAIT = 'READLOOP_IMAGE_TRANSLATE_WAIT';
+
+export interface BookStartRequest {
+    type: typeof IMAGE_TRANSLATE_BOOK_START;
+    lang: LangChoice;
+}
+
+export interface BookStartResponse {
+    ok: boolean;
+    running?: boolean;
+}
+
+export interface BookRunMessage {
+    type: typeof IMAGE_TRANSLATE_BOOK_RUN;
+    lang: LangChoice;
+}
+
+export interface BookStatusMessage extends Omit<BatchProgress, 'type'> {
+    type: typeof IMAGE_TRANSLATE_BOOK_STATUS;
 }
 
 /** 整本翻譯的翻頁：網址 # 後面的頁碼加一；不是頁碼回傳 null */
