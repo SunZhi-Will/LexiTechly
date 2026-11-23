@@ -25,7 +25,7 @@ const MIN_SIDE_PX = 8;
 /** 讓使用者拖出一個框；回傳框的位置（視窗座標，CSS 像素），取消時回傳 null */
 export function selectRegion(hint: string): Promise<ViewportRect | null> {
     return new Promise((resolve) => {
-        const host = document.createElement('lexitechly-region-select');
+        const host = document.createElement('readloop-region-select');
         const shadow = host.attachShadow({ mode: 'closed' });
         const style = document.createElement('style');
         style.textContent = STYLE;

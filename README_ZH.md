@@ -1,10 +1,10 @@
 <div align="center">
 
-# LexiTechly
+# Readloop
 
-![LexiTechly Logo](src/assets/images/logo.png)
+![Readloop Logo](src/assets/images/logo.png)
 
-🔍 智慧英文內容分析擴充功能 (TypeScript 版本)
+📖 讀迴：邊讀網頁與漫畫，邊學語言（英、日、韓、中、西、法、德）
 
 [![版本](https://img.shields.io/badge/版本-1.4.1-blue.svg)](CHANGELOG.md)
 [![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
@@ -129,7 +129,7 @@ npm run build  # 建置擴充功能
 
 4. **確認安裝**
    - 擴充功能應該會出現在擴充功能列表中
-   - 您會在瀏覽器工具列看到 LexiTechly 圖示
+   - 您會在瀏覽器工具列看到 Readloop 圖示
 
 #### 步驟 3：設定 API Keys
 1. **取得 Google Gemini API Key**
@@ -141,7 +141,7 @@ npm run build  # 建置擴充功能
 
 
 3. **在擴充功能中設定 API Keys**
-   - 點選瀏覽器工具列的 LexiTechly 圖示
+   - 點選瀏覽器工具列的 Readloop 圖示
    - 進入設定頁面
    - 在對應欄位中貼上您的 API Keys
    - 點選「儲存」
@@ -222,7 +222,7 @@ dist/
 
 ### 7. 沉浸式查閱模式 🔍
 - **啟用查閱模式**：
-  - 在任何英文網頁上，查看右上角的浮動 LexiTechly Logo
+  - 在任何英文網頁上，查看右上角的浮動 Readloop Logo
   - 點擊 Logo 切換查閱模式（Logo 會變色表示狀態）
 - **即時單字查詢**：
   - 啟用查閱模式後，將滑鼠懸停在任何英文單字上
@@ -242,7 +242,7 @@ dist/
   - 在圖片上按右鍵，選「翻譯這張圖片」，再選原文語言（自動判斷、韓文、日文、中文）
   - 譯文會貼回圖上原本的位置；右上角可切換「看原文」與「看譯文」，或關閉
 - **自動翻譯整頁**：
-  - 點工具列的 LexiTechly 圖示，按主頁的「翻譯這頁的圖片」；或按 Alt+Shift+T（可在 `chrome://extensions/shortcuts` 修改）。再按一次停止
+  - 點工具列的 Readloop 圖示，按主頁的「翻譯這頁的圖片」；或按 Alt+Shift+T（可在 `chrome://extensions/shortcuts` 修改）。再按一次停止
   - 這頁的漫畫圖片會自動翻譯，換頁或新出現的圖也會跟著翻
   - 右下角的控制列可以換原文語言、開啟「預翻下一頁」、執行「整本翻譯」或停止
 - **譯文語言**：跟著瀏覽器介面語言（繁體中文、簡體中文、日文，其餘為英文）
@@ -290,7 +290,7 @@ dist/
 
 ## ⚠️ 注意事項
 
-- 🌐 僅支援英文內容分析（圖片翻譯不受此限，支援韓文、日文、中文原文）
+- 🌐 文字查詢與分級支援英、日、韓、中、西、法、德；圖片翻譯讀韓文、日文、中文原文
 - 🔑 需要有效的 Gemini API Key
 - 🌟 建議在網路連線穩定時使用
 - 🖼️ 圖片翻譯使用免金鑰的 Google 翻譯，短時間內翻太多頁可能暫時被擋，過一段時間再試即可
@@ -392,7 +392,7 @@ npm run watch        # 監視模式，自動重新建置
 
 在 Chrome 中：
 - 打開 `chrome://extensions/`
-- 找到 LexiTechly 擴充功能
+- 找到 Readloop 擴充功能
 - 點擊「詳細資料」→「檢查檢視畫面」來開啟開發者工具
 
 ## 📄 授權條款

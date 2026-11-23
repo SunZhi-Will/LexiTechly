@@ -109,10 +109,10 @@ export function imageUrl(img: HTMLImageElement): string {
     return img.currentSrc || img.src;
 }
 
-const FLASH_TAG = 'lexitechly-flash';
+const FLASH_TAG = 'readloop-flash';
 
 function isOurs(img: HTMLImageElement): boolean {
-    return Boolean(img.closest(`lexitechly-image-translation, lexitechly-auto-translate, ${FLASH_TAG}`));
+    return Boolean(img.closest(`readloop-image-translation, readloop-auto-translate, ${FLASH_TAG}`));
 }
 
 export function isComicImage(img: HTMLImageElement): boolean {
@@ -293,7 +293,7 @@ export class AutoTranslator {
         try {
             response = (await chrome.runtime.sendMessage(request)) as TranslateResponse | undefined;
         } catch (error) {
-            console.warn('[LexiTechly] 框選翻譯：背景頁沒有回應', error);
+            console.warn('[Readloop] 框選翻譯：背景頁沒有回應', error);
             response = undefined;
         } finally {
             this.regionRequests.delete(requestId);
@@ -306,7 +306,7 @@ export class AutoTranslator {
             return;
         }
         const code = response && !response.ok ? response.code : 'analyze-failed';
-        console.warn('[LexiTechly] 框選翻譯失敗', code, response);
+        console.warn('[Readloop] 框選翻譯失敗', code, response);
         const keys: Partial<Record<typeof code, MessageKey>> = {
             'no-text': 'manga.region.noText',
             'capture-failed': 'manga.error.capture',
@@ -411,7 +411,7 @@ export class AutoTranslator {
         const layer = overlay ?? new TranslationOverlay(img, { toolbar: false });
         this.overlays.set(img, { url, overlay: layer });
         layer.setVisible(!this.showOriginal);
-        layer.showResult({ type: 'LEXITECHLY_IMAGE_TRANSLATE_RESULT', ...result }).catch(() => layer.remove());
+        layer.showResult({ type: 'READLOOP_IMAGE_TRANSLATE_RESULT', ...result }).catch(() => layer.remove());
     }
 
     private schedule(): void {

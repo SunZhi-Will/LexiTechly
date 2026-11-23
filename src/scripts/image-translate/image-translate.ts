@@ -61,7 +61,7 @@ import {
     type TranslatedImage
 } from './protocol';
 
-const MENU_PARENT = 'lexitechly-translate-image';
+const MENU_PARENT = 'readloop-translate-image';
 const MENU_CHILD_PREFIX = `${MENU_PARENT}:`;
 // 子選單：自動判斷放第一個（大部分時候選它就對）
 const MENU_LANGS: LangChoice[] = ['auto', ...SOURCE_LANGS];
@@ -75,7 +75,7 @@ const MENU_TITLES: Record<LangChoice, MessageKey> = {
 const CONTENT_SCRIPT = 'image-translate-content.js';
 const OFFSCREEN_URL = 'src/pages/offscreen.html';
 // offscreen 文件載著模型很佔記憶體，閒置這麼久就關掉，下次用到再開（模型已在快取，重開只要幾秒）
-const OFFSCREEN_IDLE_ALARM = 'lexitechly-offscreen-idle';
+const OFFSCREEN_IDLE_ALARM = 'readloop-offscreen-idle';
 const OFFSCREEN_IDLE_MINUTES = 5;
 // 直接抓原圖時的大小上限；再大的圖多半不是漫畫頁，交給畫面擷取
 const MAX_IMAGE_BYTES = 30 * 1024 * 1024;
@@ -609,10 +609,10 @@ export function installImageTranslate(): void {
     // 正式版建置的 MODE 是 production，整段會被移除
     if (import.meta.env.MODE !== 'production') {
         const hooks = globalThis as Record<string, unknown>;
-        hooks.__lexiTechlyTranslateImageForTest = async (tabId: number, srcUrl: string, lang: LangChoice, frameId = 0) => {
+        hooks.__readloopTranslateImageForTest = async (tabId: number, srcUrl: string, lang: LangChoice, frameId = 0) => {
             const tab = await chrome.tabs.get(tabId);
             await handleMenuTranslate(lang, { srcUrl, frameId, menuItemId: `${MENU_CHILD_PREFIX}${lang}`, editable: false, pageUrl: tab.url ?? '' }, tab);
         };
-        hooks.__lexiTechlyToggleAutoTranslateForTest = async (tabId: number) => handleCommand(await chrome.tabs.get(tabId));
+        hooks.__readloopToggleAutoTranslateForTest = async (tabId: number) => handleCommand(await chrome.tabs.get(tabId));
     }
 }

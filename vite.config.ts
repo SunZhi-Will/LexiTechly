@@ -23,7 +23,7 @@ function imageTranslateAssets(): Plugin {
     let mode = 'production';
     let outDir = 'dist';
     return {
-        name: 'lexitechly-image-translate-assets',
+        name: 'readloop-image-translate-assets',
         apply: 'build',
         configResolved(config) {
             mode = config.mode;
@@ -56,7 +56,7 @@ function imageTranslateAssets(): Plugin {
                     lib: {
                         entry: resolve(__dirname, 'src/scripts/image-translate/content-entry.ts'),
                         formats: ['iife'],
-                        name: 'LexiTechlyImageTranslate',
+                        name: 'ReadloopImageTranslate',
                         fileName: () => IMAGE_TRANSLATE_CONTENT
                     }
                 }

@@ -68,11 +68,11 @@ function showSelectionLookupButton(rect: DOMRect | { left: number; top: number; 
     hideSelectionLookupButton();
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'lexitechly-selection-lookup-btn';
+    btn.className = 'readloop-selection-lookup-btn';
     btn.setAttribute('aria-label', '查詢選取內容');
     // 翻譯／查詢圖示（小圓點、半透明）
     btn.innerHTML = `
-        <svg class="lexitechly-selection-lookup-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="readloop-selection-lookup-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/>
             <path d="M21 21l-4.35-4.35"/>
         </svg>
@@ -231,7 +231,7 @@ function clearAllTimersAndState(): void {
 // 清除所有高亮狀態（包括鎖定狀態）
 function clearAllHighlights(): void {
     // 清除所有 span 高亮（包括鎖定狀態）
-    const highlights = document.querySelectorAll('.lexitechly-word-highlight');
+    const highlights = document.querySelectorAll('.readloop-word-highlight');
     highlights.forEach(highlight => {
         const parent = highlight.parentNode;
         if (parent && highlight.parentNode === parent) {
@@ -242,7 +242,7 @@ function clearAllHighlights(): void {
     });
 
     // 清除所有樣式高亮（包括鎖定狀態）
-    const styledElements = document.querySelectorAll('[data-lexitechly-highlighted]');
+    const styledElements = document.querySelectorAll('[data-readloop-highlighted]');
     styledElements.forEach(element => {
         const htmlElement = element as HTMLElement;
         htmlElement.style.backgroundColor = '';
@@ -251,12 +251,12 @@ function clearAllHighlights(): void {
         htmlElement.style.cursor = '';
         htmlElement.style.pointerEvents = '';
         htmlElement.style.zIndex = '';
-        htmlElement.removeAttribute('data-lexitechly-highlighted');
-        htmlElement.removeAttribute('data-lexitechly-locked');
+        htmlElement.removeAttribute('data-readloop-highlighted');
+        htmlElement.removeAttribute('data-readloop-locked');
     });
 
     // 清除所有可能的高亮樣式（使用更廣泛的選擇器）
-    const allPossibleHighlights = document.querySelectorAll('[style*="rgba(59, 130, 246"], [style*="rgba(34, 197, 94"], [data-lexitechly-locked]');
+    const allPossibleHighlights = document.querySelectorAll('[style*="rgba(59, 130, 246"], [style*="rgba(34, 197, 94"], [data-readloop-locked]');
     allPossibleHighlights.forEach(element => {
         const htmlElement = element as HTMLElement;
         // 清除藍色選取高亮
@@ -279,14 +279,14 @@ function clearAllHighlights(): void {
         htmlElement.style.cursor = '';
         htmlElement.style.pointerEvents = '';
         htmlElement.style.zIndex = '';
-        htmlElement.removeAttribute('data-lexitechly-locked');
+        htmlElement.removeAttribute('data-readloop-locked');
 
         // 移除點擊事件監聽器
         htmlElement.removeEventListener('click', handleWordClick);
     });
 
     // 清除 tooltip
-    const tooltips = document.querySelectorAll('.lexitechly-tooltip');
+    const tooltips = document.querySelectorAll('.readloop-tooltip');
     tooltips.forEach(tooltip => tooltip.remove());
 }
 
@@ -319,8 +319,8 @@ function handleMouseMove(event: MouseEvent): void {
 
     // 跳過非文字節點和我們的擴充功能元素
     if (!target || target.nodeType !== Node.ELEMENT_NODE ||
-        target.closest('#lexitechly-floating-logo') ||
-        target.closest('.lexitechly-tooltip')) {
+        target.closest('#readloop-floating-logo') ||
+        target.closest('.readloop-tooltip')) {
         return;
     }
 
@@ -378,8 +378,8 @@ function handleWordChange(word: string, target: HTMLElement, event: MouseEvent):
     highlightWord(target, event);
 
     // 記錄當前高亮元素（排除鎖定狀態的元素）
-    currentHighlight = document.querySelector('.lexitechly-word-highlight:not([data-lexitechly-locked])') ||
-        document.querySelector('[data-lexitechly-highlighted]:not([data-lexitechly-locked])');
+    currentHighlight = document.querySelector('.readloop-word-highlight:not([data-readloop-locked])') ||
+        document.querySelector('[data-readloop-highlighted]:not([data-readloop-locked])');
 
     // 立即顯示選取效果（淺藍色）
     if (currentHighlight) {
@@ -422,7 +422,7 @@ function handleWordClick(event: MouseEvent): void {
     lockedHighlight.style.boxShadow = '0 0 0 1px rgba(34, 197, 94, 0.4)';
     lockedHighlight.style.cursor = 'default';
     lockedHighlight.style.zIndex = '10001'; // 確保鎖定狀態在更上層
-    lockedHighlight.setAttribute('data-lexitechly-locked', 'true');
+    lockedHighlight.setAttribute('data-readloop-locked', 'true');
 
     // 移除點選事件監聽器
     lockedHighlight.removeEventListener('click', handleWordClick);
@@ -444,8 +444,8 @@ function handleMouseOut(event: MouseEvent): void {
 
     // 如果滑鼠移動到tooltip或logo，不要清除
     if (relatedTarget && (
-        relatedTarget.closest('.lexitechly-tooltip') ||
-        relatedTarget.closest('#lexitechly-floating-logo'))) {
+        relatedTarget.closest('.readloop-tooltip') ||
+        relatedTarget.closest('#readloop-floating-logo'))) {
         return;
     }
 
@@ -478,18 +478,18 @@ async function showWordTooltip(word: string, x: number, y: number): Promise<void
 
     // 創建載入提示
     const tooltip = document.createElement('div');
-    tooltip.className = 'lexitechly-tooltip';
+    tooltip.className = 'readloop-tooltip';
     tooltip.innerHTML = `
-        <div class="lexitechly-tooltip-header">
-            <span class="lexitechly-tooltip-title">單字查詢</span>
-            <div class="lexitechly-tooltip-actions">
-                <button class="lexitechly-tooltip-vocabulary" title="查看單字列表"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2V5Zm0 15a2 2 0 0 0 2 2h13M9 8h6"/></svg></button>
-                <button class="lexitechly-tooltip-close" title="關閉字卡">×</button>
+        <div class="readloop-tooltip-header">
+            <span class="readloop-tooltip-title">單字查詢</span>
+            <div class="readloop-tooltip-actions">
+                <button class="readloop-tooltip-vocabulary" title="查看單字列表"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2V5Zm0 15a2 2 0 0 0 2 2h13M9 8h6"/></svg></button>
+                <button class="readloop-tooltip-close" title="關閉字卡">×</button>
             </div>
         </div>
-        <div class="lexitechly-tooltip-content">
-            <div class="lexitechly-loading">
-                <div class="lexitechly-spinner"></div>
+        <div class="readloop-tooltip-content">
+            <div class="readloop-loading">
+                <div class="readloop-spinner"></div>
                 <span>查詢中...</span>
             </div>
         </div>
@@ -590,12 +590,12 @@ async function addWordToList(wordData: any): Promise<void> {
 
 // 更新提示內容
 function updateTooltipContent(tooltip: HTMLElement, word: string, content: string): void {
-    const contentDiv = tooltip.querySelector('.lexitechly-tooltip-content');
+    const contentDiv = tooltip.querySelector('.readloop-tooltip-content');
 
     if (contentDiv) {
         if (content.includes('請先設定') || content.includes('查詢失敗')) {
             contentDiv.innerHTML = `
-                <div class="lexitechly-error">
+                <div class="readloop-error">
                     <strong>${word}</strong><br>
                     <span style="color: #EF4444;">${content}</span>
                 </div>
@@ -635,24 +635,24 @@ function handleDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
 
     // 如果點選在我們的UI元素上，不處理
-    if (target.closest('#lexitechly-floating-logo') ||
-        target.closest('.lexitechly-tooltip') ||
-        target.hasAttribute('data-lexitechly-disabled')) {
+    if (target.closest('#readloop-floating-logo') ||
+        target.closest('.readloop-tooltip') ||
+        target.hasAttribute('data-readloop-disabled')) {
         return;
     }
 
     // 如果點選在鎖定的高亮上，不處理
-    if (target.closest('[data-lexitechly-locked]')) {
+    if (target.closest('[data-readloop-locked]')) {
         return;
     }
 
     // 如果點選在關閉按鈕上，不處理（讓關閉按鈕自己處理）
-    if (target.classList.contains('lexitechly-tooltip-close')) {
+    if (target.classList.contains('readloop-tooltip-close')) {
         return;
     }
 
     // 如果點選在跳轉按鈕上，不處理（讓跳轉按鈕自己處理）
-    if (target.classList.contains('lexitechly-tooltip-vocabulary')) {
+    if (target.classList.contains('readloop-tooltip-vocabulary')) {
         return;
     }
 
@@ -679,7 +679,7 @@ function clearLockedHighlight(): void {
         lockedHighlight.style.backgroundColor = '';
         lockedHighlight.style.boxShadow = '';
         lockedHighlight.style.cursor = '';
-        lockedHighlight.removeAttribute('data-lexitechly-locked');
+        lockedHighlight.removeAttribute('data-readloop-locked');
         lockedHighlight = null;
 
         // 清除相關的 tooltip
@@ -693,22 +693,22 @@ function clearLockedHighlight(): void {
 // 顯示Toast通知
 function showToast(message: string, isLoading: boolean = false, isError: boolean = false, isSuccess: boolean = false): void {
     // 移除現有toast
-    const existingToast = document.querySelector('.lexitechly-toast');
+    const existingToast = document.querySelector('.readloop-toast');
     if (existingToast) {
         existingToast.remove();
     }
 
     const toast = document.createElement('div');
-    toast.className = 'lexitechly-toast';
+    toast.className = 'readloop-toast';
 
     let iconHtml = '';
     if (isError) iconHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3v.01"/></svg>';
     else if (isSuccess) iconHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
-    else if (isLoading) iconHtml = '<div class="lexitechly-spinner-small"></div>';
+    else if (isLoading) iconHtml = '<div class="readloop-spinner-small"></div>';
 
     toast.innerHTML = `
-        <div class="lexitechly-toast-content">
-            ${iconHtml ? `<span class="lexitechly-toast-icon${isError ? ' is-error' : isSuccess ? ' is-success' : ''}">${iconHtml}</span>` : ''}
+        <div class="readloop-toast-content">
+            ${iconHtml ? `<span class="readloop-toast-icon${isError ? ' is-error' : isSuccess ? ' is-success' : ''}">${iconHtml}</span>` : ''}
             <span>${message}</span>
         </div>
     `;
@@ -752,32 +752,32 @@ function showToast(message: string, isLoading: boolean = false, isError: boolean
 
 // 初始化查閱模式
 function initReadingMode(): void {
-    console.log('LexiTechly: 初始化查閱模式...');
+    console.log('Readloop: 初始化查閱模式...');
     
     // 檢查頁面是否為有效的網頁
     if (window.location.protocol === 'chrome-extension:' ||
         window.location.protocol === 'chrome:' ||
         window.location.protocol === 'about:') {
-        console.log('LexiTechly: 不支援的頁面類型，跳過初始化');
+        console.log('Readloop: 不支援的頁面類型，跳過初始化');
         return;
     }
 
     // 創建浮動 logo
     try {
         createFloatingLogo(toggleReadingMode);
-        console.log('LexiTechly: 浮動 logo 創建成功');
+        console.log('Readloop: 浮動 logo 創建成功');
     } catch (error) {
-        console.error('LexiTechly: 浮動 logo 創建失敗', error);
+        console.error('Readloop: 浮動 logo 創建失敗', error);
     }
 
     // 監聽點擊事件以隱藏提示
     document.addEventListener('click', (event) => {
         const target = event.target as HTMLElement;
-        if (!target.closest('.lexitechly-tooltip') && !target.closest('#lexitechly-floating-logo')) {
+        if (!target.closest('.readloop-tooltip') && !target.closest('#readloop-floating-logo')) {
             removeTooltip();
         }
         // 點擊在非懸浮查詢按鈕處時隱藏選取查詢按鈕（剛顯示 250ms 內不隱藏，避免 mouseup 後的 click 立刻關閉）
-        if (!target.closest('.lexitechly-selection-lookup-btn') && (Date.now() - selectionButtonShowTime > 250)) {
+        if (!target.closest('.readloop-selection-lookup-btn') && (Date.now() - selectionButtonShowTime > 250)) {
             hideSelectionLookupButton();
         }
     });
@@ -786,7 +786,7 @@ function initReadingMode(): void {
     document.addEventListener('mouseup', handleSelectionEnd);
     document.addEventListener('selectionchange', handleSelectionChange);
 
-    console.log('LexiTechly: 查閱模式初始化完成');
+    console.log('Readloop: 查閱模式初始化完成');
 }
 
 // 高亮相關功能
@@ -810,8 +810,8 @@ function addTooltipDragFunctionality(tooltip: HTMLElement): void {
         // 檢查是否點擊在播放按鈕、跳轉按鈕或關閉按鈕上，如果是則不啟動拖拉
         const target = e.target as HTMLElement;
         if (target.closest('.speak-btn') || 
-            target.closest('.lexitechly-tooltip-vocabulary') || 
-            target.closest('.lexitechly-tooltip-close') ||
+            target.closest('.readloop-tooltip-vocabulary') || 
+            target.closest('.readloop-tooltip-close') ||
             target.closest('.example-header')) {
             return;
         }
@@ -895,7 +895,7 @@ function addTooltipDragFunctionality(tooltip: HTMLElement): void {
             finalTop === 0 || finalTop + tooltipRect.height === windowHeight) {
             tooltip.style.border = '2px solid #ff6b6b';
         } else {
-            tooltip.style.border = '1px solid var(--lexitechly-border)';
+            tooltip.style.border = '1px solid var(--readloop-border)';
         }
 
         // 更新位置
@@ -919,7 +919,7 @@ function addTooltipDragFunctionality(tooltip: HTMLElement): void {
             document.body.style.cursor = '';
             
             // 恢復邊框樣式
-            tooltip.style.border = '1px solid var(--lexitechly-border)';
+            tooltip.style.border = '1px solid var(--readloop-border)';
             
             // 移除事件監聽器
             document.removeEventListener('mousemove', handleMouseMove);
@@ -949,7 +949,7 @@ function addTooltipDragFunctionality(tooltip: HTMLElement): void {
         document.body.style.cursor = '';
         
         // 恢復邊框樣式
-        tooltip.style.border = '1px solid var(--lexitechly-border)';
+        tooltip.style.border = '1px solid var(--readloop-border)';
         
         // 添加觸覺反饋（如果支援）
         if (navigator.vibrate) {
@@ -966,7 +966,7 @@ function addTooltipDragFunctionality(tooltip: HTMLElement): void {
     tooltip.addEventListener('mousedown', handleMouseDown as EventListener);
     
     // 特別為標題欄添加拖拉事件（確保標題欄也可以拖拉）
-    const header = tooltip.querySelector('.lexitechly-tooltip-header');
+    const header = tooltip.querySelector('.readloop-tooltip-header');
     if (header) {
         header.addEventListener('mousedown', handleMouseDown as EventListener);
     }
@@ -994,7 +994,7 @@ function addTooltipDragFunctionality(tooltip: HTMLElement): void {
 
 // 添加字卡關閉按鈕功能
 function addTooltipCloseButton(tooltip: HTMLElement): void {
-    const closeButton = tooltip.querySelector('.lexitechly-tooltip-close');
+    const closeButton = tooltip.querySelector('.readloop-tooltip-close');
     if (closeButton) {
         // 移除舊的事件監聽器（如果有的話）
         closeButton.removeEventListener('click', handleTooltipClose as EventListener);
@@ -1025,7 +1025,7 @@ function handleTooltipClose(event: Event): void {
 
 // 添加跳轉到單字列表按鈕功能
 function addTooltipVocabularyButton(tooltip: HTMLElement): void {
-    const vocabularyButton = tooltip.querySelector('.lexitechly-tooltip-vocabulary');
+    const vocabularyButton = tooltip.querySelector('.readloop-tooltip-vocabulary');
     if (vocabularyButton) {
         // 移除舊的事件監聽器（如果有的話）
         vocabularyButton.removeEventListener('click', handleTooltipVocabulary as EventListener);

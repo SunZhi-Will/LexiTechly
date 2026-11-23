@@ -22,9 +22,9 @@ export async function generateText(request: AiTextRequest): Promise<AiTextResult
         response = (await chrome.runtime.sendMessage(message)) as AiGenerateResponse | undefined;
     } catch {
         // 擴充功能剛更新、舊分頁的內容腳本連不到背景頁時會走到這裡
-        throw new AiError('network', '無法連線到 LexiTechly 背景服務，請重新整理頁面後再試');
+        throw new AiError('network', '無法連線到 Readloop 背景服務，請重新整理頁面後再試');
     }
-    if (!response) throw new AiError('network', 'LexiTechly 背景服務沒有回應，請重新整理頁面後再試');
+    if (!response) throw new AiError('network', 'Readloop 背景服務沒有回應，請重新整理頁面後再試');
     if (!response.ok) throw new AiError(response.code, response.message);
     return response.result;
 }

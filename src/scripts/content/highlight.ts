@@ -10,8 +10,8 @@ export function highlightWord(element: HTMLElement, event: MouseEvent): void {
     if (!word) return;
 
     // 檢查是否已經有相同的高亮存在，避免重複處理
-    const existingHighlight = document.querySelector('.lexitechly-word-highlight') ||
-        document.querySelector('[data-lexitechly-highlighted]');
+    const existingHighlight = document.querySelector('.readloop-word-highlight') ||
+        document.querySelector('[data-readloop-highlighted]');
 
     if (existingHighlight) {
         // 檢查現有高亮的單字是否與要高亮的單字相同
@@ -63,7 +63,7 @@ function tryRangeHighlight(element: HTMLElement, event: MouseEvent, word: string
 
     // 創建高亮元素
     const highlight = document.createElement('span');
-    highlight.className = 'lexitechly-word-highlight';
+    highlight.className = 'readloop-word-highlight';
 
     try {
         wordRange.surroundContents(highlight);
@@ -94,7 +94,7 @@ function tryElementWordHighlight(element: HTMLElement, word: string): boolean {
                 range.setEnd(textNode, match.index + word.length);
 
                 const highlight = document.createElement('span');
-                highlight.className = 'lexitechly-word-highlight';
+                highlight.className = 'readloop-word-highlight';
                 range.surroundContents(highlight);
                 return true;
             } catch (error) {
@@ -111,7 +111,7 @@ function applyElementHighlight(element: HTMLElement): void {
     element.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
     element.style.borderRadius = '3px';
     element.style.boxShadow = '0 0 0 1px rgba(59, 130, 246, 0.3)';
-    element.setAttribute('data-lexitechly-highlighted', 'true');
+    element.setAttribute('data-readloop-highlighted', 'true');
 }
 
 // 轉義正則表達式特殊字符
@@ -122,7 +122,7 @@ function escapeRegExp(string: string): string {
 // 清除單字高亮
 export function removeWordHighlight(): void {
     // 直接清除span高亮，但不清除鎖定狀態的高亮
-    const highlights = document.querySelectorAll('.lexitechly-word-highlight:not([data-lexitechly-locked])');
+    const highlights = document.querySelectorAll('.readloop-word-highlight:not([data-readloop-locked])');
     highlights.forEach(highlight => {
         const parent = highlight.parentNode;
         if (parent && highlight.parentNode === parent) {
@@ -133,17 +133,17 @@ export function removeWordHighlight(): void {
     });
 
     // 直接清除樣式高亮，但不清除鎖定狀態的高亮
-    const styledElements = document.querySelectorAll('[data-lexitechly-highlighted]:not([data-lexitechly-locked])');
+    const styledElements = document.querySelectorAll('[data-readloop-highlighted]:not([data-readloop-locked])');
     styledElements.forEach(element => {
         const htmlElement = element as HTMLElement;
         htmlElement.style.backgroundColor = '';
         htmlElement.style.borderRadius = '';
         htmlElement.style.boxShadow = '';
-        htmlElement.removeAttribute('data-lexitechly-highlighted');
+        htmlElement.removeAttribute('data-readloop-highlighted');
     });
 
     // 清除非鎖定狀態的高亮樣式
-    const allHighlighted = document.querySelectorAll('[style*="rgba("]:not([data-lexitechly-locked])');
+    const allHighlighted = document.querySelectorAll('[style*="rgba("]:not([data-readloop-locked])');
     allHighlighted.forEach(element => {
         const htmlElement = element as HTMLElement;
         // 只清除非鎖定狀態的藍色高亮

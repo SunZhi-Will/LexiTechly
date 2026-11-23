@@ -64,10 +64,10 @@ export interface TranslatedBlock extends TextBlock {
 
 // ---------- 背景頁 ↔ 內容腳本 ----------
 
-export const IMAGE_TRANSLATE_START = 'LEXITECHLY_IMAGE_TRANSLATE_START';
-export const IMAGE_TRANSLATE_PROGRESS = 'LEXITECHLY_IMAGE_TRANSLATE_PROGRESS';
-export const IMAGE_TRANSLATE_RESULT = 'LEXITECHLY_IMAGE_TRANSLATE_RESULT';
-export const IMAGE_TRANSLATE_ERROR = 'LEXITECHLY_IMAGE_TRANSLATE_ERROR';
+export const IMAGE_TRANSLATE_START = 'READLOOP_IMAGE_TRANSLATE_START';
+export const IMAGE_TRANSLATE_PROGRESS = 'READLOOP_IMAGE_TRANSLATE_PROGRESS';
+export const IMAGE_TRANSLATE_RESULT = 'READLOOP_IMAGE_TRANSLATE_RESULT';
+export const IMAGE_TRANSLATE_ERROR = 'READLOOP_IMAGE_TRANSLATE_ERROR';
 
 export interface StartRequest {
     type: typeof IMAGE_TRANSLATE_START;
@@ -129,18 +129,18 @@ export interface ErrorMessage {
 
 // 背景頁 → 內容腳本：要擷取畫面了，先把我們自己的譯文層、狀態列藏起來（不然會被截進去、蓋住要讀的字）；
 // 擷取完再顯示回來。PREPARE 等內容腳本回覆（已經藏好、畫面也重畫過）才擷取
-export const IMAGE_TRANSLATE_CAPTURE_PREPARE = 'LEXITECHLY_IMAGE_TRANSLATE_CAPTURE_PREPARE';
-export const IMAGE_TRANSLATE_CAPTURE_DONE = 'LEXITECHLY_IMAGE_TRANSLATE_CAPTURE_DONE';
+export const IMAGE_TRANSLATE_CAPTURE_PREPARE = 'READLOOP_IMAGE_TRANSLATE_CAPTURE_PREPARE';
+export const IMAGE_TRANSLATE_CAPTURE_DONE = 'READLOOP_IMAGE_TRANSLATE_CAPTURE_DONE';
 
 // ---------- 自動翻譯模式（快捷鍵開關；換頁、新出現的圖都會自動翻） ----------
 
 // 背景頁 → 內容腳本：使用者按了快捷鍵，切換這個分頁的自動翻譯
-export const IMAGE_TRANSLATE_AUTO_TOGGLE = 'LEXITECHLY_IMAGE_TRANSLATE_AUTO_TOGGLE';
+export const IMAGE_TRANSLATE_AUTO_TOGGLE = 'READLOOP_IMAGE_TRANSLATE_AUTO_TOGGLE';
 // 內容腳本 → 背景頁：翻譯一張圖
-export const IMAGE_TRANSLATE_REQUEST = 'LEXITECHLY_IMAGE_TRANSLATE_REQUEST';
+export const IMAGE_TRANSLATE_REQUEST = 'READLOOP_IMAGE_TRANSLATE_REQUEST';
 
 // popup → 背景頁：使用者在 popup 按了「翻譯這頁的圖片」，切換那個分頁的自動翻譯（和快捷鍵同一條路）
-export const IMAGE_TRANSLATE_PAGE_TOGGLE = 'LEXITECHLY_IMAGE_TRANSLATE_PAGE_TOGGLE';
+export const IMAGE_TRANSLATE_PAGE_TOGGLE = 'READLOOP_IMAGE_TRANSLATE_PAGE_TOGGLE';
 export const TRANSLATE_COMMAND = 'translate-images';
 
 export interface PageToggleRequest {
@@ -183,7 +183,7 @@ export type TranslateResponse =
 // ---------- 框選翻譯（自動翻譯中，使用者在圖上拖出一個框，只翻框裡的字） ----------
 
 // 內容腳本 → 背景頁：翻譯一張圖裡的一塊；回覆 TranslateResponse，result 是併入新區塊之後的整張譯文
-export const IMAGE_TRANSLATE_REGION = 'LEXITECHLY_IMAGE_TRANSLATE_REGION';
+export const IMAGE_TRANSLATE_REGION = 'READLOOP_IMAGE_TRANSLATE_REGION';
 
 export interface RegionRequest {
     type: typeof IMAGE_TRANSLATE_REGION;
@@ -201,13 +201,13 @@ export interface RegionRequest {
 // ---------- 本機譯文儲存與整本翻譯 ----------
 
 // 內容腳本 → 背景頁：這張圖之前翻過嗎（存在擴充功能自己的 IndexedDB，見 translation-store.ts）
-export const IMAGE_TRANSLATE_LOOKUP = 'LEXITECHLY_IMAGE_TRANSLATE_LOOKUP';
+export const IMAGE_TRANSLATE_LOOKUP = 'READLOOP_IMAGE_TRANSLATE_LOOKUP';
 // 內容腳本 → 背景頁：要在這個分頁整本翻譯了（背景頁記下這個分頁，之後才接受它送來的翻頁鍵）
-export const IMAGE_TRANSLATE_BATCH_BEGIN = 'LEXITECHLY_IMAGE_TRANSLATE_BATCH_BEGIN';
+export const IMAGE_TRANSLATE_BATCH_BEGIN = 'READLOOP_IMAGE_TRANSLATE_BATCH_BEGIN';
 // 整本翻譯中的內容腳本 → 背景頁：在網頁本身的環境按一個翻頁鍵（閱讀器的鍵盤處理多半看 keyCode，隔離環境送的事件設不了）
-export const IMAGE_TRANSLATE_BATCH_KEY = 'LEXITECHLY_IMAGE_TRANSLATE_BATCH_KEY';
+export const IMAGE_TRANSLATE_BATCH_KEY = 'READLOOP_IMAGE_TRANSLATE_BATCH_KEY';
 // 整本翻譯中的內容腳本 → 背景頁：進度；finished 時背景頁不再接受這個分頁的翻頁鍵
-export const IMAGE_TRANSLATE_BATCH_PROGRESS = 'LEXITECHLY_IMAGE_TRANSLATE_BATCH_PROGRESS';
+export const IMAGE_TRANSLATE_BATCH_PROGRESS = 'READLOOP_IMAGE_TRANSLATE_BATCH_PROGRESS';
 
 export interface LookupRequest {
     type: typeof IMAGE_TRANSLATE_LOOKUP;
@@ -254,9 +254,9 @@ export function translationKey(url: string): string | null {
 
 // ---------- 背景頁 ↔ offscreen 文件 ----------
 
-export const OFFSCREEN_TARGET = 'lexitechly-offscreen';
-export const OFFSCREEN_ANALYZE = 'LEXITECHLY_OFFSCREEN_ANALYZE';
-export const OFFSCREEN_PROGRESS = 'LEXITECHLY_OFFSCREEN_PROGRESS';
+export const OFFSCREEN_TARGET = 'readloop-offscreen';
+export const OFFSCREEN_ANALYZE = 'READLOOP_OFFSCREEN_ANALYZE';
+export const OFFSCREEN_PROGRESS = 'READLOOP_OFFSCREEN_PROGRESS';
 
 export interface AnalyzeRequest {
     target: typeof OFFSCREEN_TARGET;

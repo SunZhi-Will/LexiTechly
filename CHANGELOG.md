@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- 改名為 Readloop（讀迴），原名 LexiTechly
+  - 定位從「英文內容分析」改為「邊讀網頁與漫畫，邊學語言」；商店名稱與描述同步更新
+  - 介面文字、右鍵選單、CSS 變數與類別前綴、內部訊息名稱一律改用新名字
+  - 已存的資料沿用原本的儲存名稱（圖片譯文與語音的 IndexedDB、辨識模型快取、浮動圖示位置），更新後不會遺失，也不用重新下載模型
 - 介面全面改版
   - popup、單字頁與注入網頁的字卡改用同一套設計變數（顏色、圓角、陰影、字型），深色模式由變數切換
   - popup 加寬為 380 x 580；主頁改為品牌標題、分析結果卡片與圖片翻譯卡片，底部導覽改用線條圖示

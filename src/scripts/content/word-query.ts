@@ -28,7 +28,7 @@ export interface WordQueryResult {
 export async function queryWordInfoWithTranslationOnly(word: string): Promise<WordQueryResult> {
     const safeWord = word.trim();
     if (!safeWord) {
-        return { html: '<div class="lexitechly-error">請輸入單字</div>' };
+        return { html: '<div class="readloop-error">請輸入單字</div>' };
     }
 
     const { lang, native } = await languagesForSnippet(safeWord);
@@ -363,7 +363,7 @@ export async function queryWordInfo(word: string): Promise<WordQueryResult> {
             reason.textContent = error.message;
             const title = document.createElement('strong');
             title.textContent = word;
-            return { html: `<div class="lexitechly-error">${title.outerHTML}<br>${reason.outerHTML}</div>` };
+            return { html: `<div class="readloop-error">${title.outerHTML}<br>${reason.outerHTML}</div>` };
         }
         // 若主請求失敗，縮短提示再試一次
         try {
@@ -391,7 +391,7 @@ export async function queryWordInfo(word: string): Promise<WordQueryResult> {
             return { html, wordData };
         } catch (retryError) {
             const errorHtml = `
-                <div class="lexitechly-error">
+                <div class="readloop-error">
                     <strong>${word}</strong><br>
                     <span style="color: #d43c3c;">解析回應失敗，請稍後重試</span>
                 </div>

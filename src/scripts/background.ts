@@ -1,11 +1,11 @@
-// Background Script for LexiTechly Extension
+// Background Script for Readloop Extension
 // 處理擴充功能的訊息通訊和狀態管理
 
 import { handleAiMessage } from './ai/background';
 import { t } from './i18n';
 import { PENDING_ASK_KEY, type PendingAsk } from './sidepanel/protocol';
 
-const EXPLAIN_MENU_ID = 'lexitechly-explain-selection';
+const EXPLAIN_MENU_ID = 'readloop-explain-selection';
 import { createImageTranslateMenus, installImageTranslate } from './image-translate/image-translate';
 
 interface MessageRequest {
@@ -119,7 +119,7 @@ chrome.runtime.onMessage.addListener((
 
 // 監聽擴充功能安裝事件
 chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails) => {
-    console.log('LexiTechly 擴充功能已安裝/更新:', details);
+    console.log('Readloop 擴充功能已安裝/更新:', details);
 
     // 第一次安裝時開歡迎頁：說明免設定就能用的功能，並讓使用者選擇要不要填 API Key
     if (details.reason === 'install') {
@@ -145,7 +145,7 @@ chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails
     try {
         chrome.contextMenus.removeAll(() => {
             chrome.contextMenus.create({
-                id: 'lexitechly-lookup-selection',
+                id: 'readloop-lookup-selection',
                 title: t('menuLookupSelection'),
                 contexts: ['selection']
             });
@@ -171,7 +171,7 @@ chrome.contextMenus?.onClicked.addListener((info, tab) => {
         void chrome.storage.session.set({ [PENDING_ASK_KEY]: pending });
         return;
     }
-    if (info.menuItemId === 'lexitechly-lookup-selection' && info.selectionText && tab?.id) {
+    if (info.menuItemId === 'readloop-lookup-selection' && info.selectionText && tab?.id) {
         chrome.tabs.sendMessage(tab.id, {
             action: 'lookupSelection',
             text: info.selectionText
@@ -182,7 +182,7 @@ chrome.contextMenus?.onClicked.addListener((info, tab) => {
 // 圖片翻譯（右鍵選單、Alt+Shift+T 自動翻譯）：監聽器要在頂層同步註冊，service worker 被喚醒時才接得到事件
 installImageTranslate();
 
-console.log('LexiTechly Background Script 已載入');
+console.log('Readloop Background Script 已載入');
 
 // 添加 export 語句以使其成為模組
 export {}; 

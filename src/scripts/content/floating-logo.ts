@@ -21,7 +21,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         if (floatingLogo) return; // 避免重複創建
 
         floatingLogo = document.createElement('div');
-        floatingLogo.id = 'lexitechly-floating-logo';
+        floatingLogo.id = 'readloop-floating-logo';
 
         // 使用 PNG 圖片作為 logo
         const logoImg = document.createElement('img');
@@ -34,7 +34,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
 
         // 創建關閉按鈕
         const closeButton = document.createElement('button');
-        closeButton.className = 'lexitechly-close-btn';
+        closeButton.className = 'readloop-close-btn';
         closeButton.innerHTML = '×';
         closeButton.style.display = 'none'; // 預設隱藏
 
@@ -71,7 +71,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         // 拖拽開始
         floatingLogo.addEventListener('mousedown', (e) => {
             // 如果點擊的是關閉按鈕，不啟動拖拽
-            if ((e.target as HTMLElement).classList.contains('lexitechly-close-btn')) {
+            if ((e.target as HTMLElement).classList.contains('readloop-close-btn')) {
                 return;
             }
 
@@ -91,7 +91,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
             dragOffset.y = e.clientY - rect.top;
 
             if (floatingLogo) {
-                floatingLogo.classList.add('lexitechly-dragging');
+                floatingLogo.classList.add('readloop-dragging');
                 floatingLogo.style.cursor = 'grabbing';
                 floatingLogo.style.transition = 'none';
                 floatingLogo.style.transform = 'none';
@@ -147,11 +147,11 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
             isDragging = false;
             
             // 如果點擊的是關閉按鈕，不處理點擊事件
-            if ((e.target as HTMLElement).classList.contains('lexitechly-close-btn')) {
+            if ((e.target as HTMLElement).classList.contains('readloop-close-btn')) {
                 return;
             }
 
-            floatingLogo.classList.remove('lexitechly-dragging');
+            floatingLogo.classList.remove('readloop-dragging');
             floatingLogo.style.cursor = 'pointer';
             floatingLogo.style.transition = 'opacity 0.3s, background-color 0.3s, box-shadow 0.3s';
             floatingLogo.style.opacity = '0.9';
@@ -207,6 +207,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         document.body.appendChild(floatingLogo);
 
         // 載入儲存的位置
+        // 沿用改名前（LexiTechly）的 key，使用者拖過的位置才不會重置
         const savedPosition = localStorage.getItem('lexitechly-logo-position');
         if (savedPosition) {
             try {
@@ -237,22 +238,22 @@ export function updateLogoAppearance(readingMode: boolean): void {
 // 顯示Toast通知 - 簡化版本
 function showToast(message: string, isLoading: boolean = false, isError: boolean = false, isSuccess: boolean = false): void {
     // 移除現有toast
-    const existingToast = document.querySelector('.lexitechly-toast');
+    const existingToast = document.querySelector('.readloop-toast');
     if (existingToast) {
         existingToast.remove();
     }
 
     const toast = document.createElement('div');
-    toast.className = 'lexitechly-toast';
+    toast.className = 'readloop-toast';
 
     let iconHtml = '';
     if (isError) iconHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3v.01"/></svg>';
     else if (isSuccess) iconHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
-    else if (isLoading) iconHtml = '<div class="lexitechly-spinner-small"></div>';
+    else if (isLoading) iconHtml = '<div class="readloop-spinner-small"></div>';
 
     toast.innerHTML = `
-        <div class="lexitechly-toast-content">
-            ${iconHtml ? `<span class="lexitechly-toast-icon${isError ? ' is-error' : isSuccess ? ' is-success' : ''}">${iconHtml}</span>` : ''}
+        <div class="readloop-toast-content">
+            ${iconHtml ? `<span class="readloop-toast-icon${isError ? ' is-error' : isSuccess ? ' is-success' : ''}">${iconHtml}</span>` : ''}
             <span>${message}</span>
         </div>
     `;

@@ -1,4 +1,4 @@
-# LexiTechly Privacy Policy & 隱私權政策
+# Readloop Privacy Policy & 隱私權政策
 
 *Last Updated: November 2026*  
 *最後更新日期：2026年11月*
@@ -9,7 +9,7 @@
 
 ## Introduction
 
-Welcome to LexiTechly. We value your privacy and are committed to protecting your personal data. This Privacy Policy explains how we handle your information. Important note: This extension is designed as a frontend-only application. We do not run any servers, and your data is stored locally in your browser. Some features send content directly from your browser to third-party services (see "Third-Party Services" and "Image Translation" below).
+Welcome to Readloop. We value your privacy and are committed to protecting your personal data. This Privacy Policy explains how we handle your information. Important note: This extension is designed as a frontend-only application. We do not run any servers, and your data is stored locally in your browser. Some features send content directly from your browser to third-party services (see "Third-Party Services" and "Image Translation" below).
 
 ## Data Collection and Usage
 
@@ -47,7 +47,7 @@ Image translation runs only when you start it: by right-clicking an image and ch
 - **Text recognition (OCR) happens on your device.** The image itself is not uploaded. To read the image, the extension fetches it from its original URL without your cookies, or, if that is not possible, captures the visible part of the current tab and crops out the image.
 - **Recognized text is sent to the translation service you choose.** In settings, under "Image translation engine", you choose Google Translate (the default) or Gemini.
   - Google Translate: only the text found in the image, the source language, and the target language are sent to `translate.googleapis.com`. No API key, account, or page address is attached by the extension.
-  - Gemini: the same text and languages are sent to the Gemini API (`generativelanguage.googleapis.com`) with the API key you entered, as with LexiTechly's other Gemini features.
+  - Gemini: the same text and languages are sent to the Gemini API (`generativelanguage.googleapis.com`) with the API key you entered, as with Readloop's other Gemini features.
   - In both cases the image itself is not sent. As with any web request, Google receives your IP address, and its handling of the request is governed by Google's own privacy policy and, for Gemini, the Gemini API terms.
 - **Recognition models are downloaded from Hugging Face.** The first time you use each source language, about 25 to 41 MB of model files are downloaded from `huggingface.co`, verified against a fixed checksum, and cached in your browser. This request does not include any information about the images or pages you translate.
 - **Translations are saved locally.** So that the same page does not need to be translated again, the extension keeps up to 3,000 translated images in your browser (a compressed copy of the image, the recognized text, and the translation), removing the oldest ones first. It also remembers that you accepted the first-use notice, the source language you chose per website, and the "pre-translate next page" switch.
@@ -100,7 +100,7 @@ We may update this Privacy Policy periodically. We will notify you of significan
 ## Contact Us
 
 If you have any questions about this Privacy Policy, please contact us:
-- GitHub Issues: [LexiTechly GitHub Repository](https://github.com/SunZhi-Will)
+- GitHub Issues: [Readloop GitHub Repository](https://github.com/SunZhi-Will)
 - Email: sun055676@gmail.com
 
 Using this extension indicates your agreement to this Privacy Policy.
@@ -111,7 +111,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 
 ## 簡介
 
-歡迎使用 LexiTechly。我們重視您的隱私權，並致力於保護您的個人資料。本隱私權政策說明我們如何收集、使用和保護您的資訊。特別說明：本擴充功能採用純前端設計，我們沒有自己的伺服器，您的資料儲存於您的本地瀏覽器中。部分功能會由您的瀏覽器直接把內容送到第三方服務（見下方「第三方服務」與「圖片翻譯」）。
+歡迎使用 Readloop。我們重視您的隱私權，並致力於保護您的個人資料。本隱私權政策說明我們如何收集、使用和保護您的資訊。特別說明：本擴充功能採用純前端設計，我們沒有自己的伺服器，您的資料儲存於您的本地瀏覽器中。部分功能會由您的瀏覽器直接把內容送到第三方服務（見下方「第三方服務」與「圖片翻譯」）。
 
 ## 資料收集與使用
 
@@ -149,7 +149,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 - **文字辨識（OCR）在您的電腦上完成。** 圖片本身不會上傳。為了讀取圖片，擴充功能會在不帶您的 Cookie 的情況下，從圖片原本的網址抓取；抓不到時，改為擷取目前分頁看得到的畫面，再裁出那張圖。
 - **辨識出的文字會送到您選擇的翻譯服務。** 在設定頁的「圖片翻譯來源」可以選 Google 翻譯（預設）或 Gemini。
   - Google 翻譯：只有圖片中辨識出的文字、原文語言與目標語言會送到 `translate.googleapis.com`，擴充功能不會附上任何 API Key、帳號或網頁網址。
-  - Gemini：同樣的文字與語言會連同您填入的 API Key 送到 Gemini API（`generativelanguage.googleapis.com`），和 LexiTechly 其他 Gemini 功能相同。
+  - Gemini：同樣的文字與語言會連同您填入的 API Key 送到 Gemini API（`generativelanguage.googleapis.com`），和 Readloop 其他 Gemini 功能相同。
   - 兩種方式都不會送出圖片本身。和所有網路請求一樣，Google 會收到您的 IP 位址，後續處理依 Google 的隱私權政策，Gemini 另依 Gemini API 的服務條款。
 - **辨識模型從 Hugging Face 下載。** 每種原文語言第一次使用時，會從 `huggingface.co` 下載約 25 到 41 MB 的模型檔，比對固定的雜湊值後存在您的瀏覽器裡。這個請求不包含您翻譯的圖片或網頁的任何資訊。
 - **譯文存在本機。** 為了讓同一頁不必重翻，擴充功能會在您的瀏覽器中保存最多 3,000 張翻譯過的圖（壓縮後的圖片、辨識出的原文與譯文），超過時先刪最舊的。另外會記住您已看過第一次使用的說明、您為各網站選的原文語言，以及「預翻下一頁」開關。
@@ -171,7 +171,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 - activeTab：存取當前網頁內容進行分析
 - scripting：執行網頁分析腳本
 - tabs：記錄瀏覽網頁
-- 網站存取權限：提供英文內容分析
+- 網站存取權限：在網頁上查詢單字、分析外語內容與翻譯圖片
 - contextMenus：加入「查詢選取文字」與「翻譯這張圖片」的右鍵選單
 - offscreen：在擴充功能自己的隱藏頁面裡，執行圖片翻譯的本機文字辨識
 - alarms：隱藏頁面閒置幾分鐘後把它關掉，釋放記憶體
@@ -202,7 +202,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 ## 聯絡我們
 
 如果您對本隱私權政策有任何疑問，請通過以下方式聯絡我們：
-- GitHub Issues: [LexiTechly GitHub Repository](https://github.com/SunZhi-Will)
+- GitHub Issues: [Readloop GitHub Repository](https://github.com/SunZhi-Will)
 - Email: sun055676@gmail.com
 
 使用本擴充功能即表示您同意本隱私權政策的條款。

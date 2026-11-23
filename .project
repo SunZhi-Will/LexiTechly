@@ -1,14 +1,14 @@
 ---
-name: LexiTechly
+name: Readloop
 category: 學習教育
-description: Chrome 英文內容 CEFR 等級即時分析擴充
+description: 邊讀網頁與漫畫邊學語言的 Chrome 擴充（原名 LexiTechly）
 stack: Chrome Extension + Vite + Tailwind
 status: 開發中
 ---
 
 ## 這是什麼
 
-Chrome 英文內容 CEFR 等級即時分析擴充
+讀網頁和漫畫時查單字、看難度，查過的字收進單字本。支援 7 種語言，漫畫圖片在本機辨識翻譯。原名 LexiTechly。
 
 ## 核心功能
 

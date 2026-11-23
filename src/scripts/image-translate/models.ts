@@ -9,6 +9,7 @@
 import type { SourceLang } from './protocol';
 
 // 模型存在擴充功能自己的 Cache Storage（offscreen 文件寫入，設定頁可清除，兩邊同一個來源）
+// 沿用改名前（LexiTechly）的快取名稱：改掉會讓使用者重新下載辨識模型
 export const MODEL_CACHE = 'lexitechly-image-translate-models-v1';
 
 export interface ModelFile {

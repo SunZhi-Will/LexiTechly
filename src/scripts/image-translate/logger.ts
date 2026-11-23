@@ -2,7 +2,7 @@
  * 圖片翻譯的記錄：警告才進 console，除錯訊息只在非正式版的建置輸出
  */
 
-const PREFIX = '[LexiTechly 圖片翻譯]';
+const PREFIX = '[Readloop 圖片翻譯]';
 
 export const contentLogger = {
     debug(message: string, data?: unknown): void {

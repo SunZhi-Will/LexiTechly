@@ -8,6 +8,7 @@
 
 import type { TranslatedImage } from './protocol';
 
+// 沿用改名前（LexiTechly）的資料庫名稱：改掉會讓已存的譯文消失
 const DB_NAME = 'lexitechly-image-translations';
 const STORE = 'pages';
 // 最多存這麼多頁；超過時刪掉最舊的（一頁約 200 KB）

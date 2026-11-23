@@ -1,5 +1,5 @@
 /**
- * 圖片翻譯用 Gemini 翻譯（使用者在 LexiTechly 設定填的 API Key）
+ * 圖片翻譯用 Gemini 翻譯（使用者在 Readloop 設定填的 API Key）
  *
  * 和 Google 免金鑰端點比：會看前後文，對白比較自然，也不會被同一個 IP 的請求次數擋下；
  * 代價是要 API Key、比較慢，而且受 Gemini 的免費額度限制。
@@ -10,7 +10,7 @@ import { GEMINI_GENERATE_URL } from '../ai-models';
 import type { Locale } from './i18n';
 import type { SourceLang } from './protocol';
 
-// 和 LexiTechly 其他功能用同一個模型
+// 和 Readloop 其他功能用同一個模型
 const ENDPOINT = GEMINI_GENERATE_URL;
 
 const SOURCE_NAMES: Record<SourceLang, string> = { ko: 'Korean', ja: 'Japanese', zh: 'Chinese' };

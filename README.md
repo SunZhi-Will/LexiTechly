@@ -1,10 +1,10 @@
 <div align="center">
 
-# LexiTechly
+# Readloop
 
-![LexiTechly Logo](src/assets/images/logo.png)
+![Readloop Logo](src/assets/images/logo.png)
 
-🔍 An intelligent Chrome extension for English content analysis (TypeScript Edition)
+📖 Learn languages from the web pages and manga you read (English, Japanese, Korean, Chinese, Spanish, French, German)
 
 [![Version](https://img.shields.io/badge/Version-1.4.1-blue.svg)](CHANGELOG.md)
 [![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
@@ -129,7 +129,7 @@ After building, the `dist/` directory will contain all necessary extension files
 
 4. **Confirm Installation**
    - The extension should appear in the extensions list
-   - You'll see the LexiTechly icon in the browser toolbar
+   - You'll see the Readloop icon in the browser toolbar
 
 #### Step 3: Set Up API Keys
 1. **Get Google Gemini API Key**
@@ -141,7 +141,7 @@ After building, the `dist/` directory will contain all necessary extension files
 
 
 3. **Configure API Keys in Extension**
-   - Click the LexiTechly icon in the browser toolbar
+   - Click the Readloop icon in the browser toolbar
    - Go to settings page
    - Paste your API Keys in the corresponding fields
    - Click "Save"
@@ -222,7 +222,7 @@ dist/
 
 ### 7. Immersive Reading Mode 🔍
 - **啟用閱讀模式**：
-  - 在任何英文網頁上尋找右上角的半透明 LexiTechly logo
+  - 在任何英文網頁上尋找右上角的半透明 Readloop logo
   - **🆕 可拖拽移動**: logo 現在支援拖拽功能，你可以將它移動到任何你喜歡的位置
   - 點擊 logo 可切換閱讀模式（logo 會變色以顯示狀態）
   - logo 位置會自動儲存，下次訪問時會保持在相同位置
@@ -250,7 +250,7 @@ dist/
   - Right-click an image, choose "Translate this image", then pick the source language (auto-detect, Korean, Japanese, Chinese)
   - The translation is drawn over the original text; use the buttons in the top-right corner to switch between original and translation, or close it
 - **Auto-translate a page**:
-  - Click the LexiTechly toolbar icon and press "Translate images on this page" on the main tab, or press Alt+Shift+T (change it at `chrome://extensions/shortcuts`). Press again to stop
+  - Click the Readloop toolbar icon and press "Translate images on this page" on the main tab, or press Alt+Shift+T (change it at `chrome://extensions/shortcuts`). Press again to stop
   - Comic images on the page are translated automatically, including new images after a page turn
   - The control bar in the bottom-right corner lets you change the source language, turn on "pre-translate next page", run "whole book", or stop
 - **Target language**: follows the browser UI language (Traditional Chinese, Simplified Chinese, Japanese; English otherwise)
@@ -298,7 +298,7 @@ dist/
 
 ## ⚠️ Important Notes
 
-- 🌐 English content analysis only (image translation is separate and reads Korean, Japanese, and Chinese)
+- 🌐 Word lookup and level ratings work in English, Japanese, Korean, Chinese, Spanish, French and German; image translation reads Korean, Japanese and Chinese
 - 🔑 Valid Gemini API Key required
 - 🌟 Stable internet connection recommended
 - 🖼️ Image translation uses the keyless Google Translate endpoint; translating many pages in a short time may be temporarily blocked, so try again later
@@ -382,7 +382,7 @@ npm run watch        # Watch mode, auto-rebuild
 
 In Chrome:
 - Open `chrome://extensions/`
-- Find the LexiTechly extension
+- Find the Readloop extension
 - Click "Details" → "Inspect views" to open developer tools
 
 ## 📄 License

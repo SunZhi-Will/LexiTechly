@@ -116,7 +116,7 @@ export interface PillHandlers {
 type Menu = { kind: 'more' } | { kind: 'lang'; resolve: (lang: LangChoice | null) => void };
 
 export class AutoPill {
-    private readonly host = document.createElement('lexitechly-auto-translate');
+    private readonly host = document.createElement('readloop-auto-translate');
     private readonly box: HTMLDivElement;
     private showOriginal = false;
     private menu: Menu | null = null;

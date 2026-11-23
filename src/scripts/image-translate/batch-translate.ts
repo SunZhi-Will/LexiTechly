@@ -206,7 +206,7 @@ export class BatchRunner {
 
 /** 整本翻譯時的狀態列：跟自動翻譯同一個標籤名稱，擷取畫面時一起被藏起來 */
 export class BatchPill {
-    private readonly host = document.createElement('lexitechly-auto-translate');
+    private readonly host = document.createElement('readloop-auto-translate');
     private readonly box = document.createElement('div');
     private readonly stopButton = document.createElement('button');
 

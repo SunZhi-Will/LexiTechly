@@ -19,6 +19,7 @@ export class AudioStorage {
         return;
       }
 
+      // 沿用改名前（LexiTechly）的資料庫名稱：改掉會讓已存的語音快取消失
       const request = indexedDB.open('LexiTechlyAudioDB', 1);
 
       request.onupgradeneeded = (event) => {

@@ -32,7 +32,7 @@ import {
 } from './protocol';
 import type { MessageKey } from './i18n';
 
-const INSTALLED_FLAG = '__lexiTechlyImageTranslateInstalled';
+const INSTALLED_FLAG = '__readloopImageTranslateInstalled';
 const NOTICE_ACCEPTED_KEY = 'imageTranslate.noticeAccepted';
 // 自動翻譯手動選過的原文語言，依網站記住；沒選過就是自動判斷。
 // 舊版的 imageTranslate.langByHost 會強迫整個網站用同一種語言（同一個網站常有各種語言的作品），換新鍵讓它失效
@@ -110,7 +110,7 @@ async function start(request: StartRequest): Promise<StartResponse> {
 
 // ---------- 擷取畫面時藏起我們自己的介面 ----------
 
-const OUR_HOSTS = 'lexitechly-image-translation, lexitechly-auto-translate';
+const OUR_HOSTS = 'readloop-image-translation, readloop-auto-translate';
 let hiddenForCapture: HTMLElement[] = [];
 
 /** 藏起譯文層與狀態列，等畫面真的重畫過（兩個 animation frame）才回覆，確保截圖裡沒有它們 */
@@ -191,7 +191,7 @@ function exportDiagnostics(translator: AutoTranslator): string | null {
     const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
-    const filename = `lexitechly-ocr-log-${Date.now()}.json`;
+    const filename = `readloop-ocr-log-${Date.now()}.json`;
     link.download = filename;
     document.documentElement.appendChild(link);
     link.click();

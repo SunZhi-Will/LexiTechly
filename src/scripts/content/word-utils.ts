@@ -157,7 +157,7 @@ export function disableAllLinks(): HTMLElement[] {
         const htmlLink = link as HTMLElement;
         htmlLink.style.pointerEvents = 'none';
         htmlLink.style.opacity = '0.6';
-        htmlLink.setAttribute('data-lexitechly-disabled', 'true');
+        htmlLink.setAttribute('data-readloop-disabled', 'true');
         disabledElements.push(htmlLink);
     });
 
@@ -167,7 +167,7 @@ export function disableAllLinks(): HTMLElement[] {
         const htmlButton = button as HTMLElement;
         htmlButton.style.pointerEvents = 'none';
         htmlButton.style.opacity = '0.6';
-        htmlButton.setAttribute('data-lexitechly-disabled', 'true');
+        htmlButton.setAttribute('data-readloop-disabled', 'true');
         disabledElements.push(htmlButton);
     });
 
@@ -177,7 +177,7 @@ export function disableAllLinks(): HTMLElement[] {
         const htmlElement = element as HTMLElement;
         htmlElement.style.pointerEvents = 'none';
         htmlElement.style.opacity = '0.6';
-        htmlElement.setAttribute('data-lexitechly-disabled', 'true');
+        htmlElement.setAttribute('data-readloop-disabled', 'true');
         disabledElements.push(htmlElement);
     });
 
@@ -189,6 +189,6 @@ export function enableAllLinks(disabledElements: HTMLElement[]): void {
     disabledElements.forEach(element => {
         element.style.pointerEvents = '';
         element.style.opacity = '';
-        element.removeAttribute('data-lexitechly-disabled');
+        element.removeAttribute('data-readloop-disabled');
     });
 } 

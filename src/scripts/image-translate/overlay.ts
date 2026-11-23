@@ -42,7 +42,7 @@ button { font: 600 12px/1 system-ui, -apple-system, "PingFang TC", "Microsoft Jh
 const MIN_SHOWN_FONT_PX = 9;
 
 export class TranslationOverlay {
-    private readonly host = document.createElement('lexitechly-image-translation');
+    private readonly host = document.createElement('readloop-image-translation');
     private readonly root: HTMLDivElement;
     private frame = 0;
     private removed = false;

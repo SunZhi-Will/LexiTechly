@@ -146,7 +146,7 @@ body {
 }
 
 .word-grid:empty::after {
-    content: '沒有符合條件的單字。在網頁上用 LexiTechly 分析頁面或在閱讀模式點選單字，就會收集到這裡。';
+    content: '沒有符合條件的單字。在網頁上用 Readloop 分析頁面或在閱讀模式點選單字，就會收集到這裡。';
     grid-column: 1 / -1;
     padding: 56px 24px;
     border: 1px dashed var(--border-strong);
