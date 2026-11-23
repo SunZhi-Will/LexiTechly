@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { dedupeBoxes, dedupeOverlapping, planTiles } from '../src/scripts/image-translate/tiles';
-import { groupLines, layoutBox, shouldTranslate } from '../src/scripts/image-translate/group';
+import { groupLines, layoutBox, layoutBoxes, shouldTranslate } from '../src/scripts/image-translate/group';
 import { fitText, tokenize, wrapText, type Measure } from '../src/scripts/image-translate/typeset';
 import {
     TranslateHttpError,
@@ -88,9 +88,10 @@ test('沒讀到真正的字（只有標點）不翻，保留原圖', () => {
 });
 
 test('框外文字要信心夠高、字夠多才翻（手繪狀聲詞跳過）', () => {
-    assert.equal(shouldTranslate('text_free', '짝짝', 0.95), false);
+    assert.equal(shouldTranslate('text_free', '짝', 0.95), false);
+    assert.equal(shouldTranslate('text_free', '짝짝', 0.95), true);
     assert.equal(shouldTranslate('text_free', '코모나 시민 여러분', 0.6), false);
-    assert.equal(shouldTranslate('text_free', '코모나 시민 여러분', 0.9), true);
+    assert.equal(shouldTranslate('text_free', '코모나 시민 여러분', 0.7), true);
 });
 
 test('不在任何區塊裡的行被丟掉', () => {
@@ -102,6 +103,28 @@ test('排版範圍：對話框內縮後比原文大就用對話框', () => {
     assert.deepEqual(layoutBox({ box: [150, 140, 350, 260], bubbleBox: null }), [150, 140, 350, 260]);
     const area = layoutBox({ box: [200, 180, 300, 220], bubbleBox: [100, 100, 400, 300] });
     assert.deepEqual(area.map(Math.round), [145, 134, 355, 266]);
+});
+
+test('排版範圍不伸進別的區塊：兩段話在同一個對話框裡，各自切在對方的邊界', () => {
+    const bubbleBox: Box = [100, 100, 400, 500];
+    const [upper, lower] = layoutBoxes([
+        { box: [200, 150, 300, 250], bubbleBox },
+        { box: [200, 320, 300, 420], bubbleBox }
+    ]);
+    assert.equal(upper[3], 320);
+    assert.equal(lower[1], 250);
+    // 仍然用對話框的寬度，也一定包住自己的原文
+    assert.ok(upper[0] < 200 && upper[2] > 300 && upper[1] <= 150);
+    assert.ok(lower[3] >= 420);
+});
+
+test('排版範圍：兩個原文區塊本身疊在一起時只用自己的原文區塊', () => {
+    const bubbleBox: Box = [100, 100, 400, 500];
+    const [first] = layoutBoxes([
+        { box: [200, 150, 300, 300], bubbleBox },
+        { box: [250, 250, 350, 400], bubbleBox }
+    ]);
+    assert.deepEqual(first, [200, 150, 300, 300]);
 });
 
 // ---------- 排版 ----------

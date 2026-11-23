@@ -11,9 +11,10 @@ import { boxArea, intersection } from './tiles';
 const LINE_IN_REGION = 0.4;
 // 文字區塊至少要有這麼多比例落在某個對話框裡，才把那個對話框當成它的排版範圍
 const REGION_IN_BUBBLE = 0.6;
-// 框外文字（旁白、畫面上的字）要翻的門檻：手繪狀聲詞多半 OCR 信心低或只有一兩個字
-const FREE_TEXT_MIN_CONFIDENCE = 0.8;
-const FREE_TEXT_MIN_CHARS = 3;
+// 框外文字（旁白、畫面上的字）要翻的門檻：手繪狀聲詞多半 OCR 信心低或只有一個字
+// （原本 0.8／3 字會漏掉不少旁白和短句，放寬到 0.65／2 字）
+const FREE_TEXT_MIN_CONFIDENCE = 0.65;
+const FREE_TEXT_MIN_CHARS = 2;
 
 // 同一個區塊的多行怎麼接：韓文以空白分詞，中日文直接接
 const JOINER: Record<SourceLang, string> = { ko: ' ', ja: '', zh: '' };
@@ -127,4 +128,31 @@ export function layoutBox(block: Pick<TextBlock, 'box' | 'bubbleBox'>): Box {
     // 對話框多半是橢圓，四角是空的，所以左右內縮 15%、上下 17%
     const inset: Box = [x0 + w * 0.15, y0 + h * 0.17, x1 - w * 0.15, y1 - h * 0.17];
     return boxArea(inset) > boxArea(block.box) ? inset : block.box;
+}
+
+/**
+ * 每個區塊的排版範圍，而且不蓋到別的區塊：對話框內縮後的範圍可能伸進隔壁的原文區塊
+ * （兩個對話框靠很近、或兩段話被偵測成同一個對話框時），這時從侵入的那一側切掉，
+ * 在可行的切法裡留下面積最大的。
+ */
+export function layoutBoxes(blocks: Pick<TextBlock, 'box' | 'bubbleBox'>[]): Box[] {
+    return blocks.map((block, index) => {
+        const own = block.box;
+        // 一定包含原文區塊本身（對話框內縮後不一定包得住靠邊的原文），切的時候也只切原文區塊以外的部分
+        const fitted = layoutBox(block);
+        let area: Box = [Math.min(fitted[0], own[0]), Math.min(fitted[1], own[1]), Math.max(fitted[2], own[2]), Math.max(fitted[3], own[3])];
+        blocks.forEach((other, j) => {
+            if (j === index) return;
+            const b = other.box;
+            if (intersection(area, b) === 0) return;
+            const cuts: Box[] = [];
+            if (b[1] >= own[3]) cuts.push([area[0], area[1], area[2], Math.min(area[3], b[1])]);
+            if (b[3] <= own[1]) cuts.push([area[0], Math.max(area[1], b[3]), area[2], area[3]]);
+            if (b[0] >= own[2]) cuts.push([area[0], area[1], Math.min(area[2], b[0]), area[3]]);
+            if (b[2] <= own[0]) cuts.push([Math.max(area[0], b[2]), area[1], area[2], area[3]]);
+            // 兩個原文區塊本身就疊在一起：沒有乾淨的切法，只用自己的原文區塊
+            area = cuts.length ? cuts.reduce((best, cut) => (boxArea(cut) > boxArea(best) ? cut : best)) : [...own];
+        });
+        return area;
+    });
 }
