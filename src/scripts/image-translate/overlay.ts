@@ -138,6 +138,11 @@ export class TranslationOverlay {
         this.root.appendChild(status);
     }
 
+    /** 拿掉狀態文字，留下已經畫好的譯文 */
+    clearStatus(): void {
+        this.clear();
+    }
+
     /** 第一次使用的說明；回傳使用者按了繼續還是取消 */
     confirmNotice(title: string, body: string): Promise<boolean> {
         this.clear();

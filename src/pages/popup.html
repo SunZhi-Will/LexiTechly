@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 
 <head>
     <meta charset="UTF-8">
     <title>LexiTechly</title>
     <script type="module" src="../scripts/theme-init.ts"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/shared/audio.css">
 </head>
@@ -15,24 +16,20 @@
             <!-- 主頁面 -->
             <div id="main-page" class="page active">
                 <div class="page-content">
-                    <div class="page-header">
-                        <h2>英文程度分析器</h2>
-                    </div>
-
-                    <button id="analyze">分析當前頁面</button>
-
-                    <div class="image-translate-card">
-                        <button id="translate-page-images" type="button">翻譯這頁的圖片</button>
-                        <div class="image-translate-hint">這頁的漫畫圖片會自動翻譯，換頁也會跟著翻；再按一次停止。單張圖片也可以按右鍵選「翻譯這張圖片」。</div>
-                        <div class="image-translate-hint">
-                            快捷鍵：<span id="translate-images-shortcut">讀取中...</span>
-                            <a href="#" id="translate-images-shortcut-link">設定快捷鍵</a>
+                    <div class="brand-header">
+                        <img class="brand-logo" src="/images/logo128.png" alt="">
+                        <div class="brand-text">
+                            <h2>LexiTechly</h2>
+                            <p>英文閱讀助手</p>
                         </div>
                     </div>
 
                     <div class="result">
                         <div class="level-container">
-                            <p>CEFR 等級：</p>
+                            <div class="level-meta">
+                                <p>CEFR 等級</p>
+                                <span>這個頁面的英文難度</span>
+                            </div>
                             <div id="level" class="level">-</div>
                         </div>
                         <div class="analysis-details">
@@ -49,6 +46,25 @@
                                 <div id="topic" class="detail-text">-</div>
                             </div>
                         </div>
+                        <button id="analyze">分析當前頁面</button>
+                    </div>
+
+                    <div class="image-translate-card">
+                        <div class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="3" />
+                                <circle cx="9" cy="9" r="2" />
+                                <path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L5 21" />
+                            </svg>
+                            <h3>圖片翻譯</h3>
+                        </div>
+                        <div class="image-translate-hint">自動翻譯這頁的漫畫圖片，換頁也會跟著翻，再按一次停止。單張圖片可以按右鍵選「翻譯這張圖片」。</div>
+                        <button id="translate-page-images" type="button">翻譯這頁的圖片</button>
+                        <div class="image-translate-hint shortcut-row">
+                            <span>快捷鍵</span>
+                            <kbd id="translate-images-shortcut">讀取中...</kbd>
+                            <a href="#" id="translate-images-shortcut-link">設定快捷鍵</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -59,9 +75,8 @@
                     <div class="page-header">
                         <h2>AI 對話</h2>
                         <button id="clear-chat" class="clear-chat-btn">
-                            <svg viewBox="0 0 24 24">
-                                <path
-                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" />
                             </svg>
                             清除對話
                         </button>
@@ -70,10 +85,10 @@
                     <div class="chat-container">
                         <div id="chat-messages" class="chat-messages"></div>
                         <div class="chat-input-container">
-                            <input type="text" id="chat-input" class="chat-input" placeholder="輸入您的問題...">
-                            <button id="send-message" class="chat-send">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                            <input type="text" id="chat-input" class="chat-input" placeholder="針對這個頁面提問...">
+                            <button id="send-message" class="chat-send" aria-label="送出">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 19V5m-6 6 6-6 6 6" />
                                 </svg>
                             </button>
                         </div>
@@ -89,13 +104,13 @@
                     </div>
 
                     <div class="settings-sections">
+                        <div class="settings-group-title">AI 與功能來源</div>
+
                         <!-- API 設定區塊 -->
                         <div class="settings-section collapsible" id="gemini-api-section">
                             <div class="section-header" id="gemini-api-header">
                                 <h3>Gemini API 設定</h3>
-                                <svg class="arrow-icon" viewBox="0 0 24 24">
-                                    <path d="M7 10l5 5 5-5z" />
-                                </svg>
+                                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                             </div>
                             <div class="section-content" id="gemini-api-content">
                                 <div class="api-key-section">
@@ -116,9 +131,7 @@
                                         <li>點擊「Get API key」按鈕</li>
                                         <li>複製產生的 API Key</li>
                                     </ol>
-                                    <p style="margin-top: 12px; color: #1a73e8; font-size: 13px;">
-                                        <strong>注意：</strong>此 API Key 將同時用於文字分析和語音生成功能
-                                    </p>
+                                    <p class="help-note">此 API Key 會同時用於文字分析和語音生成功能。</p>
                                 </div>
                             </div>
                         </div>
@@ -127,17 +140,13 @@
                         <div class="settings-section collapsible" id="language-section">
                             <div class="section-header" id="language-header">
                                 <h3>語言</h3>
-                                <svg class="arrow-icon" viewBox="0 0 24 24">
-                                    <path d="M7 10l5 5 5-5z" />
-                                </svg>
+                                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                             </div>
                             <div class="section-content">
-                                <div class="appearance-option theme-toggle" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-                                    <label for="learning-lang">要學的語言（決定斷詞方式與分級系統）</label>
-                                    <select id="learning-lang"></select>
-                                    <label for="native-lang">翻譯與說明使用的語言</label>
-                                    <select id="native-lang"></select>
-                                </div>
+                                <p class="section-hint"><label for="learning-lang">要學的語言（決定斷詞方式與分級系統）</label></p>
+                                <select id="learning-lang"></select>
+                                <p class="section-hint"><label for="native-lang">翻譯與說明使用的語言</label></p>
+                                <select id="native-lang"></select>
                             </div>
                         </div>
 
@@ -145,23 +154,25 @@
                         <div class="settings-section collapsible" id="word-lookup-section">
                             <div class="section-header" id="word-lookup-header">
                                 <h3>閱讀模式查單字</h3>
-                                <svg class="arrow-icon" viewBox="0 0 24 24">
-                                    <path d="M7 10l5 5 5-5z" />
-                                </svg>
+                                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                             </div>
                             <div class="section-content">
-                                <div class="appearance-option theme-toggle" style="flex-direction: column; align-items: flex-start;">
-                                    <label style="margin-bottom: 8px;">查單字來源（點選單字時顯示的翻譯）</label>
-                                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
-                                            <input type="radio" name="word-lookup-provider" value="gemini" id="word-lookup-gemini">
-                                            <span>Gemini API（完整解析：CEFR、詞性、例句，需 API Key）</span>
-                                        </label>
-                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
-                                            <input type="radio" name="word-lookup-provider" value="translation-only" id="word-lookup-translation-only">
-                                            <span>僅翻譯（免 API Key，使用 MyMemory + 免費字典）</span>
-                                        </label>
-                                    </div>
+                                <p class="section-hint">點選單字時顯示的翻譯來源</p>
+                                <div class="option-list">
+                                    <label class="radio-label">
+                                        <input type="radio" name="word-lookup-provider" value="gemini" id="word-lookup-gemini">
+                                        <span class="option-text">
+                                            <span class="option-title">Gemini API</span>
+                                            <span class="option-desc">完整解析：CEFR、詞性、例句，需 API Key</span>
+                                        </span>
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="word-lookup-provider" value="translation-only" id="word-lookup-translation-only">
+                                        <span class="option-text">
+                                            <span class="option-title">僅翻譯</span>
+                                            <span class="option-desc">免 API Key，使用 MyMemory 與免費字典</span>
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -170,23 +181,25 @@
                         <div class="settings-section collapsible" id="tts-provider-section">
                             <div class="section-header" id="tts-provider-header">
                                 <h3>發音來源</h3>
-                                <svg class="arrow-icon" viewBox="0 0 24 24">
-                                    <path d="M7 10l5 5 5-5z" />
-                                </svg>
+                                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                             </div>
                             <div class="section-content">
-                                <div class="appearance-option theme-toggle" style="flex-direction: column; align-items: flex-start;">
-                                    <label style="margin-bottom: 8px;">單字與例句的發音（閱讀模式、單字列表）</label>
-                                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
-                                            <input type="radio" name="tts-provider" value="gemini" id="tts-provider-gemini">
-                                            <span>Gemini API（需 API Key，高品質）</span>
-                                        </label>
-                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
-                                            <input type="radio" name="tts-provider" value="browser" id="tts-provider-browser">
-                                            <span>瀏覽器內建語音</span>
-                                        </label>
-                                    </div>
+                                <p class="section-hint">單字與例句的發音（閱讀模式、單字列表）</p>
+                                <div class="option-list">
+                                    <label class="radio-label">
+                                        <input type="radio" name="tts-provider" value="gemini" id="tts-provider-gemini">
+                                        <span class="option-text">
+                                            <span class="option-title">Gemini API</span>
+                                            <span class="option-desc">高品質，需 API Key</span>
+                                        </span>
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="tts-provider" value="browser" id="tts-provider-browser">
+                                        <span class="option-text">
+                                            <span class="option-title">瀏覽器內建語音</span>
+                                            <span class="option-desc">離線可用</span>
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -195,42 +208,43 @@
                         <div class="settings-section collapsible" id="image-translate-engine-section">
                             <div class="section-header" id="image-translate-engine-header">
                                 <h3>圖片翻譯來源</h3>
-                                <svg class="arrow-icon" viewBox="0 0 24 24">
-                                    <path d="M7 10l5 5 5-5z" />
-                                </svg>
+                                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                             </div>
                             <div class="section-content">
-                                <div class="appearance-option theme-toggle" style="flex-direction: column; align-items: flex-start;">
-                                    <label style="margin-bottom: 8px;">翻譯圖片中的文字時使用（文字辨識一律在本機完成）</label>
-                                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
-                                            <input type="radio" name="image-translate-engine" value="google" id="image-translate-engine-google">
-                                            <span>Google 翻譯（免 API Key，速度快；短時間翻太多頁可能暫時被擋）</span>
-                                        </label>
-                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
-                                            <input type="radio" name="image-translate-engine" value="gemini" id="image-translate-engine-gemini">
-                                            <span>Gemini API（需 API Key，會參考整頁對白，譯文較自然；受 Gemini 額度限制）</span>
-                                        </label>
-                                    </div>
+                                <p class="section-hint">翻譯圖片中的文字時使用（文字辨識一律在本機完成）</p>
+                                <div class="option-list">
+                                    <label class="radio-label">
+                                        <input type="radio" name="image-translate-engine" value="google" id="image-translate-engine-google">
+                                        <span class="option-text">
+                                            <span class="option-title">Google 翻譯</span>
+                                            <span class="option-desc">免 API Key，速度快；短時間翻太多頁可能暫時被擋</span>
+                                        </span>
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="image-translate-engine" value="gemini" id="image-translate-engine-gemini">
+                                        <span class="option-text">
+                                            <span class="option-title">Gemini API</span>
+                                            <span class="option-desc">需 API Key，會參考整頁對白，譯文較自然；受 Gemini 額度限制</span>
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
 
+                        <div class="settings-group-title">外觀</div>
+
                         <!-- 外觀設定區塊 -->
                         <div class="settings-section appearance">
-                            <div class="section-header">
-                                <h3>外觀設定</h3>
-                            </div>
                             <div class="section-content">
                                 <div class="appearance-option theme-toggle">
-                                    <label>深色模式</label>
+                                    <label for="dark-mode">深色模式</label>
                                     <label class="switch">
                                         <input type="checkbox" id="dark-mode">
                                         <span class="slider"></span>
                                     </label>
                                 </div>
                                 <div class="appearance-option theme-toggle">
-                                    <label>顯示懸浮圖示</label>
+                                    <label for="show-floating-logo">顯示懸浮圖示</label>
                                     <label class="switch">
                                         <input type="checkbox" id="show-floating-logo" checked>
                                         <span class="slider"></span>
@@ -239,68 +253,55 @@
                             </div>
                         </div>
 
+                        <div class="settings-group-title">資料</div>
+
                         <!-- 儲存空間管理 -->
                         <div class="storage-info">
-                            <h4>儲存空間使用狀態</h4>
-
-                            <div style="margin-bottom: 12px;">
-                                <div class="storage-input-container">
-                                    <div class="storage-input-wrapper">
-                                        <input type="text" id="storage-limit" placeholder="未限制容量">
-                                        <span class="unit-label">MB</span>
-                                    </div>
-                                    <button id="save-storage-limit" class="storage-save-btn">
-                                        <svg viewBox="0 -960 960 960">
-                                            <path
-                                                d="M840-680v480q0 33-23.5 56.5T760-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h480l160 160Zm-80 34L646-760H200v560h560v-446ZM480-240q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35ZM240-560h360v-160H240v160Zm-40-86v446-560 114Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <div style="font-size: 12px; color: #5f6368; margin-bottom: 4px;">
-                                    目前狀態：<span id="storage-status" style="color: #1a73e8; font-weight: 500;">無限制</span>
-                                </div>
+                            <div class="storage-head">
+                                <h4>儲存空間</h4>
+                                <span id="storage-status" class="storage-status">無限制</span>
                             </div>
 
                             <div class="storage-bar">
                                 <div class="storage-used" id="storage-used-bar"></div>
                             </div>
 
-                            <div class="storage-text">
-                                <div>已使用：<span id="storage-used">計算中...</span></div>
-                                <div>未使用：<span id="storage-free">計算中...</span></div>
-                                <div>總容量：<span id="storage-total">計算中...</span></div>
+                            <div class="storage-text storage-stats">
+                                <div><span class="stat-label">已使用</span><span id="storage-used">計算中...</span></div>
+                                <div><span class="stat-label">未使用</span><span id="storage-free">計算中...</span></div>
+                                <div><span class="stat-label">總容量</span><span id="storage-total">計算中...</span></div>
                             </div>
 
-                            <div style="display: flex; gap: 8px; margin-top: 12px;">
-                                <button id="clear-audio" class="save-button" style="flex: 1; font-size: 12px;">
-                                    清除語音快取
-                                </button>
-                                <button id="clear-all-data" class="save-button" style="flex: 1; font-size: 12px;">
-                                    清除所有資料
-                                </button>
+                            <label class="field-label" for="storage-limit">容量上限</label>
+                            <div class="storage-input-container">
+                                <div class="storage-input-wrapper">
+                                    <input type="text" id="storage-limit" placeholder="未限制容量">
+                                    <span class="unit-label">MB</span>
+                                </div>
+                                <button id="save-storage-limit" class="storage-save-btn">儲存</button>
                             </div>
 
-                            <div style="display: flex; gap: 8px; margin-top: 12px;">
-                                <button id="settings-export-csv" class="save-button" style="flex: 1;">
-                                    匯出單字列表 (CSV)
-                                </button>
+                            <div class="button-row">
+                                <button id="settings-export-csv" class="save-button secondary">匯出單字列表 (CSV)</button>
+                            </div>
+                            <div class="button-row">
+                                <button id="clear-audio" class="save-button secondary">清除語音快取</button>
+                                <button id="clear-all-data" class="save-button danger">清除所有資料</button>
                             </div>
                         </div>
 
                         <!-- 圖片翻譯資料（IndexedDB 與 Cache Storage，不算在上面的用量裡） -->
-                        <div class="storage-info" style="margin-top: 12px;">
-                            <h4>圖片翻譯資料</h4>
-                            <div class="storage-text">
-                                <div>存下來的譯文：<span id="image-translate-pages">計算中...</span></div>
-                                <div>文字辨識模型：<span id="image-translate-models">計算中...</span></div>
+                        <div class="storage-info">
+                            <div class="storage-head">
+                                <h4>圖片翻譯資料</h4>
                             </div>
-                            <div style="display: flex; gap: 8px; margin-top: 12px;">
-                                <button id="clear-image-translations" class="save-button" style="flex: 1; font-size: 12px;">
-                                    清除圖片譯文
-                                </button>
-                                <button id="clear-image-models" class="save-button" style="flex: 1; font-size: 12px;">
-                                    清除辨識模型
-                                </button>
+                            <div class="storage-text storage-rows">
+                                <div><span class="stat-label">存下來的譯文</span><span id="image-translate-pages">計算中...</span></div>
+                                <div><span class="stat-label">文字辨識模型</span><span id="image-translate-models">計算中...</span></div>
+                            </div>
+                            <div class="button-row">
+                                <button id="clear-image-translations" class="save-button secondary">清除圖片譯文</button>
+                                <button id="clear-image-models" class="save-button secondary">清除辨識模型</button>
                             </div>
                         </div>
                     </div>
@@ -323,34 +324,34 @@
             <div id="speech-page" class="page">
                 <div class="page-content">
                     <div class="page-header">
-                        <h2>語音功能</h2>
+                        <h2>文字轉語音</h2>
                     </div>
                     <div class="speech-container">
                         <div class="speech-input-container">
                             <textarea id="speech-text" placeholder="輸入要轉換為語音的文字" rows="6" class="speech-textarea"></textarea>
                             <div class="speech-controls-container">
                                 <div class="speech-control-group">
-                                    <label for="voice-select">語音:</label>
+                                    <label for="voice-select">語音</label>
                                     <select id="voice-select" class="speech-select">
-                                        <option value="Puck">PUCK</option>
-                                        <option value="Nano">NANO</option>
-                                        <option value="Helios">HELIOS</option>
-                                        <option value="Cobalt">COBALT</option>
+                                        <option value="Puck">Puck</option>
+                                        <option value="Nano">Nano</option>
+                                        <option value="Helios">Helios</option>
+                                        <option value="Cobalt">Cobalt</option>
                                     </select>
                                 </div>
                                 <div class="speech-control-group">
-                                    <label for="language-select">語言:</label>
+                                    <label for="language-select">語言</label>
                                     <select id="language-select" class="speech-select">
                                         <option value="en-US">英文</option>
                                         <option value="zh">中文</option>
                                     </select>
                                 </div>
                                 <div class="speech-control-group">
-                                    <label for="speed-range">語速: <span id="speed-value">1.0</span></label>
+                                    <label for="speed-range">語速 <span id="speed-value">1.0</span></label>
                                     <input type="range" id="speed-range" class="speech-range" min="0.5" max="2.0" step="0.1" value="1.0">
                                 </div>
                                 <div class="speech-control-group">
-                                    <label for="pitch-range">音調: <span id="pitch-value">1.0</span></label>
+                                    <label for="pitch-range">音調 <span id="pitch-value">1.0</span></label>
                                     <input type="range" id="pitch-range" class="speech-range" min="0.5" max="2.0" step="0.1" value="1.0">
                                 </div>
                             </div>
@@ -371,90 +372,44 @@
             </div>
         </div>
 
+        <!-- 錯誤訊息 -->
+        <div id="error-message" class="error-banner" role="alert" style="display: none;"></div>
+
         <!-- 底部導航欄 -->
         <div class="bottom-nav">
             <button class="nav-item active" data-page="main-page">
-                <svg viewBox="0 0 24 24">
-                    <path
-                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
-                    <path d="M7 12h2v5H7zm4-7h2v12h-2zm4 4h2v8h-2z" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 20V10m6 10V4m6 16v-7m6 7H2" />
                 </svg>
                 <span>分析</span>
             </button>
             <button class="nav-item" data-page="vocabulary-page">
-                <svg viewBox="0 0 24 24">
-                    <path
-                        d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8zm0-3h8v2h-8zm0 6h4v2h-4z" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2V5Zm0 15a2 2 0 0 0 2 2h13M9 8h6" />
                 </svg>
                 <span>單字</span>
             </button>
             <button class="nav-item" data-page="speech-page">
-                <svg viewBox="0 0 24 24">
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 5 6 9H3v6h3l5 4V5Zm4.5 3.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
                 </svg>
                 <span>語音</span>
             </button>
             <button class="nav-item" data-page="chat-page">
-                <svg viewBox="0 0 24 24">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.9A8 8 0 1 1 21 12Z" />
                 </svg>
                 <span>對話</span>
             </button>
             <button class="nav-item" data-page="settings-page">
-                <svg viewBox="0 0 24 24">
-                    <path
-                        d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5-0.38,1.03-0.7,1.62-0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 6h10m4 0h2M4 12h2m4 0h10M4 18h10m4 0h2" />
+                    <circle cx="16" cy="6" r="2" />
+                    <circle cx="8" cy="12" r="2" />
+                    <circle cx="16" cy="18" r="2" />
                 </svg>
                 <span>設定</span>
             </button>
-        </div>
-    </div>
-
-    <!-- 錯誤訊息 -->
-    <div id="error-message"
-        style="display: none; color: #d32f2f; background-color: #fde8e8; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 14px;">
-    </div>
-
-    <!-- 確認對話框 -->
-    <div class="confirm-dialog-overlay" id="confirm-dialog">
-        <div class="confirm-dialog">
-            <h3>確認清除資料</h3>
-            <div class="confirm-dialog-content">
-                此操作將清除以下資料：
-                <ul>
-                    <li>單字列表</li>
-                    <li>分析快取</li>
-                    <li>語音快取</li>
-                    <li>對話記錄</li>
-                    <li>圖片譯文</li>
-                    <li>圖片翻譯的辨識模型（下次翻譯時重新下載）</li>
-                </ul>
-                <strong style="color: #d32f2f;">此操作無法復原！</strong>
-            </div>
-            <div class="confirm-dialog-buttons">
-                <button class="confirm-dialog-btn cancel" id="cancel-clear">取消</button>
-                <button class="confirm-dialog-btn confirm" id="confirm-clear">確認清除</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 清除語音快取確認對話框 -->
-    <div class="confirm-dialog-overlay" id="confirm-audio-dialog">
-        <div class="confirm-dialog">
-            <h3>確認清除語音快取</h3>
-            <div class="confirm-dialog-content">
-                此操作將清除所有已下載的語音檔案。
-                <ul>
-                    <li>所有語音檔案將被刪除</li>
-                    <li>需要時會自動重新下載</li>
-                    <li>不會影響其他資料</li>
-                </ul>
-                <strong style="color: #1a73e8;">語音檔案會在需要時自動重新下載</strong>
-            </div>
-            <div class="confirm-dialog-buttons">
-                <button class="confirm-dialog-btn cancel" id="cancel-audio-clear">取消</button>
-                <button class="confirm-dialog-btn confirm" id="confirm-audio-clear">確認清除</button>
-            </div>
         </div>
     </div>
 

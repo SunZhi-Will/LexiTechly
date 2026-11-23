@@ -1,4 +1,4 @@
-/* 播放按鈕樣式 */
+/* 發音按鈕（popup 與單字頁共用） */
 .speak-btn {
     width: 28px;
     height: 28px;
@@ -6,54 +6,49 @@
     padding: 0;
     margin: 0;
     border: none;
-    background-color: #e8f0fe;
+    background-color: var(--primary-soft);
+    color: var(--primary);
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s, transform 0.15s;
     position: relative;
-    overflow: hidden;
-}
-
-.speak-btn.elegant {
-    background-color: #f0f7ff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
 .speak-btn:hover {
-    background-color: #d2e3fc;
-    transform: scale(1.05);
+    background-color: var(--primary-soft-hover);
 }
 
 .speak-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 .speak-btn svg {
     width: 16px;
     height: 16px;
-    fill: #1a73e8;
-    transition: all 0.2s ease;
+    fill: currentColor;
+}
+
+.speak-btn.small {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+}
+
+.speak-btn.small svg {
+    width: 13px;
+    height: 13px;
 }
 
 .speak-btn.playing {
-    background-color: #1a73e8;
+    background-color: var(--primary);
+    color: var(--on-primary);
 }
 
-.speak-btn.playing svg {
-    fill: white;
-}
-
-.speak-btn svg.play-icon {
-    display: block;
-}
-
-.speak-btn svg.stop-icon {
-    display: none;
-}
-
+.speak-btn svg.stop-icon,
 .speak-btn.playing svg.play-icon {
     display: none;
 }
@@ -62,7 +57,6 @@
     display: block;
 }
 
-/* 載入動畫 */
 .speak-btn.loading {
     pointer-events: none;
 }
@@ -77,38 +71,7 @@
     width: 12px;
     height: 12px;
     border: 2px solid transparent;
-    border-top-color: #1a73e8;
+    border-top-color: currentColor;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
 }
-
-/* 深色模式樣式 */
-.dark-mode .speak-btn {
-    background-color: rgba(100, 181, 246, 0.15);
-}
-
-.dark-mode .speak-btn:hover {
-    background-color: rgba(100, 181, 246, 0.25);
-}
-
-.dark-mode .speak-btn svg {
-    fill: #64b5f6;
-}
-
-.dark-mode .speak-btn.playing {
-    background-color: #64b5f6;
-}
-
-.dark-mode .speak-btn.playing svg {
-    fill: #2d2d2d;
-}
-
-.dark-mode .speak-btn.loading::after {
-    border-top-color: #64b5f6;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-} 

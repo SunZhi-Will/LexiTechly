@@ -8,7 +8,7 @@
  */
 
 import type { Locale } from './i18n';
-import { layoutBox } from './group';
+import { layoutBoxes } from './group';
 import type { Box, TranslatedBlock } from './protocol';
 import { COLUMN_SPACING, LINE_HEIGHT, VERTICAL_ADVANCE, fitText, fitVertical } from './typeset';
 
@@ -89,10 +89,15 @@ export function drawTranslations(ctx: CanvasRenderingContext2D, blocks: Translat
         maxFont: block.fontHint > 0 ? Math.max(options.minFont ?? 0, Math.round(block.fontHint * 1.1)) : undefined
     });
 
-    for (const block of blocks) {
-        if (!block.translation.trim()) continue;
+    // 先把所有原文抹掉、再一起排譯文：邊抹邊畫的話，後面區塊抹字的底色會蓋到前面已經畫好的譯文
+    const shown = blocks.filter((block) => block.translation.trim());
+    const areas = layoutBoxes(shown);
+    const palettes = shown.map((block) => {
         const erase = clampBox(block.box, width, height, ERASE_PAD);
-        const palette = samplePalette(ctx, erase);
+        return { erase, palette: samplePalette(ctx, erase) };
+    });
+    shown.forEach((block, index) => {
+        const { erase, palette } = palettes[index];
         ctx.fillStyle = palette.background;
         if (block.label === 'text_free') {
             ctx.globalAlpha = 0.92;
@@ -103,8 +108,11 @@ export function drawTranslations(ctx: CanvasRenderingContext2D, blocks: Translat
         } else {
             ctx.fillRect(erase[0], erase[1], erase[2] - erase[0], erase[3] - erase[1]);
         }
+    });
 
-        const area = layoutBox(block);
+    shown.forEach((block, index) => {
+        const { palette } = palettes[index];
+        const area = areas[index];
         const boxWidth = area[2] - area[0];
         const boxHeight = area[3] - area[1];
         const centerX = (area[0] + area[2]) / 2;
@@ -147,12 +155,12 @@ export function drawTranslations(ctx: CanvasRenderingContext2D, blocks: Translat
                     }
                 });
             });
-            continue;
+            return;
         }
 
         const { fontSize, lines } = fitText(block.translation, boxWidth, boxHeight, measure, fitOptions(block));
         ctx.font = fontAt(fontSize);
         const firstY = centerY - ((lines.length - 1) * fontSize * LINE_HEIGHT) / 2;
         lines.forEach((line, i) => draw(line, centerX, firstY + i * fontSize * LINE_HEIGHT, fontSize));
-    }
+    });
 }

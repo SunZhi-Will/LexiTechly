@@ -193,8 +193,9 @@ function createWordDetailsPage(word: Word, details: WordDetails): HTMLElement {
             <div class="header-actions">
                 <button class="show-graph-btn" title="顯示關聯圖">
                     <svg viewBox="0 0 24 24" width="20" height="20">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                        <path d="M17 16a3 3 0 0 0-2.4 1.2l-5.7-3.3a3 3 0 0 0 0-1.8l5.7-3.3A3 3 0 1 0 14 7c0 .3 0 .6.1.9l-5.7 3.3a3 3 0 1 0 0 3.6l5.7 3.3A3 3 0 1 0 17 16Z"/>
                     </svg>
+                    關聯圖
                 </button>
                 <button class="reanalyze-btn" title="重新分析">
                     <svg viewBox="0 0 24 24" width="20" height="20">

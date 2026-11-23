@@ -24,8 +24,22 @@ const TARGET_NAMES: Record<Locale, string> = {
 /** 沒有 API Key，或 Gemini 說金鑰無效、沒有權限 */
 export class GeminiKeyError extends Error {}
 
-/** Gemini 的額度用完或請求太頻繁（429） */
-export class GeminiQuotaError extends Error {}
+/** Gemini 的額度用完或請求太頻繁（429）；retryAfterMs 是 Gemini 建議的等待時間（沒給就是 null） */
+export class GeminiQuotaError extends Error {
+    constructor(readonly retryAfterMs: number | null = null) {
+        super('quota');
+    }
+}
+
+/**
+ * 從 429 回應取出建議的等待時間：先看 Retry-After 標頭（秒），再看錯誤內容裡 RetryInfo 的 retryDelay（例如 "37s"、"1.5s"）
+ */
+export function parseRetryDelay(retryAfterHeader: string | null, body: string): number | null {
+    const header = Number(retryAfterHeader);
+    if (retryAfterHeader && Number.isFinite(header) && header >= 0) return Math.round(header * 1000);
+    const match = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(body);
+    return match ? Math.round(Number(match[1]) * 1000) : null;
+}
 
 export function buildGeminiPrompt(texts: string[], source: SourceLang, target: Locale): string {
     return [
@@ -83,7 +97,10 @@ export async function translateWithGemini(
             }
         })
     });
-    if (response.status === 429) throw new GeminiQuotaError('quota');
+    if (response.status === 429) {
+        const body = await response.text().catch(() => '');
+        throw new GeminiQuotaError(parseRetryDelay(response.headers.get('retry-after'), body));
+    }
     if (response.status === 400 || response.status === 401 || response.status === 403) {
         const body = await response.text().catch(() => '');
         // 400 也可能是請求本身的問題；只有和金鑰有關的才當作金鑰錯誤

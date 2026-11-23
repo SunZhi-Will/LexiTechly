@@ -79,7 +79,8 @@ const ICONS = {
     more: svg('<circle cx="3.5" cy="8" r=".9" fill="currentColor"/><circle cx="8" cy="8" r=".9" fill="currentColor"/><circle cx="12.5" cy="8" r=".9" fill="currentColor"/>'),
     close: svg('<path d="M4 4l8 8M12 4l-8 8"/>'),
     refresh: svg('<path d="M13.5 8A5.5 5.5 0 1 1 11.9 4.1M13.5 2v3h-3"/>'),
-    download: svg('<path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10"/>')
+    download: svg('<path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10"/>'),
+    select: svg('<path d="M2.5 5V2.5H5M11 2.5h2.5V5M13.5 11v2.5H11M5 13.5H2.5V11M7 2.5h2M7 13.5h2M2.5 7v2M13.5 7v2"/>')
 };
 
 export const LANG_NAMES: Record<LangChoice, MessageKey> = {
@@ -102,6 +103,8 @@ export interface PillHandlers {
     onStop(): void;
     // 重翻畫面上看得到的圖（有對話框漏翻時）
     onRetranslate(): void;
+    // 框選翻譯：在圖上拖出一個框，只翻框裡的字（漏翻或翻錯的地方）
+    onSelectRegion(): void;
     // 把畫面上這頁的辨識紀錄存成檔案（回報漏翻用，只存在使用者自己的電腦）
     onExport(): void;
     // 預翻下一頁的開關
@@ -289,6 +292,7 @@ export class AutoPill {
             run();
         });
         return this.el('div', 'menu',
+            item('select', t('manga.auto.selectRegion'), () => this.handlers.onSelectRegion()),
             item('refresh', t('manga.auto.retranslate'), () => this.handlers.onRetranslate()),
             item('download', t('manga.auto.export'), () => this.handlers.onExport()));
     }

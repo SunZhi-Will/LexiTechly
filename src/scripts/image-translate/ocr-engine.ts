@@ -6,7 +6,7 @@
  *
  * 只用 WASM：P0 實測偵測模型的 MaxPool（ceil_mode）在 ORT 的 WebGPU 後端會直接出錯，
  * OCR 用 WebGPU 也沒有比較快，所以整包只打包 WASM 版（vite.config.ts 把 onnxruntime-web 指到 onnxruntime-web/wasm）。
- * offscreen 文件沒有跨來源隔離，WASM 只能單執行緒。
+ * manifest 設了 COOP／COEP，offscreen 文件是跨來源隔離的，WASM 可以用多執行緒（見下方 numThreads）。
  */
 
 import * as ort from 'onnxruntime-web/wasm';

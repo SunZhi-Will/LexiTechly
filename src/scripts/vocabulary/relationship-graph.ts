@@ -17,29 +17,29 @@ export function createRelationshipGraph(container: HTMLElement, word: Word, deta
     // 定義顏色主題
     const colors = {
         center: {
-            background: '#1a73e8',
-            border: '#0d47a1',
-            highlight: { background: '#2196f3', border: '#1565c0' }
+            background: '#2468e8',
+            border: '#1a56c9',
+            highlight: { background: '#3b7cf0', border: '#1a56c9' }
         },
         synonym: {
-            background: '#4caf50',
-            border: '#2e7d32',
-            highlight: { background: '#66bb6a', border: '#388e3c' }
+            background: '#17915a',
+            border: '#0f7446',
+            highlight: { background: '#22a86c', border: '#0f7446' }
         },
         antonym: {
-            background: '#f44336',
-            border: '#c62828',
-            highlight: { background: '#ef5350', border: '#d32f2f' }
+            background: '#d43c3c',
+            border: '#b02c2c',
+            highlight: { background: '#e25555', border: '#b02c2c' }
         },
         synonymSecond: {
-            background: '#81c784',
-            border: '#4caf50',
-            highlight: { background: '#a5d6a7', border: '#66bb6a' }
+            background: '#6cc79b',
+            border: '#17915a',
+            highlight: { background: '#8ad6b1', border: '#17915a' }
         },
         antonymSecond: {
-            background: '#ff8a80',
-            border: '#f44336',
-            highlight: { background: '#ffab91', border: '#ff5722' }
+            background: '#ee8e8e',
+            border: '#d43c3c',
+            highlight: { background: '#f3a8a8', border: '#d43c3c' }
         }
     };
 
@@ -125,7 +125,7 @@ export function createRelationshipGraph(container: HTMLElement, word: Word, deta
                 });
 
                 // 添加邊
-                const edgeColor = type === 'synonym' ? '#4caf50' : '#f44336';
+                const edgeColor = type === 'synonym' ? '#17915a' : '#d43c3c';
                 edges.add({
                     from: sourceWord,
                     to: related.text,
@@ -341,21 +341,18 @@ export function createRelationshipGraph(container: HTMLElement, word: Word, deta
     instructions.className = 'vis-instructions';
     instructions.innerHTML = `
         <div class="vis-instruction-item">
-            <span class="instruction-icon">🖱️</span>
-            <span>拖拽節點或視圖</span>
+            <span class="vis-legend-dot" style="background: ${colors.center.background}"></span>
+            <span>目前單字</span>
         </div>
         <div class="vis-instruction-item">
-            <span class="instruction-icon">🔍</span>
-            <span>滾輪縮放</span>
+            <span class="vis-legend-dot" style="background: ${colors.synonym.background}"></span>
+            <span>相似詞</span>
         </div>
         <div class="vis-instruction-item">
-            <span class="instruction-icon">➕</span>
-            <span>點擊節點添加單字</span>
+            <span class="vis-legend-dot" style="background: ${colors.antonym.background}"></span>
+            <span>反義詞</span>
         </div>
-        <div class="vis-instruction-item">
-            <span class="instruction-icon">✨</span>
-            <span>智能物理佈局</span>
-        </div>
+        <div class="vis-instruction-hint">拖曳移動，滾輪縮放<br>點節點加入單字</div>
     `;
     container.appendChild(instructions);
 

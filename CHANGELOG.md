@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- 介面全面改版
+  - popup、單字頁與注入網頁的字卡改用同一套設計變數（顏色、圓角、陰影、字型），深色模式由變數切換
+  - popup 加寬為 380 x 580；主頁改為品牌標題、分析結果卡片與圖片翻譯卡片，底部導覽改用線條圖示
+  - 設定頁分成「AI 與功能來源」「外觀」「資料」三組，來源選項改成可點選的卡片，清除所有資料改為危險樣式
+  - 單字卡的 CEFR 等級依 A、B、C 分色；空狀態、提示訊息與確認對話框重新設計，提示圖示改用 SVG
+  - 單字頁加上搜尋欄圖示與固定在頂端的篩選列，單字詳情改為右側抽屜，關聯圖加上圖例
+  - 注入網頁的字卡樣式限定在字卡內，不再影響網頁本身同名的類別
+  - 判斷網頁深淺色時以網頁實際背景為準，白底網頁不再因為系統是深色模式而出現深色字卡
+
+### Removed
+- popup 不再載入 Tailwind 的基礎樣式，也移除沒被使用的 dark-mode.css 與 relationship-graph.css
+
 ### Added
 - 圖片翻譯（原本在 PostVault，移到 LexiTechly）
   - 在圖片上按右鍵選「翻譯這張圖片」，可選自動判斷、韓文、日文或中文原文，譯文會貼回圖上原本的位置
@@ -16,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 支援直排文字與原文語言自動偵測
   - 文字辨識在本機完成（ppu-paddle-ocr 6.6.1 + onnxruntime-web 1.30.0 的 WASM 版），圖片不上傳
   - 翻譯來源可在設定頁選擇：Google 翻譯（預設，免 API Key）或 Gemini（用使用者的 API Key，參考整頁對白）
+  - Gemini 請求排隊送出（一次一個）；被額度擋下時依 Gemini 建議的時間等待後重試一次，並放慢到每 7 秒一次，避免自動翻譯時一波連發用完免費額度
   - 每種原文語言第一次使用時下載約 25 到 41 MB 的辨識模型，之後存在瀏覽器裡
   - 翻過的頁存在本機（最多 3,000 張），下次直接顯示
   - 譯文語言跟著瀏覽器介面語言：繁體中文、簡體中文、日文，其餘為英文

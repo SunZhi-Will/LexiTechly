@@ -160,15 +160,15 @@ export async function updateStorageUsage(): Promise<void> {
 
                 // 根據使用量改變顏色
                 if (usagePercent > 90) {
-                    storageUsedBarElement.style.backgroundColor = '#d32f2f';
+                    storageUsedBarElement.style.backgroundColor = 'var(--danger)';
                 } else if (usagePercent > 70) {
-                    storageUsedBarElement.style.backgroundColor = '#f57c00';
+                    storageUsedBarElement.style.backgroundColor = 'var(--warning)';
                 } else {
-                    storageUsedBarElement.style.backgroundColor = '#1a73e8';
+                    storageUsedBarElement.style.backgroundColor = 'var(--primary)';
                 }
             } else {
                 storageUsedBarElement.style.width = '0%';
-                storageUsedBarElement.style.backgroundColor = '#e0e0e0';
+                storageUsedBarElement.style.backgroundColor = 'transparent';
             }
         }
     } catch (error) {

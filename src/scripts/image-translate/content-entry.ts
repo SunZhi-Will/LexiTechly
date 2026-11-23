@@ -12,6 +12,7 @@ import { TranslationOverlay } from './overlay';
 import { AutoTranslator, type AutoState } from './auto-translate';
 import { AutoPill } from './auto-pill';
 import { BatchPill, BatchRunner } from './batch-translate';
+import { imageUnder, selectRegion } from './region-select';
 import {
     IMAGE_TRANSLATE_AUTO_TOGGLE,
     IMAGE_TRANSLATE_BATCH_BEGIN,
@@ -47,7 +48,8 @@ const ERROR_KEYS: Record<ErrorMessage['code'], MessageKey> = {
     'translate-busy': 'manga.error.busy',
     'translate-no-key': 'manga.error.noKey',
     'capture-failed': 'manga.error.capture',
-    'model-download-failed': 'manga.error.download'
+    'model-download-failed': 'manga.error.download',
+    'region-outside': 'manga.error.regionOutside'
 };
 
 const overlays = new Map<string, TranslationOverlay>();
@@ -214,6 +216,19 @@ async function rememberLanguage(lang: LangChoice): Promise<void> {
     await chrome.storage.local.set({ [LANG_BY_HOST_KEY]: { ...map, [location.host]: lang } });
 }
 
+/** 框選翻譯：讓使用者在圖上拖出一個框，只翻框裡的字 */
+async function selectAndTranslate(): Promise<void> {
+    if (!auto) return;
+    const rect = await selectRegion(t('manga.region.hint'));
+    if (!rect || !auto) return;
+    const target = imageUnder(rect);
+    if (!target) {
+        auto.pill.flash(t('manga.region.noImage'));
+        return;
+    }
+    await auto.translator.translateRegion(target.img, target.selection);
+}
+
 function stopAuto(): void {
     auto?.translator.stop();
     auto?.pill.remove();
@@ -240,6 +255,7 @@ async function toggleAuto(): Promise<void> {
         onChangeLanguage: () => void changeLanguage(),
         onStop: stopAuto,
         onRetranslate: () => auto?.translator.retranslateVisible(),
+        onSelectRegion: () => void selectAndTranslate(),
         onBatch: () => void startBatch(),
         onTogglePrefetch: (enabled) => {
             auto?.translator.setPrefetchNext(enabled);

@@ -5,6 +5,7 @@ import { speakWord } from '../vocabulary/audio.js';
 import { LEARNING_LANGUAGES, NATIVE_LANGUAGES, normalizeLevel } from '../lang/languages.js';
 import { buildShortWordQueryPrompt, buildWordQueryPrompt } from '../lang/prompts.js';
 import { languagesForSnippet } from './page-lang.js';
+import { isDarkTheme, themeVars } from './styles';
 
 // 查單字結果型別（與 Gemini 回傳格式相容）
 export interface WordQueryResult {
@@ -392,7 +393,7 @@ export async function queryWordInfo(word: string): Promise<WordQueryResult> {
             const errorHtml = `
                 <div class="lexitechly-error">
                     <strong>${word}</strong><br>
-                    <span style="color: #EF4444;">解析回應失敗，請稍後重試</span>
+                    <span style="color: #d43c3c;">解析回應失敗，請稍後重試</span>
                 </div>
             `;
             console.error('word query failed:', error, retryError);
@@ -403,78 +404,13 @@ export async function queryWordInfo(word: string): Promise<WordQueryResult> {
 
 // 檢測頁面主題
 export function checkPageTheme(): boolean {
-    // 檢查 CSS 媒體查詢
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return true;
-    }
-
-    // 檢查 HTML 元素的 data-theme 或 class
-    const html = document.documentElement;
-    const body = document.body;
-
-    // 常見的深色主題標識
-    const darkIndicators = [
-        'dark', 'dark-theme', 'dark-mode', 'theme-dark',
-        'night', 'night-mode', 'black-theme'
-    ];
-
-    for (const indicator of darkIndicators) {
-        if (html.classList.contains(indicator) ||
-            body.classList.contains(indicator) ||
-            html.getAttribute('data-theme')?.includes(indicator) ||
-            body.getAttribute('data-theme')?.includes(indicator)) {
-            return true;
-        }
-    }
-
-    // 檢查背景顏色
-    const bodyStyles = window.getComputedStyle(body);
-    const htmlStyles = window.getComputedStyle(html);
-
-    const bodyBg = bodyStyles.backgroundColor;
-    const htmlBg = htmlStyles.backgroundColor;
-
-    // 檢查是否為深色背景
-    const checkDarkColor = (color: string): boolean => {
-        if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') {
-            return false;
-        }
-
-        // 解析 RGB 值
-        const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-        if (rgbMatch) {
-            const [, r, g, b] = rgbMatch.map(Number);
-            // 計算亮度 (使用 YIQ 公式)
-            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-            return brightness < 128; // 如果亮度小於 128 認為是深色
-        }
-
-        return false;
-    };
-
-    return checkDarkColor(bodyBg) || checkDarkColor(htmlBg);
+    return isDarkTheme();
 }
 
 // 更新 tooltip 主題
 export function updateTooltipTheme(isDark: boolean): void {
-    // 更新 CSS 變數
     const root = document.documentElement;
-
-    if (isDark) {
-        root.style.setProperty('--lexitechly-tooltip-bg', 'rgba(31, 41, 55, 0.98)');
-        root.style.setProperty('--lexitechly-text-primary', '#F9FAFB');
-        root.style.setProperty('--lexitechly-text-secondary', '#D1D5DB');
-        root.style.setProperty('--lexitechly-text-muted', '#9CA3AF');
-        root.style.setProperty('--lexitechly-border', 'rgba(75, 85, 99, 0.3)');
-        root.style.setProperty('--lexitechly-shadow', 'rgba(0, 0, 0, 0.3)');
-        root.style.setProperty('--lexitechly-bg-secondary', 'rgba(55, 65, 81, 0.9)');
-    } else {
-        root.style.setProperty('--lexitechly-tooltip-bg', 'rgba(255, 255, 255, 0.98)');
-        root.style.setProperty('--lexitechly-text-primary', '#1F2937');
-        root.style.setProperty('--lexitechly-text-secondary', '#374151');
-        root.style.setProperty('--lexitechly-text-muted', '#6B7280');
-        root.style.setProperty('--lexitechly-border', 'rgba(229, 231, 235, 0.3)');
-        root.style.setProperty('--lexitechly-shadow', 'rgba(0, 0, 0, 0.1)');
-        root.style.setProperty('--lexitechly-bg-secondary', 'rgba(249, 250, 251, 0.9)');
+    for (const [name, value] of Object.entries(themeVars(isDark))) {
+        root.style.setProperty(name, value);
     }
-} 
+}

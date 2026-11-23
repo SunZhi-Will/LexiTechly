@@ -1,10 +1,5 @@
-/* 導入分離的樣式文件 - 必須在 @tailwind 之前 */
+/* popup 樣式入口 */
+@import './tokens.css';
 @import './base.css';
 @import './components.css';
 @import './pages.css';
-@import './dark-mode.css';
-@import './relationship-graph.css';
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;

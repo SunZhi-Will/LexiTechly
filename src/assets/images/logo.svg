@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4c8dff"/>
+      <stop offset="1" stop-color="#1747c9"/>
+    </linearGradient>
+    <linearGradient id="hl" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd84d"/>
+      <stop offset="1" stop-color="#ffb020"/>
+    </linearGradient>
+  </defs>
+  <!-- tile -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <!-- text lines (the page being read) -->
+  <rect x="236" y="148" width="148" height="30" rx="15" fill="#ffffff" opacity="0.42"/>
+  <rect x="236" y="214" width="112" height="30" rx="15" fill="#ffffff" opacity="0.42"/>
+  <!-- highlighted word -->
+  <rect x="226" y="268" width="168" height="58" rx="18" fill="url(#hl)"/>
+  <rect x="250" y="290" width="120" height="14" rx="7" fill="#163a99"/>
+  <!-- bold L -->
+  <path d="M128 112 a26 26 0 0 1 26 -26 h18 a26 26 0 0 1 26 26 v258 h168 a26 26 0 0 1 26 26 v4 a26 26 0 0 1 -26 26 h-212 a26 26 0 0 1 -26 -26 z" fill="#ffffff"/>
+  <!-- AI spark -->
+  <path d="M398 74 C403 104 410 111 440 116 C410 121 403 128 398 158 C393 128 386 121 356 116 C386 111 393 104 398 74 Z" fill="#ffffff"/>
+</svg>

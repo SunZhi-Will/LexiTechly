@@ -122,7 +122,8 @@ export interface ErrorMessage {
     type: typeof IMAGE_TRANSLATE_ERROR;
     requestId: string;
     // translate-busy：免金鑰的翻譯端點把這個 IP 暫時擋下（429），而且沒有本機翻譯可以接手
-    code: 'no-text' | 'analyze-failed' | 'translate-failed' | 'translate-busy' | 'translate-no-key' | 'capture-failed' | 'model-download-failed';
+    // region-outside：框選翻譯框到之前沒讀到的地方（只擷取了畫面上看得到的一塊）
+    code: 'no-text' | 'analyze-failed' | 'translate-failed' | 'translate-busy' | 'translate-no-key' | 'capture-failed' | 'model-download-failed' | 'region-outside';
     detail?: string;
 }
 
@@ -178,6 +179,24 @@ export type TranslateResponse =
     // skipped：不像漫畫頁（太小）；needsVisible：抓不到原圖，要等圖片出現在畫面上才能擷取
     // retryAt：translate-busy 時，翻譯服務預計可以再試的時間（毫秒時間戳）
     | { ok: false; code: ErrorMessage['code'] | 'skipped'; needsVisible?: boolean; retryAt?: number };
+
+// ---------- 框選翻譯（自動翻譯中，使用者在圖上拖出一個框，只翻框裡的字） ----------
+
+// 內容腳本 → 背景頁：翻譯一張圖裡的一塊；回覆 TranslateResponse，result 是併入新區塊之後的整張譯文
+export const IMAGE_TRANSLATE_REGION = 'LEXITECHLY_IMAGE_TRANSLATE_REGION';
+
+export interface RegionRequest {
+    type: typeof IMAGE_TRANSLATE_REGION;
+    requestId: string;
+    srcUrl: string;
+    lang: LangChoice;
+    hint?: SourceLang;
+    geometry: ImageGeometry | null;
+    // 框選的範圍，占整張原圖的比例（0 到 1）
+    selection: { left: number; top: number; width: number; height: number };
+    // 這張圖原本的譯文（有的話）：從它的底圖裁切，新區塊併進它的區塊裡
+    base?: TranslatedImage;
+}
 
 // ---------- 本機譯文儲存與整本翻譯 ----------
 
