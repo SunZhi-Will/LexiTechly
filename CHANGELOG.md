@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 支援直排文字與原文語言自動偵測
   - 文字辨識在本機完成（ppu-paddle-ocr 6.6.1 + onnxruntime-web 1.30.0 的 WASM 版），圖片不上傳
   - 翻譯來源可在設定頁選擇：Google 翻譯（預設，免 API Key）或 Gemini（用使用者的 API Key，參考整頁對白）
+  - Gemini 請求排隊送出（一次一個）；被額度擋下時依 Gemini 建議的時間等待後重試一次，並放慢到每 7 秒一次，避免自動翻譯時一波連發用完免費額度
   - 每種原文語言第一次使用時下載約 25 到 41 MB 的辨識模型，之後存在瀏覽器裡
   - 翻過的頁存在本機（最多 3,000 張），下次直接顯示
   - 譯文語言跟著瀏覽器介面語言：繁體中文、簡體中文、日文，其餘為英文
