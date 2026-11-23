@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Readloop: a highlighted word inside a reading loop (read, look up, keep, review) -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#4c8dff"/>
@@ -9,16 +10,13 @@
       <stop offset="1" stop-color="#ffb020"/>
     </linearGradient>
   </defs>
-  <!-- tile -->
   <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
-  <!-- text lines (the page being read) -->
-  <rect x="236" y="148" width="148" height="30" rx="15" fill="#ffffff" opacity="0.42"/>
-  <rect x="236" y="214" width="112" height="30" rx="15" fill="#ffffff" opacity="0.42"/>
+  <!-- loop -->
+  <path d="M341.0 149.3 A138 138 0 1 1 178.8 143.6" fill="none" stroke="#ffffff" stroke-width="46" stroke-linecap="round"/>
+  <path d="M154.4 107.4 L218.9 116.6 L203.3 179.8 Z" fill="#ffffff" stroke="#ffffff" stroke-width="11.5" stroke-linejoin="round"/>
+  <rect x="190" y="186" width="132" height="22" rx="12" fill="#ffffff" opacity="0.45"/>
+  <rect x="190" y="308" width="96" height="22" rx="12" fill="#ffffff" opacity="0.45"/>
   <!-- highlighted word -->
-  <rect x="226" y="268" width="168" height="58" rx="18" fill="url(#hl)"/>
-  <rect x="250" y="290" width="120" height="14" rx="7" fill="#163a99"/>
-  <!-- bold L -->
-  <path d="M128 112 a26 26 0 0 1 26 -26 h18 a26 26 0 0 1 26 26 v258 h168 a26 26 0 0 1 26 26 v4 a26 26 0 0 1 -26 26 h-212 a26 26 0 0 1 -26 -26 z" fill="#ffffff"/>
-  <!-- AI spark -->
-  <path d="M398 74 C403 104 410 111 440 116 C410 121 403 128 398 158 C393 128 386 121 356 116 C386 111 393 104 398 74 Z" fill="#ffffff"/>
+  <rect x="160" y="226" width="192" height="64" rx="20" fill="url(#hl)"/>
+  <rect x="186" y="249" width="140" height="18" rx="9" fill="#163a99"/>
 </svg>
