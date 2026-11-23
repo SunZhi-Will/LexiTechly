@@ -18,7 +18,8 @@ import { contentLogger } from './logger';
 import { getLocale, initI18n, t, type MessageKey } from './i18n';
 import { isFromContentScript, isFromExtensionPage } from './sender-guard';
 import { groupLines } from './group';
-import { TranslateBusyError, translateForImage } from './translate-engines';
+import { GeminiKeyError } from './gemini-translate';
+import { TranslateBusyError, getEngine, translateForImage, type ImageTranslateEngine } from './translate-engines';
 import { loadTranslation, saveTranslation } from './translation-store';
 import {
     IMAGE_TRANSLATE_AUTO_TOGGLE,
@@ -234,11 +235,14 @@ async function runPipeline(input: PipelineInput): Promise<TranslateResponse> {
         if (!prefetch) sendToTab(tabId, frameId, { type: IMAGE_TRANSLATE_PROGRESS, requestId, phase: 'translate' });
         await initI18n();
         const locale = getLocale();
+        const engine = await getEngine();
         let translations: string[];
         try {
-            translations = await translateForImage(blocks.map((block) => block.text), sourceLang, locale);
+            translations = await translateForImage(blocks.map((block) => block.text), sourceLang, locale, engine);
         } catch (error) {
             if (error instanceof TranslateBusyError) return { ok: false, code: 'translate-busy', retryAt: error.retryAt };
+            if (error instanceof GeminiKeyError) return { ok: false, code: 'translate-no-key' };
+            contentLogger.warn('圖片翻譯：翻譯失敗', error);
             return { ok: false, code: 'translate-failed' };
         }
 
@@ -256,7 +260,7 @@ async function runPipeline(input: PipelineInput): Promise<TranslateResponse> {
         // 存起來：下次打開同一部漫畫直接貼上（存失敗不影響這次的結果）
         const key = translationKey(srcUrl);
         if (key) {
-            await storeResult(`${locale}|${key}`, result).catch((error) => contentLogger.debug('圖片翻譯：存譯文失敗', error));
+            await storeResult(storeKey(locale, engine, key), result).catch((error) => contentLogger.debug('圖片翻譯：存譯文失敗', error));
         }
         return { ok: true, result };
     } catch (error) {
@@ -281,11 +285,19 @@ async function storeResult(key: string, result: TranslatedImage): Promise<void> 
     await saveTranslation(key, { ...result, image });
 }
 
+/**
+ * 存譯文的鍵：譯文語言 + 翻譯來源 + 圖片網址。Google 的維持原本的格式（之前存的譯文照樣能用），
+ * Gemini 的另外存，切換來源時不會拿到另一個來源翻的
+ */
+function storeKey(locale: string, engine: ImageTranslateEngine, key: string): string {
+    return engine === 'google' ? `${locale}|${key}` : `${locale}|${engine}|${key}`;
+}
+
 async function lookupStored(srcUrl: string): Promise<TranslatedImage | null> {
     const key = translationKey(srcUrl);
     if (!key) return null;
     await initI18n();
-    const stored = await loadTranslation(`${getLocale()}|${key}`).catch(() => null);
+    const stored = await loadTranslation(storeKey(getLocale(), await getEngine(), key)).catch(() => null);
     return stored ? { ...stored, requestId: crypto.randomUUID() } : null;
 }
 

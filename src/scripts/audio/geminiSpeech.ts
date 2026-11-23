@@ -230,8 +230,9 @@ export async function textToSpeech(
   const pitch = options.pitch || 1.0;
   const temperature = options.temperature ?? 1;
 
-  // 使用較新的模型
-  const model = 'models/gemini-2.0-flash-live-001';
+  // gemini-2.0-flash-live-001 已過官方關閉日，官方指定的替代模型是 gemini-3.8-live。
+  // 不放進 ai-models.ts：那個檔案會被內容腳本匯入，共用的話打包時會把整個語音 SDK 帶進每個網頁。
+  const model = 'models/gemini-3.8-live';
 
   // config 結構與 Bash/curl 一致
   const config = {

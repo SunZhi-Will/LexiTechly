@@ -177,6 +177,31 @@
                             </div>
                         </div>
 
+                        <!-- 圖片翻譯來源 -->
+                        <div class="settings-section collapsible" id="image-translate-engine-section">
+                            <div class="section-header" id="image-translate-engine-header">
+                                <h3>圖片翻譯來源</h3>
+                                <svg class="arrow-icon" viewBox="0 0 24 24">
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                            </div>
+                            <div class="section-content">
+                                <div class="appearance-option theme-toggle" style="flex-direction: column; align-items: flex-start;">
+                                    <label style="margin-bottom: 8px;">翻譯圖片中的文字時使用（文字辨識一律在本機完成）</label>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="radio" name="image-translate-engine" value="google" id="image-translate-engine-google">
+                                            <span>Google 翻譯（免 API Key，速度快；短時間翻太多頁可能暫時被擋）</span>
+                                        </label>
+                                        <label class="radio-label" style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="radio" name="image-translate-engine" value="gemini" id="image-translate-engine-gemini">
+                                            <span>Gemini API（需 API Key，會參考整頁對白，譯文較自然；受 Gemini 額度限制）</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 外觀設定區塊 -->
                         <div class="settings-section appearance">
                             <div class="section-header">

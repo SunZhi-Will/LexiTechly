@@ -1,4 +1,5 @@
 /// <reference types="chrome"/>
+import { GEMINI_GENERATE_URL } from '../ai-models.js';
 
 import { speakWord } from '../vocabulary/audio.js';
 
@@ -137,7 +138,7 @@ export async function queryWordInfoWithTranslationOnly(word: string): Promise<Wo
 
 // 查詢單字資訊（Gemini API）
 export async function queryWordInfo(word: string, apiKey: string): Promise<WordQueryResult> {
-    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+    const API_URL = GEMINI_GENERATE_URL;
 
     const basePrompt = `
     只回傳 JSON，描述英文單字 "${word}"：

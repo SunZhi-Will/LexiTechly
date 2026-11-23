@@ -45,6 +45,7 @@ const ERROR_KEYS: Record<ErrorMessage['code'], MessageKey> = {
     'analyze-failed': 'manga.error.analyze',
     'translate-failed': 'manga.error.translate',
     'translate-busy': 'manga.error.busy',
+    'translate-no-key': 'manga.error.noKey',
     'capture-failed': 'manga.error.capture',
     'model-download-failed': 'manga.error.download'
 };

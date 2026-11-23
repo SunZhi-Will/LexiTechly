@@ -254,11 +254,14 @@ dist/
   - Comic images on the page are translated automatically, including new images after a page turn
   - The control bar in the bottom-right corner lets you change the source language, turn on "pre-translate next page", run "whole book", or stop
 - **Target language**: follows the browser UI language (Traditional Chinese, Simplified Chinese, Japanese; English otherwise)
+- **Translation engine**: choose it in settings under "Image translation engine"
+  - Google Translate (default): no API key, fast; may be blocked briefly after many pages in a short time
+  - Gemini: uses the API key from "Gemini API settings", reads the whole page of dialogue for more natural translations, subject to your Gemini quota
 - **First use**:
   - A notice explains what is sent; translation starts after you press "Continue"
   - Each source language downloads about 25 to 41 MB of recognition models once
 - **Privacy**: text recognition runs on your device and images are not uploaded; only the recognized text is sent to Google Translate. See the [Privacy Policy](privacy-policy.md)
-- **No Gemini API Key needed**
+- **No Gemini API Key needed by default** (only when Gemini is the translation engine)
 
 ## 🎨 User Interface Features
 
@@ -355,7 +358,8 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history and update notes.
 - Shortcut does nothing: the popup's main tab shows the current shortcut; "not set" means another extension took it, so use "set shortcut" to pick another, or just use the button
 - "Can't read this image": scroll the image into view and try again
 - "Model download failed": check that huggingface.co is reachable, then try again
-- "Translation service is busy": Google Translate is temporarily blocking requests; try again later
+- "Translation service is busy": Google Translate is temporarily blocking requests or your Gemini quota ran out; try again later, or switch to Gemini when using Google Translate
+- "API key is missing or invalid": the engine is Gemini; enter a valid key in "Gemini API settings", or switch image translation back to Google Translate
 - Not available on `chrome://` pages or the Chrome Web Store
 
 ### Reinstallation Steps

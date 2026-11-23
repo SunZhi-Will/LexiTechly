@@ -122,7 +122,7 @@ export interface ErrorMessage {
     type: typeof IMAGE_TRANSLATE_ERROR;
     requestId: string;
     // translate-busy：免金鑰的翻譯端點把這個 IP 暫時擋下（429），而且沒有本機翻譯可以接手
-    code: 'no-text' | 'analyze-failed' | 'translate-failed' | 'translate-busy' | 'capture-failed' | 'model-download-failed';
+    code: 'no-text' | 'analyze-failed' | 'translate-failed' | 'translate-busy' | 'translate-no-key' | 'capture-failed' | 'model-download-failed';
     detail?: string;
 }
 

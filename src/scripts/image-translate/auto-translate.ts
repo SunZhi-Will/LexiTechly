@@ -493,7 +493,7 @@ export class AutoTranslator {
     }
 
     /** 畫面上那張圖失敗：在圖上標出原因幾秒，之後拿掉，原圖照常可看 */
-    private showFailure(job: Job, overlay: TranslationOverlay | null, key: 'manga.error.noText' | 'manga.error.capture' | 'manga.error.analyze' | 'manga.error.translate'): void {
+    private showFailure(job: Job, overlay: TranslationOverlay | null, key: 'manga.error.noText' | 'manga.error.capture' | 'manga.error.analyze' | 'manga.error.translate' | 'manga.error.noKey'): void {
         if (!overlay || !job.img) return;
         overlay.setStatus(t(key), true);
         const img = job.img;
@@ -542,7 +542,7 @@ export class AutoTranslator {
             this.showFailure(job, overlay, 'manga.error.capture');
         } else {
             this.cache.set(job.url, { status: 'failed' });
-            this.showFailure(job, overlay, code === 'translate-failed' ? 'manga.error.translate' : 'manga.error.analyze');
+            this.showFailure(job, overlay, code === 'translate-failed' ? 'manga.error.translate' : code === 'translate-no-key' ? 'manga.error.noKey' : 'manga.error.analyze');
         }
     }
 }

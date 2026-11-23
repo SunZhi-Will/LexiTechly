@@ -259,6 +259,30 @@ function initializeSettingsPage(): void {
             }
         });
     });
+    // 圖片翻譯來源（imageTranslate.engine；背景頁每次翻譯時讀取）
+    chrome.storage.local.get(['imageTranslate.engine']).then((res) => {
+        const engine = res['imageTranslate.engine'] === 'gemini' ? 'gemini' : 'google';
+        const radio = document.getElementById(`image-translate-engine-${engine}`) as HTMLInputElement | null;
+        if (radio) radio.checked = true;
+    });
+    document.querySelectorAll('input[name="image-translate-engine"]').forEach((radio) => {
+        radio.addEventListener('change', async () => {
+            const el = radio as HTMLInputElement;
+            if (!el.checked) return;
+            await chrome.storage.local.set({ 'imageTranslate.engine': el.value });
+            if (el.value === 'gemini') {
+                const { apiKey } = await chrome.storage.local.get('apiKey');
+                if (typeof apiKey === 'string' && apiKey.trim()) {
+                    UI.showToast('圖片翻譯已切換為 Gemini', false, false, true);
+                } else {
+                    UI.showToast('圖片翻譯已切換為 Gemini，請記得在「Gemini API 設定」填入 API Key', false, true);
+                }
+            } else {
+                UI.showToast('圖片翻譯已切換為 Google 翻譯', false, false, true);
+            }
+        });
+    });
+
     chrome.storage.local.get(['ttsProvider']).then((res) => {
         const v = (res.ttsProvider === 'google-translate' || res.ttsProvider === 'browser') ? res.ttsProvider : 'gemini';
         const g = document.getElementById('tts-provider-gemini') as HTMLInputElement;
@@ -465,8 +489,8 @@ function initializeClearDataFeature(): void {
                         const imageClearFailed = imageResults.some((result) => result.status === 'rejected');
 
                         // 備份重要設定
-                        const { apiKey, darkMode, storageLimit, wordLookupProvider, ttsProvider } =
-                            await chrome.storage.local.get(['apiKey', 'darkMode', 'storageLimit', 'wordLookupProvider', 'ttsProvider']);
+                        const { apiKey, darkMode, storageLimit, wordLookupProvider, ttsProvider, 'imageTranslate.engine': imageTranslateEngine } =
+                            await chrome.storage.local.get(['apiKey', 'darkMode', 'storageLimit', 'wordLookupProvider', 'ttsProvider', 'imageTranslate.engine']);
 
                         await chrome.storage.local.clear();
 
@@ -477,6 +501,7 @@ function initializeClearDataFeature(): void {
                         if (storageLimit !== undefined) settingsToRestore.storageLimit = storageLimit;
                         if (wordLookupProvider !== undefined) settingsToRestore.wordLookupProvider = wordLookupProvider;
                         if (ttsProvider !== undefined) settingsToRestore.ttsProvider = ttsProvider;
+                        if (imageTranslateEngine !== undefined) settingsToRestore['imageTranslate.engine'] = imageTranslateEngine;
 
                         if (Object.keys(settingsToRestore).length > 0) {
                             await chrome.storage.local.set(settingsToRestore);

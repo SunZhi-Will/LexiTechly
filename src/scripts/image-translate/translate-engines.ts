@@ -1,7 +1,12 @@
 /**
  * 圖片翻譯的翻譯引擎選擇（背景頁）
  *
- * 1. Google 免金鑰端點（預設）：品質好、不需下載，但同一個 IP 短時間請求太多會被擋（429）。
+ * 使用者在設定頁選翻譯來源（imageTranslate.engine）：
+ * - google（預設）：下面的 Google 免金鑰流程。
+ * - gemini：用使用者填的 Gemini API Key（見 gemini-translate.ts），不走 Google，也不會被 Google 擋。
+ *
+ * Google 流程：
+ * 1. Google 免金鑰端點：品質好、不需下載，但同一個 IP 短時間請求太多會被擋（429）。
  * 2. Chrome 內建翻譯（Translator API）：只有 Google Chrome 有，而且該語言的語言包要使用者先下載過
  *    （availability 為 available）；下載需要使用者點擊，背景頁做不到，所以這裡只在已經可用時接手。
  *
@@ -11,7 +16,18 @@
 
 import type { Locale } from './i18n';
 import { TranslateHttpError, googleSourceCode, googleTargetCode, translateTexts } from './google-translate';
+import { GeminiQuotaError, translateWithGemini } from './gemini-translate';
 import type { SourceLang } from './protocol';
+
+export type ImageTranslateEngine = 'google' | 'gemini';
+export const ENGINE_KEY = 'imageTranslate.engine';
+// Gemini 回 429（額度或頻率限制）時，請使用者等這麼久再試
+const GEMINI_RETRY_MS = 60 * 1000;
+
+export async function getEngine(): Promise<ImageTranslateEngine> {
+    const stored = await chrome.storage.local.get(ENGINE_KEY);
+    return stored[ENGINE_KEY] === 'gemini' ? 'gemini' : 'google';
+}
 
 const BLOCKED_KEY = 'imageTranslate.googleBlockedUntil';
 const BLOCK_MS = 30 * 60 * 1000;
@@ -81,7 +97,17 @@ function paced<T>(task: () => Promise<T>): Promise<T> {
     return job;
 }
 
-export async function translateForImage(texts: string[], lang: SourceLang, locale: Locale): Promise<string[]> {
+export async function translateForImage(texts: string[], lang: SourceLang, locale: Locale, engine: ImageTranslateEngine = 'google'): Promise<string[]> {
+    if (engine === 'gemini') {
+        const { apiKey } = await chrome.storage.local.get('apiKey');
+        try {
+            // 金鑰錯誤（GeminiKeyError）往上丟，由呼叫端告訴使用者去設定
+            return await translateWithGemini(texts, lang, locale, typeof apiKey === 'string' ? apiKey.trim() : '');
+        } catch (error) {
+            if (error instanceof GeminiQuotaError) throw new TranslateBusyError(Date.now() + GEMINI_RETRY_MS);
+            throw error;
+        }
+    }
     let blockedUntil = await googleBlockedUntil();
     let blocked = Date.now() < blockedUntil;
     if (!blocked) {

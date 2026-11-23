@@ -27,6 +27,7 @@ const SOURCE = {
     'manga.error.capture': '讀不到這張圖片，請把圖片捲到畫面上再試一次',
     'manga.error.translate': '翻譯失敗，請再試一次',
     'manga.error.busy': '翻譯服務暫時忙碌，請過一段時間再試',
+    'manga.error.noKey': '圖片翻譯來源是 Gemini，但 API Key 未設定或無效。請到 LexiTechly 設定填入，或把圖片翻譯來源改回 Google 翻譯',
     'manga.lang.auto': '自動判斷',
     'manga.lang.detected': '{lang}（自動）',
     'manga.lang.ko': '韓文',
@@ -69,7 +70,7 @@ const SOURCE = {
     'manga.auto.statUnreadable': '讀不到 {count} 張',
     'manga.auto.statFailed': '失敗 {count} 張',
     'manga.auto.busyTitle': '翻譯服務暫時忙碌，自動翻譯已暫停',
-    'manga.auto.busyBody': 'Google 翻譯暫時擋下了這個網路的請求。約 {minutes} 分鐘後再按一次快捷鍵即可繼續。',
+    'manga.auto.busyBody': '翻譯服務暫時擋下了請求（Google 翻譯的請求次數或 Gemini 的額度）。約 {minutes} 分鐘後再按一次「翻譯這頁的圖片」或快捷鍵即可繼續。',
 } as const;
 
 export type MessageKey = keyof typeof SOURCE;
@@ -99,6 +100,7 @@ export const MESSAGES: Record<Locale, Record<MessageKey, string>> = {
         'manga.error.capture': '读不到这张图片，请把图片滚动到屏幕上再试一次',
         'manga.error.translate': '翻译失败，请再试一次',
         'manga.error.busy': '翻译服务暂时繁忙，请过一段时间再试',
+        'manga.error.noKey': '图片翻译来源是 Gemini，但 API Key 未设置或无效。请到 LexiTechly 设置填入，或把图片翻译来源改回 Google 翻译',
         'manga.lang.auto': '自动判断',
         'manga.lang.detected': '{lang}（自动）',
         'manga.lang.ko': '韩文',
@@ -141,7 +143,7 @@ export const MESSAGES: Record<Locale, Record<MessageKey, string>> = {
         'manga.auto.statUnreadable': '读不到 {count} 张',
         'manga.auto.statFailed': '失败 {count} 张',
         'manga.auto.busyTitle': '翻译服务暂时繁忙，自动翻译已暂停',
-        'manga.auto.busyBody': 'Google 翻译暂时拦下了这个网络的请求。约 {minutes} 分钟后再按一次快捷键即可继续。',
+        'manga.auto.busyBody': '翻译服务暂时拦下了请求（Google 翻译的请求次数或 Gemini 的额度）。约 {minutes} 分钟后再按一次「翻译这页的图片」或快捷键即可继续。',
     },
     en: {
         'manga.menu.translate': 'Translate this image',
@@ -166,6 +168,7 @@ export const MESSAGES: Record<Locale, Record<MessageKey, string>> = {
         'manga.error.capture': 'Couldn\'t read this image. Scroll it into view and try again',
         'manga.error.translate': 'Translation failed. Please try again',
         'manga.error.busy': 'The translation service is busy. Please try again later',
+        'manga.error.noKey': 'Image translation is set to Gemini, but the API key is missing or invalid. Add it in LexiTechly settings, or switch image translation back to Google Translate',
         'manga.lang.auto': 'Auto-detect',
         'manga.lang.detected': '{lang} (auto)',
         'manga.lang.ko': 'Korean',
@@ -208,7 +211,7 @@ export const MESSAGES: Record<Locale, Record<MessageKey, string>> = {
         'manga.auto.statUnreadable': '{count} unreadable',
         'manga.auto.statFailed': '{count} failed',
         'manga.auto.busyTitle': 'The translation service is busy, so auto-translate is paused',
-        'manga.auto.busyBody': 'Google Translate is temporarily blocking requests from this network. Press the shortcut again in about {minutes} min to continue.',
+        'manga.auto.busyBody': 'The translation service is temporarily refusing requests (Google Translate request limit or Gemini quota). Press "Translate images on this page" or the shortcut again in about {minutes} min to continue.',
     },
     ja: {
         'manga.menu.translate': 'この画像を翻訳',
@@ -233,6 +236,7 @@ export const MESSAGES: Record<Locale, Record<MessageKey, string>> = {
         'manga.error.capture': 'この画像を読み込めませんでした。画像を画面内に表示してからもう一度お試しください',
         'manga.error.translate': '翻訳に失敗しました。もう一度お試しください',
         'manga.error.busy': '翻訳サービスが混み合っています。しばらくしてからお試しください',
+        'manga.error.noKey': '画像翻訳の翻訳元が Gemini ですが、API キーが未設定か無効です。LexiTechly の設定で入力するか、画像翻訳の翻訳元を Google 翻訳に戻してください',
         'manga.lang.auto': '自動判定',
         'manga.lang.detected': '{lang}（自動）',
         'manga.lang.ko': '韓国語',
@@ -275,6 +279,6 @@ export const MESSAGES: Record<Locale, Record<MessageKey, string>> = {
         'manga.auto.statUnreadable': '読み取れない {count} 枚',
         'manga.auto.statFailed': '失敗 {count} 枚',
         'manga.auto.busyTitle': '翻訳サービスが混み合っているため、自動翻訳を一時停止しました',
-        'manga.auto.busyBody': 'Google 翻訳がこのネットワークからのリクエストを一時的にブロックしています。約 {minutes} 分後にもう一度ショートカットを押すと再開します。',
+        'manga.auto.busyBody': '翻訳サービスが一時的にリクエストを受け付けていません（Google 翻訳のリクエスト数または Gemini の割り当て）。約 {minutes} 分後にもう一度「このページの画像を翻訳」かショートカットを押すと再開します。',
     }
 };

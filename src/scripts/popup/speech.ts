@@ -62,7 +62,6 @@ export function initializeSpeechPage(): void {
             }
             
             const apiKeyString = typeof apiKey === 'string' ? apiKey : '';
-            console.log('開始生成語音，API Key 前5位：', apiKeyString.substring(0, 5));
             
             // 設置語音選項
             const options: SpeechOptions = {

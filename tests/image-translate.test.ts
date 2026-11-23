@@ -411,3 +411,50 @@ test('譯文的鍵：去掉主機（圖床常換子網域），blob:／data: 不
     assert.equal(translationKey('data:image/png;base64,AAAA'), null);
     assert.equal(translationKey('not a url'), null);
 });
+
+// ---------- Gemini 翻譯（不打網路，用假的 fetch） ----------
+
+import { GeminiKeyError, GeminiQuotaError, buildGeminiPrompt, parseGeminiTranslations, translateWithGemini } from '../src/scripts/image-translate/gemini-translate';
+
+function geminiReply(texts: string[]): unknown {
+    return { candidates: [{ content: { parts: [{ text: JSON.stringify(texts) }] } }] };
+}
+
+test('Gemini：解析 JSON 陣列，包在 ```json 裡也行；數量不符就丟錯', () => {
+    assert.deepEqual(parseGeminiTranslations(geminiReply(['你好', '再見']), 2), ['你好', '再見']);
+    const fenced = { candidates: [{ content: { parts: [{ text: '```json\n["一"]\n```' }] } }] };
+    assert.deepEqual(parseGeminiTranslations(fenced, 1), ['一']);
+    assert.throws(() => parseGeminiTranslations(geminiReply(['只有一句']), 2));
+    assert.throws(() => parseGeminiTranslations({}, 1));
+});
+
+test('Gemini：提示詞寫明語言與數量', () => {
+    const prompt = buildGeminiPrompt(['안녕', '뭐야'], 'ko', 'zh-TW');
+    assert.match(prompt, /Korean/);
+    assert.match(prompt, /Traditional Chinese/);
+    assert.match(prompt, /exactly 2 strings/);
+});
+
+test('Gemini：空白段落不送、譯文放回原位置，金鑰放在標頭不放網址', async () => {
+    const calls: { url: string; init: RequestInit }[] = [];
+    const fakeFetch = (async (url: string, init: RequestInit) => {
+        calls.push({ url, init });
+        return new Response(JSON.stringify(geminiReply(['甲', '乙'])), { status: 200 });
+    }) as unknown as typeof fetch;
+    const out = await translateWithGemini(['a', '  ', 'b'], 'ja', 'zh-TW', 'k', fakeFetch);
+    assert.deepEqual(out, ['甲', '', '乙']);
+    assert.equal(calls.length, 1);
+    const [{ url, init }] = calls;
+    assert.ok(!url.includes('key='));
+    assert.equal((init.headers as Record<string, string>)['x-goog-api-key'], 'k');
+    assert.equal(JSON.parse(String(init.body)).contents[0].parts[0].text.split('\n').pop(), JSON.stringify(['a', 'b']));
+});
+
+test('Gemini：沒有金鑰、金鑰無效、額度用完各自丟對應的錯', async () => {
+    const reply = (status: number, body = '') => (async () => new Response(body, { status })) as unknown as typeof fetch;
+    await assert.rejects(translateWithGemini(['a'], 'ko', 'en', '', reply(200)), GeminiKeyError);
+    await assert.rejects(translateWithGemini(['a'], 'ko', 'en', 'k', reply(400, '{"error":{"message":"API key not valid"}}')), GeminiKeyError);
+    await assert.rejects(translateWithGemini(['a'], 'ko', 'en', 'k', reply(403)), GeminiKeyError);
+    await assert.rejects(translateWithGemini(['a'], 'ko', 'en', 'k', reply(429)), GeminiQuotaError);
+    await assert.rejects(translateWithGemini(['a'], 'ko', 'en', 'k', reply(400, '{"error":{"message":"bad request"}}')), (e: Error) => !(e instanceof GeminiKeyError));
+});

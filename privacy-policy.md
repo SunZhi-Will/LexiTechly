@@ -45,7 +45,10 @@ Your local data is used only for:
 Image translation runs only when you start it: by right-clicking an image and choosing "Translate this image", or by pressing "Translate images on this page" in the popup or the shortcut (Alt+Shift+T by default) to auto-translate comic images on the current tab. It never runs in the background on pages you have not asked it to translate.
 
 - **Text recognition (OCR) happens on your device.** The image itself is not uploaded. To read the image, the extension fetches it from its original URL without your cookies, or, if that is not possible, captures the visible part of the current tab and crops out the image.
-- **Recognized text is sent to Google Translate.** Only the text found in the image, the source language, and the target language are sent to `translate.googleapis.com` to get the translation. No API key, account, or page address is attached by the extension. As with any web request, Google receives your IP address, and its handling of the request is governed by Google's own privacy policy.
+- **Recognized text is sent to the translation service you choose.** In settings, under "Image translation engine", you choose Google Translate (the default) or Gemini.
+  - Google Translate: only the text found in the image, the source language, and the target language are sent to `translate.googleapis.com`. No API key, account, or page address is attached by the extension.
+  - Gemini: the same text and languages are sent to the Gemini API (`generativelanguage.googleapis.com`) with the API key you entered, as with LexiTechly's other Gemini features.
+  - In both cases the image itself is not sent. As with any web request, Google receives your IP address, and its handling of the request is governed by Google's own privacy policy and, for Gemini, the Gemini API terms.
 - **Recognition models are downloaded from Hugging Face.** The first time you use each source language, about 25 to 41 MB of model files are downloaded from `huggingface.co`, verified against a fixed checksum, and cached in your browser. This request does not include any information about the images or pages you translate.
 - **Translations are saved locally.** So that the same page does not need to be translated again, the extension keeps up to 3,000 translated images in your browser (a compressed copy of the image, the recognized text, and the translation), removing the oldest ones first. It also remembers that you accepted the first-use notice, the source language you chose per website, and the "pre-translate next page" switch.
 - **Removing this data.** In settings, under "Image translation data", you can see how many translations are saved and how much space the models use, and clear either one with its own button. The "clear all data" button in settings also clears both, and they are removed when you uninstall the extension.
@@ -80,10 +83,10 @@ The extension requests the following permissions:
 
 ## Third-Party Services
 
-- Google Gemini API: For AI analysis and conversation features
+- Google Gemini API: For AI analysis and conversation features, and for image translation when you choose Gemini as its engine
 - Google Gemini API: Provides word and sentence audio playback
 - API Keys are provided by users and we do not store or share them
-- Google Translate: Provides word pronunciation audio, and translates the text recognized in images (image translation)
+- Google Translate: Provides word pronunciation audio, and translates the text recognized in images when it is the image translation engine (the default)
 - Hugging Face: Hosts the text recognition models downloaded on first use of image translation
 
 ## Children's Privacy
@@ -144,7 +147,10 @@ Using this extension indicates your agreement to this Privacy Policy.
 圖片翻譯只在您主動啟動時才會執行：在圖片上按右鍵選「翻譯這張圖片」，或在 popup 按「翻譯這頁的圖片」、按快捷鍵（預設 Alt+Shift+T）自動翻譯目前分頁的漫畫圖片。您沒有要求翻譯的網頁，它不會在背景執行。
 
 - **文字辨識（OCR）在您的電腦上完成。** 圖片本身不會上傳。為了讀取圖片，擴充功能會在不帶您的 Cookie 的情況下，從圖片原本的網址抓取；抓不到時，改為擷取目前分頁看得到的畫面，再裁出那張圖。
-- **辨識出的文字會送到 Google 翻譯。** 只有圖片中辨識出的文字、原文語言與目標語言會送到 `translate.googleapis.com` 取得譯文。擴充功能不會附上任何 API Key、帳號或網頁網址。和所有網路請求一樣，Google 會收到您的 IP 位址，後續處理依 Google 的隱私權政策。
+- **辨識出的文字會送到您選擇的翻譯服務。** 在設定頁的「圖片翻譯來源」可以選 Google 翻譯（預設）或 Gemini。
+  - Google 翻譯：只有圖片中辨識出的文字、原文語言與目標語言會送到 `translate.googleapis.com`，擴充功能不會附上任何 API Key、帳號或網頁網址。
+  - Gemini：同樣的文字與語言會連同您填入的 API Key 送到 Gemini API（`generativelanguage.googleapis.com`），和 LexiTechly 其他 Gemini 功能相同。
+  - 兩種方式都不會送出圖片本身。和所有網路請求一樣，Google 會收到您的 IP 位址，後續處理依 Google 的隱私權政策，Gemini 另依 Gemini API 的服務條款。
 - **辨識模型從 Hugging Face 下載。** 每種原文語言第一次使用時，會從 `huggingface.co` 下載約 25 到 41 MB 的模型檔，比對固定的雜湊值後存在您的瀏覽器裡。這個請求不包含您翻譯的圖片或網頁的任何資訊。
 - **譯文存在本機。** 為了讓同一頁不必重翻，擴充功能會在您的瀏覽器中保存最多 3,000 張翻譯過的圖（壓縮後的圖片、辨識出的原文與譯文），超過時先刪最舊的。另外會記住您已看過第一次使用的說明、您為各網站選的原文語言，以及「預翻下一頁」開關。
 - **如何移除這些資料。** 在設定頁的「圖片翻譯資料」可以看到存了幾頁譯文、模型占多少空間，並用各自的按鈕清除。設定裡的「清除所有資料」按鈕也會一併清除這兩項，移除擴充功能時同樣會刪除。
@@ -179,10 +185,10 @@ Using this extension indicates your agreement to this Privacy Policy.
 
 ## 第三方服務
 
-- Google Gemini API：用於 AI 分析與對話功能
+- Google Gemini API：用於 AI 分析與對話功能，以及您把圖片翻譯來源設為 Gemini 時的翻譯
 - Google Gemini API：提供單字和例句的語音播放
 - API Key 由用戶自行提供，我們不會存儲或分享該金鑰
-- Google 翻譯：提供單字發音音檔，以及翻譯圖片中辨識出的文字（圖片翻譯）
+- Google 翻譯：提供單字發音音檔，以及在圖片翻譯來源為 Google 翻譯（預設）時翻譯圖片中辨識出的文字
 - Hugging Face：存放圖片翻譯第一次使用時下載的文字辨識模型
 
 ## 兒童隱私

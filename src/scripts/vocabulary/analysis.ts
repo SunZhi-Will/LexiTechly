@@ -1,11 +1,12 @@
 /// <reference types="chrome"/>
+import { GEMINI_GENERATE_URL } from '../ai-models.js';
 
 import { Word, WordDetails } from './types.js';
 import { wordAnalysisCache, accumulatedVocabulary } from './storage.js';
 
 // AI 分析單字詳細資訊
 export async function analyzeWordDetails(word: string, apiKey: string): Promise<WordDetails> {
-    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+    const API_URL = GEMINI_GENERATE_URL;
 
     const prompt = `
         分析英文單字 "${word}" 並提供以下資訊：
