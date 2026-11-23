@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - 圖片翻譯（原本在 PostVault，移到 LexiTechly）
   - 在圖片上按右鍵選「翻譯這張圖片」，可選自動判斷、韓文、日文或中文原文，譯文會貼回圖上原本的位置
-  - 快捷鍵 Alt+Shift+T 自動翻譯目前分頁的漫畫圖片，換頁或新出現的圖也會跟著翻
+  - popup 主頁的「翻譯這頁的圖片」按鈕或快捷鍵 Alt+Shift+T 自動翻譯目前分頁的漫畫圖片，換頁或新出現的圖也會跟著翻
+  - popup 顯示目前的快捷鍵；被其他擴充功能占用時顯示「未設定」並提供設定連結
   - 整本翻譯、預翻下一頁、看原文與看譯文切換
   - 支援直排文字與原文語言自動偵測
   - 文字辨識在本機完成（ppu-paddle-ocr 6.6.1 + onnxruntime-web 1.30.0 的 WASM 版），圖片不上傳；辨識出的文字送 Google 翻譯取得譯文

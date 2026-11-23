@@ -32,7 +32,7 @@
   - Beautiful word cards showing: translation, part of speech, CEFR level, examples
 - 🖼️ **Image Translation**
   - Right-click an image and choose "Translate this image"; the translation is drawn back in place
-  - Alt+Shift+T auto-translates comic images on the page and follows page turns
+  - The "Translate images on this page" button in the popup (or Alt+Shift+T) auto-translates comic images and follows page turns
   - Korean, Japanese, and Chinese source text (auto-detected), including vertical text
   - Text recognition runs on your device; images are not uploaded
 - 🎯 Modern User Interface
@@ -250,7 +250,7 @@ dist/
   - Right-click an image, choose "Translate this image", then pick the source language (auto-detect, Korean, Japanese, Chinese)
   - The translation is drawn over the original text; use the buttons in the top-right corner to switch between original and translation, or close it
 - **Auto-translate a page**:
-  - Press Alt+Shift+T (change it at `chrome://extensions/shortcuts`) to toggle auto-translate on the current tab
+  - Click the LexiTechly toolbar icon and press "Translate images on this page" on the main tab, or press Alt+Shift+T (change it at `chrome://extensions/shortcuts`). Press again to stop
   - Comic images on the page are translated automatically, including new images after a page turn
   - The control bar in the bottom-right corner lets you change the source language, turn on "pre-translate next page", run "whole book", or stop
 - **Target language**: follows the browser UI language (Traditional Chinese, Simplified Chinese, Japanese; English otherwise)
@@ -352,7 +352,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history and update notes.
 
 **Q: Image translation does nothing or fails**
 - No "Translate this image" item: make sure you right-clicked an image, then reload the extension
-- Shortcut does nothing: check at `chrome://extensions/shortcuts` that Alt+Shift+T is not taken by another extension
+- Shortcut does nothing: the popup's main tab shows the current shortcut; "not set" means another extension took it, so use "set shortcut" to pick another, or just use the button
 - "Can't read this image": scroll the image into view and try again
 - "Model download failed": check that huggingface.co is reachable, then try again
 - "Translation service is busy": Google Translate is temporarily blocking requests; try again later

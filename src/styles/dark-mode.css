@@ -419,3 +419,27 @@ body.dark-mode {
     background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
     box-shadow: 0 4px 12px rgba(255, 82, 82, 0.4);
 }
+/* 深色模式：圖片翻譯 */
+.dark-mode .image-translate-card {
+    background: rgba(100, 181, 246, 0.08);
+    border-color: rgba(100, 181, 246, 0.25);
+}
+
+.dark-mode #translate-page-images {
+    background: transparent;
+    color: #64b5f6;
+    border-color: #64b5f6;
+}
+
+.dark-mode #translate-page-images:hover {
+    background: #64b5f6;
+    color: #121212;
+}
+
+.dark-mode .image-translate-hint {
+    color: #9aa0a6;
+}
+
+.dark-mode .image-translate-hint a {
+    color: #64b5f6;
+}

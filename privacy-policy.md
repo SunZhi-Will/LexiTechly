@@ -42,7 +42,7 @@ Your local data is used only for:
 
 ## Image Translation
 
-Image translation runs only when you start it: by right-clicking an image and choosing "Translate this image", or by pressing the shortcut (Alt+Shift+T by default) to auto-translate comic images on the current tab. It never runs in the background on pages you have not asked it to translate.
+Image translation runs only when you start it: by right-clicking an image and choosing "Translate this image", or by pressing "Translate images on this page" in the popup or the shortcut (Alt+Shift+T by default) to auto-translate comic images on the current tab. It never runs in the background on pages you have not asked it to translate.
 
 - **Text recognition (OCR) happens on your device.** The image itself is not uploaded. To read the image, the extension fetches it from its original URL without your cookies, or, if that is not possible, captures the visible part of the current tab and crops out the image.
 - **Recognized text is sent to Google Translate.** Only the text found in the image, the source language, and the target language are sent to `translate.googleapis.com` to get the translation. No API key, account, or page address is attached by the extension. As with any web request, Google receives your IP address, and its handling of the request is governed by Google's own privacy policy.
@@ -141,7 +141,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 
 ## 圖片翻譯
 
-圖片翻譯只在您主動啟動時才會執行：在圖片上按右鍵選「翻譯這張圖片」，或按快捷鍵（預設 Alt+Shift+T）自動翻譯目前分頁的漫畫圖片。您沒有要求翻譯的網頁，它不會在背景執行。
+圖片翻譯只在您主動啟動時才會執行：在圖片上按右鍵選「翻譯這張圖片」，或在 popup 按「翻譯這頁的圖片」、按快捷鍵（預設 Alt+Shift+T）自動翻譯目前分頁的漫畫圖片。您沒有要求翻譯的網頁，它不會在背景執行。
 
 - **文字辨識（OCR）在您的電腦上完成。** 圖片本身不會上傳。為了讀取圖片，擴充功能會在不帶您的 Cookie 的情況下，從圖片原本的網址抓取；抓不到時，改為擷取目前分頁看得到的畫面，再裁出那張圖。
 - **辨識出的文字會送到 Google 翻譯。** 只有圖片中辨識出的文字、原文語言與目標語言會送到 `translate.googleapis.com` 取得譯文。擴充功能不會附上任何 API Key、帳號或網頁網址。和所有網路請求一樣，Google 會收到您的 IP 位址，後續處理依 Google 的隱私權政策。

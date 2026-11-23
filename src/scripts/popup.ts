@@ -10,6 +10,7 @@ import { getSpeakButtonHTML, speakWord } from './vocabulary/audio.js';
 import { audioCache } from './vocabulary/storage.js';
 import { convertToCSV, downloadCSV } from './vocabulary/export.js';
 import { clearModelCache, clearSavedTranslations, getImageTranslateUsage } from './image-translate/storage-admin.js';
+import { initImageTranslateButton } from './image-translate/popup-button.js';
 
 export { }; // 使此檔案成為模組
 
@@ -734,6 +735,8 @@ document.addEventListener('DOMContentLoaded', async (): Promise<void> => {
         });
 
         // 分析按鈕監聽（無 API Key 時使用本地分析，不需 AI）
+        initImageTranslateButton();
+
         const analyzeButton = document.getElementById('analyze');
         if (analyzeButton) {
             analyzeButton.addEventListener('click', async (): Promise<void> => {

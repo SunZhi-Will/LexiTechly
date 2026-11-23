@@ -138,6 +138,15 @@ export const IMAGE_TRANSLATE_AUTO_TOGGLE = 'LEXITECHLY_IMAGE_TRANSLATE_AUTO_TOGG
 // 內容腳本 → 背景頁：翻譯一張圖
 export const IMAGE_TRANSLATE_REQUEST = 'LEXITECHLY_IMAGE_TRANSLATE_REQUEST';
 
+// popup → 背景頁：使用者在 popup 按了「翻譯這頁的圖片」，切換那個分頁的自動翻譯（和快捷鍵同一條路）
+export const IMAGE_TRANSLATE_PAGE_TOGGLE = 'LEXITECHLY_IMAGE_TRANSLATE_PAGE_TOGGLE';
+export const TRANSLATE_COMMAND = 'translate-images';
+
+export interface PageToggleRequest {
+    type: typeof IMAGE_TRANSLATE_PAGE_TOGGLE;
+    tabId: number;
+}
+
 export interface AutoToggleMessage {
     type: typeof IMAGE_TRANSLATE_AUTO_TOGGLE;
 }

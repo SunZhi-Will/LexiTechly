@@ -16,7 +16,7 @@
 
 import { contentLogger } from './logger';
 import { getLocale, initI18n, t, type MessageKey } from './i18n';
-import { isFromContentScript } from './sender-guard';
+import { isFromContentScript, isFromExtensionPage } from './sender-guard';
 import { groupLines } from './group';
 import { TranslateBusyError, translateForImage } from './translate-engines';
 import { loadTranslation, saveTranslation } from './translation-store';
@@ -26,6 +26,7 @@ import {
     IMAGE_TRANSLATE_BATCH_BEGIN,
     IMAGE_TRANSLATE_BATCH_PROGRESS,
     IMAGE_TRANSLATE_LOOKUP,
+    IMAGE_TRANSLATE_PAGE_TOGGLE,
     IMAGE_TRANSLATE_CAPTURE_DONE,
     IMAGE_TRANSLATE_CAPTURE_PREPARE,
     IMAGE_TRANSLATE_ERROR,
@@ -37,6 +38,7 @@ import {
     OFFSCREEN_PROGRESS,
     OFFSCREEN_TARGET,
     SOURCE_LANGS,
+    TRANSLATE_COMMAND,
     translationKey,
     type AnalyzeRequest,
     type BatchProgress,
@@ -65,7 +67,6 @@ const MENU_TITLES: Record<LangChoice, MessageKey> = {
     ja: 'manga.menu.fromJapanese',
     zh: 'manga.menu.fromChinese'
 };
-export const TRANSLATE_COMMAND = 'translate-images';
 // 內容腳本是另外打包成單一檔案的（見 vite.config.ts 的 imageTranslateAssets），才能用檔名注入
 const CONTENT_SCRIPT = 'image-translate-content.js';
 const OFFSCREEN_URL = 'src/pages/offscreen.html';
@@ -357,13 +358,15 @@ async function handleMenuTranslate(lang: LangChoice, info: chrome.contextMenus.O
 }
 
 /**
- * 快捷鍵：切換這個分頁的自動翻譯（只在主頁框；閱讀器的圖片幾乎都在主頁框）
+ * 快捷鍵或 popup 的按鈕：切換這個分頁的自動翻譯（只在主頁框；閱讀器的圖片幾乎都在主頁框）。
+ * 回傳是否成功注入（chrome:// 頁面、線上應用程式商店等不能注入）
  */
-async function handleCommand(tab: chrome.tabs.Tab | undefined): Promise<void> {
-    if (typeof tab?.id !== 'number') return;
-    if (!(await injectContentScript(tab.id, 0))) return;
+async function handleCommand(tab: chrome.tabs.Tab | undefined): Promise<boolean> {
+    if (typeof tab?.id !== 'number') return false;
+    if (!(await injectContentScript(tab.id, 0))) return false;
     const message: AutoToggleMessage = { type: IMAGE_TRANSLATE_AUTO_TOGGLE };
     chrome.tabs.sendMessage(tab.id, message, { frameId: 0 }).catch(() => undefined);
+    return true;
 }
 
 function isTranslateRequest(message: unknown): message is TranslateRequest {
@@ -403,6 +406,11 @@ export function installImageTranslate(): void {
     });
 
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        // popup 的「翻譯這頁的圖片」按鈕：只接受擴充功能自己的頁面送來的，網頁裡的內容腳本不能替任意分頁開翻譯
+        if (message?.type === IMAGE_TRANSLATE_PAGE_TOGGLE && isFromExtensionPage(sender) && typeof message.tabId === 'number') {
+            chrome.tabs.get(message.tabId).then(handleCommand).then(sendResponse, () => sendResponse(false));
+            return true;
+        }
         // 之前翻過的頁：直接回傳存著的譯文
         if (message?.type === IMAGE_TRANSLATE_LOOKUP && isFromContentScript(sender) && typeof message.srcUrl === 'string') {
             lookupStored(message.srcUrl).then(sendResponse, () => sendResponse(null));

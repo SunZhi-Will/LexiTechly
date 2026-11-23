@@ -5,7 +5,7 @@
  * 擴充功能頁面的 sender.url 在 chrome-extension://<id>/ 底下，內容腳本的 sender.url 是它所在網頁的網址。
  */
 
-function isFromExtensionPage(sender: { id?: string; url?: string }): boolean {
+export function isFromExtensionPage(sender: { id?: string; url?: string }): boolean {
     if (sender.id !== chrome.runtime.id || typeof sender.url !== 'string') return false;
     return sender.url.startsWith(chrome.runtime.getURL(''));
 }

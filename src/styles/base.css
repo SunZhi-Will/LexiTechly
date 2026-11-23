@@ -235,3 +235,46 @@ button:disabled {
 .focus\:border-primary:focus {
     border-color: #1a73e8;
 }
+/* 圖片翻譯：主頁的「翻譯這頁的圖片」 */
+.image-translate-card {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(26, 115, 232, 0.06);
+    border: 1px solid rgba(26, 115, 232, 0.18);
+}
+
+#translate-page-images {
+    width: 100%;
+    padding: 11px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    background: #fff;
+    color: #1a73e8;
+    border: 1.5px solid #1a73e8;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+#translate-page-images:hover {
+    background: #1a73e8;
+    color: #fff;
+}
+
+#translate-page-images:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.image-translate-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #5f6368;
+}
+
+.image-translate-hint a {
+    margin-left: 6px;
+    color: #1a73e8;
+}
