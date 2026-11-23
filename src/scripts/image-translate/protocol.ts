@@ -265,6 +265,8 @@ export interface AnalyzeRequest {
     dataUrl: string;
     lang: LangChoice;
     hint?: SourceLang;
+    // 框選翻譯：整張圖就是使用者框起來的文字，不跑對話框偵測（見 ocr-engine.ts 的 analyzeRegion）
+    region?: boolean;
 }
 
 export type AnalyzeResponse = ({ ok: true; lang: SourceLang } & ImageAnalysis) | { ok: false; code: 'model-download-failed' | 'analyze-failed'; detail: string };

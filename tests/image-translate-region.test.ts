@@ -71,3 +71,11 @@ test('併回原本的譯文：只沾到邊的舊區塊保留', () => {
     const merged = mergeRegionBlock(old, translated([180, 180, 260, 260], '新的', [180, 180, 260, 260]));
     assert.deepEqual(merged.map((b) => b.translation), ['旁邊的', '新的']);
 });
+
+test('框住整張圖的寬度時，比例不會因為浮點誤差超過 1', () => {
+    const image = { x: 0.1, y: 0.2, width: 0.7, height: 0.3 };
+    const fraction = selectionOnImage({ x: 0, y: 0, width: 5, height: 5 }, image)!;
+    for (const value of [fraction.left, fraction.top, fraction.width, fraction.height, fraction.left + fraction.width, fraction.top + fraction.height]) {
+        assert.ok(value >= 0 && value <= 1, String(value));
+    }
+});

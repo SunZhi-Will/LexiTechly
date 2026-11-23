@@ -4,7 +4,7 @@
  * 只接受擴充功能自己（背景頁）送來、target 是 offscreen 的訊息。
  */
 
-import { ModelDownloadError, analyzeImage } from './ocr-engine';
+import { ModelDownloadError, analyzeImage, analyzeRegion } from './ocr-engine';
 import {
     OFFSCREEN_ANALYZE,
     OFFSCREEN_PROGRESS,
@@ -26,7 +26,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!isAnalyzeRequest(message) || sender.id !== chrome.runtime.id) return false;
     const run = async (): Promise<AnalyzeResponse> => {
         try {
-            const analysis = await analyzeImage(message.dataUrl, message.lang, message.hint, (loaded, total) => {
+            const analyze = message.region === true ? analyzeRegion : analyzeImage;
+            const analysis = await analyze(message.dataUrl, message.lang, message.hint, (loaded, total) => {
                 const progress: OffscreenProgress = { type: OFFSCREEN_PROGRESS, requestId: message.requestId, loaded, total };
                 chrome.runtime.sendMessage(progress).catch(() => undefined);
             });

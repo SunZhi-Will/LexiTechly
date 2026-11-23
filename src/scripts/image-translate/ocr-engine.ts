@@ -178,11 +178,18 @@ async function recognizeLines(ocr: PaddleOcrService, canvas: OffscreenCanvas): P
     }));
 }
 
-async function loadCanvas(dataUrl: string): Promise<OffscreenCanvas> {
+// 框選翻譯：框起來的那一塊通常很小，放大到最長邊這麼長（最多 REGION_MAX_UPSCALE 倍），小字才讀得出來
+const REGION_TARGET_SIDE = 1000;
+const REGION_MAX_UPSCALE = 4;
+
+async function loadCanvas(dataUrl: string, region = false): Promise<OffscreenCanvas> {
     const blob = await (await fetch(dataUrl)).blob();
     const bitmap = await createImageBitmap(blob);
+    const longest = Math.max(bitmap.width, bitmap.height);
     // 太大的縮小；太小的（擷取畫面時圖片被縮到視窗大小，小字只剩十幾像素）先放大再辨識
-    const scale = bitmap.width > MAX_WIDTH ? MAX_WIDTH / bitmap.width : bitmap.width < MIN_WIDTH ? Math.min(MAX_UPSCALE, MIN_WIDTH / bitmap.width) : 1;
+    const scale = region
+        ? longest < REGION_TARGET_SIDE ? Math.min(REGION_MAX_UPSCALE, REGION_TARGET_SIDE / longest) : Math.min(1, MAX_WIDTH / bitmap.width)
+        : bitmap.width > MAX_WIDTH ? MAX_WIDTH / bitmap.width : bitmap.width < MIN_WIDTH ? Math.min(MAX_UPSCALE, MIN_WIDTH / bitmap.width) : 1;
     const canvas = new OffscreenCanvas(Math.round(bitmap.width * scale), Math.round(bitmap.height * scale));
     const ctx = canvas.getContext('2d')!;
     ctx.imageSmoothingQuality = 'high';
@@ -414,6 +421,40 @@ export async function analyzeImage(dataUrl: string, lang: SourceLang | 'auto', h
         if (textRegions === 0) return { ...analysis, lang: candidate };
         const texts = groupLines(analysis, candidate).map((block) => block.text);
         const verdict = judge(candidate, texts, textRegions);
+        if (verdict.accepted) return { ...analysis, lang: candidate };
+        if (!best || verdict.score > best.verdict.score) best = { analysis, verdict };
+        candidate = nextCandidate(texts, tried);
+    }
+    return { ...best!.analysis, lang: best!.verdict.lang };
+}
+
+/**
+ * 框選翻譯：使用者框起來的那一塊。不跑對話框偵測（框很小、又被拉伸成正方形，偵測模型常常什麼都找不到，
+ * 直排的字就只能交給橫排 OCR，讀出來是空的），整塊直接當成一個文字區塊：
+ * 先看是不是直排、是就切欄辨識；不是直排或切欄讀不到字，再用整塊 OCR。
+ * lang 為 'auto' 時和整頁一樣依讀到的字換語言試。
+ */
+export async function analyzeRegion(dataUrl: string, lang: SourceLang | 'auto', hint: SourceLang | undefined, onProgress: ProgressFn): Promise<ImageAnalysis & { lang: SourceLang }> {
+    const canvas = await loadCanvas(dataUrl, true);
+    const region: Region = { label: 'text_bubble', score: 1, box: [0, 0, canvas.width, canvas.height] };
+    const readWith = async (candidate: SourceLang): Promise<ImageAnalysis> => {
+        const { ocr } = await prepare(candidate, onProgress);
+        const plan = planVertical(canvas, region);
+        let lines = plan ? await recognizeColumns(ocr, canvas, [plan]) : [];
+        if (lines.length === 0) lines = await recognizeLines(ocr, copyCanvas(canvas));
+        return { width: canvas.width, height: canvas.height, regions: [region], lines };
+    };
+    if (lang !== 'auto') return { ...(await readWith(lang)), lang };
+
+    const tried: SourceLang[] = [];
+    let best: { analysis: ImageAnalysis; verdict: LangVerdict } | null = null;
+    let candidate: SourceLang | null = hint ?? 'ja';
+    while (candidate) {
+        tried.push(candidate);
+        const analysis = await readWith(candidate);
+        const texts = groupLines(analysis, candidate).map((block) => block.text);
+        if (texts.length === 0) return { ...analysis, lang: candidate };
+        const verdict = judge(candidate, texts, 1);
         if (verdict.accepted) return { ...analysis, lang: candidate };
         if (!best || verdict.score > best.verdict.score) best = { analysis, verdict };
         candidate = nextCandidate(texts, tried);

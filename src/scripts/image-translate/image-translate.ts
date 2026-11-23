@@ -325,7 +325,7 @@ async function runRegion({ tab, frameId, request }: RegionInput): Promise<Transl
         sendToTab(tabId, frameId, { type: IMAGE_TRANSLATE_PROGRESS, requestId, phase: 'analyze' });
         // 框起來的字很少，自動判斷語言不可靠：這張圖之前判斷過就直接用那個語言
         const analyzeLang: LangChoice = lang === 'auto' && base ? base.sourceLang : lang;
-        const analyzeRequest: AnalyzeRequest = { target: OFFSCREEN_TARGET, type: OFFSCREEN_ANALYZE, requestId, dataUrl: cropped.dataUrl, lang: analyzeLang, hint };
+        const analyzeRequest: AnalyzeRequest = { target: OFFSCREEN_TARGET, type: OFFSCREEN_ANALYZE, requestId, dataUrl: cropped.dataUrl, lang: analyzeLang, hint, region: true };
         const analysis = (await chrome.runtime.sendMessage(analyzeRequest)) as AnalyzeResponse | undefined;
         if (!analysis?.ok) {
             contentLogger.warn('框選翻譯：辨識失敗', analysis);
@@ -559,7 +559,13 @@ export function installImageTranslate(): void {
             return false;
         }
         // 框選翻譯：翻一張圖裡框起來的一塊
-        if (isRegionRequest(message) && isFromContentScript(sender) && sender.tab) {
+        if (message?.type === IMAGE_TRANSLATE_REGION && isFromContentScript(sender) && sender.tab) {
+            // 格式不對也要回覆，不然內容腳本只會收到「沒有回應」，看不出原因
+            if (!isRegionRequest(message)) {
+                contentLogger.warn('框選翻譯：請求格式不正確', { selection: message.selection, lang: message.lang, hasBase: Boolean(message.base) });
+                sendResponse({ ok: false, code: 'analyze-failed' } satisfies TranslateResponse);
+                return false;
+            }
             runRegion({ tab: sender.tab, frameId: sender.frameId ?? 0, request: message }).then(sendResponse);
             return true;
         }

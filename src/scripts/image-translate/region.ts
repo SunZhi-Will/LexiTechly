@@ -34,7 +34,11 @@ export function selectionOnImage(selection: ViewportRect, image: ViewportRect): 
     const x1 = Math.min(selection.x + selection.width, image.x + image.width);
     const y1 = Math.min(selection.y + selection.height, image.y + image.height);
     if (x1 <= x0 || y1 <= y0) return null;
-    return { left: (x0 - image.x) / image.width, top: (y0 - image.y) / image.height, width: (x1 - x0) / image.width, height: (y1 - y0) / image.height };
+    // 浮點誤差會算出 1.0000000000000002 這種值，背景頁檢查比例在 0 到 1 之間時會整個拒絕
+    const clamp = (value: number) => Math.min(1, Math.max(0, value));
+    const left = clamp((x0 - image.x) / image.width);
+    const top = clamp((y0 - image.y) / image.height);
+    return { left, top, width: Math.min(1 - left, clamp((x1 - x0) / image.width)), height: Math.min(1 - top, clamp((y1 - y0) / image.height)) };
 }
 
 /**

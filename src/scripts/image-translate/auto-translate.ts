@@ -292,7 +292,8 @@ export class AutoTranslator {
         let response: TranslateResponse | undefined;
         try {
             response = (await chrome.runtime.sendMessage(request)) as TranslateResponse | undefined;
-        } catch {
+        } catch (error) {
+            console.warn('[LexiTechly] 框選翻譯：背景頁沒有回應', error);
             response = undefined;
         } finally {
             this.regionRequests.delete(requestId);
@@ -305,8 +306,9 @@ export class AutoTranslator {
             return;
         }
         const code = response && !response.ok ? response.code : 'analyze-failed';
+        console.warn('[LexiTechly] 框選翻譯失敗', code, response);
         const keys: Partial<Record<typeof code, MessageKey>> = {
-            'no-text': 'manga.error.noText',
+            'no-text': 'manga.region.noText',
             'capture-failed': 'manga.error.capture',
             'translate-failed': 'manga.error.translate',
             'translate-busy': 'manga.error.busy',
