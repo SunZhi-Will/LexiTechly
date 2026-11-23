@@ -2,7 +2,6 @@
 
 import { audioCache, cacheAudioData } from './storage.js';
 import { showToast } from './ui.js';
-import { textToSpeech, VOICE_OPTIONS, LANGUAGE_OPTIONS } from '../audio/geminiSpeech.js';
 
 // 全域音訊變數
 let currentAudio: HTMLAudioElement | null = null;
@@ -144,6 +143,8 @@ async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button
 
         if (typeof apiKey === 'string' && apiKey.trim()) {
             try {
+                // Gemini 語音 SDK 很大，用到時才載入；這個檔案會被內容腳本匯入，靜態匯入會讓每個網頁都載入它
+                const { textToSpeech, VOICE_OPTIONS, LANGUAGE_OPTIONS } = await import('../audio/geminiSpeech.js');
                 // 獲取語音設定
                 const speechSettings = localStorage.getItem('speechSettings');
                 const settings = speechSettings ? JSON.parse(speechSettings) : {

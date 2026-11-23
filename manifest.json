@@ -8,7 +8,6 @@
         "unlimitedStorage",
         "activeTab",
         "scripting",
-        "tabs",
         "contextMenus",
         "offscreen",
         "alarms"
@@ -56,14 +55,7 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "libs/marked.min.js",
-                "images/logo128.png",
-                "assets/*.js",
-                "assets/*.css",
-                "scripts/*.js",
-                "styles/*.css",
-                "src/scripts/*.ts",
-                "src/scripts/content/*.ts"
+                "images/logo128.png"
             ],
             "matches": [
                 "<all_urls>"
