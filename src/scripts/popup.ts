@@ -9,6 +9,7 @@ import { removePhoneticFromVocabulary } from './vocabulary/cleaner.js';
 import { getSpeakButtonHTML, speakWord } from './vocabulary/audio.js';
 import { audioCache } from './vocabulary/storage.js';
 import { convertToCSV, downloadCSV } from './vocabulary/export.js';
+import { clearModelCache, clearSavedTranslations, getImageTranslateUsage } from './image-translate/storage-admin.js';
 
 export { }; // 使此檔案成為模組
 
@@ -395,8 +396,59 @@ function initializeSettingsPage(): void {
     Storage.updateStorageUsage();
 }
 
+// 圖片翻譯資料：顯示用量
+async function updateImageTranslateUsage(): Promise<void> {
+    const pagesElement = document.getElementById('image-translate-pages');
+    const modelsElement = document.getElementById('image-translate-models');
+    if (!pagesElement || !modelsElement) return;
+    const { pages, modelBytes } = await getImageTranslateUsage();
+    pagesElement.textContent = `${pages} 頁`;
+    modelsElement.textContent = modelBytes > 0 ? `${(modelBytes / (1024 * 1024)).toFixed(1)} MB` : '尚未下載';
+}
+
+// 圖片翻譯資料：清除按鈕
+function initializeImageTranslateClear(): void {
+    void updateImageTranslateUsage();
+
+    document.getElementById('clear-image-translations')?.addEventListener('click', () => {
+        UI.showConfirmDialog(
+            '確認清除圖片譯文',
+            '此操作將刪除所有存下來的圖片翻譯結果。',
+            ['再看到同一頁時需要重新翻譯', '不會影響單字列表與其他資料'],
+            async () => {
+                try {
+                    await clearSavedTranslations();
+                    await updateImageTranslateUsage();
+                    UI.showToast('圖片譯文已清除', false, false, true);
+                } catch (error) {
+                    UI.showToast('清除圖片譯文失敗', false, true);
+                }
+            }
+        );
+    });
+
+    document.getElementById('clear-image-models')?.addEventListener('click', () => {
+        UI.showConfirmDialog(
+            '確認清除辨識模型',
+            '此操作將刪除已下載的文字辨識模型。',
+            ['下次翻譯圖片時會重新下載（每種語言約 25 到 41 MB）', '已存下來的譯文不受影響'],
+            async () => {
+                try {
+                    await clearModelCache();
+                    await updateImageTranslateUsage();
+                    UI.showToast('辨識模型已清除', false, false, true);
+                } catch (error) {
+                    UI.showToast('清除辨識模型失敗', false, true);
+                }
+            }
+        );
+    });
+}
+
 // 清除功能初始化
 function initializeClearDataFeature(): void {
+    initializeImageTranslateClear();
+
     // 清除所有資料
     const clearAllDataButton = document.getElementById('clear-all-data');
     if (clearAllDataButton) {

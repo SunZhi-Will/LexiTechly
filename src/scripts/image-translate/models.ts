@@ -8,6 +8,9 @@
 
 import type { SourceLang } from './protocol';
 
+// 模型存在擴充功能自己的 Cache Storage（offscreen 文件寫入，設定頁可清除，兩邊同一個來源）
+export const MODEL_CACHE = 'lexitechly-image-translate-models-v1';
+
 export interface ModelFile {
     url: string;
     sha256: string;
@@ -84,6 +87,12 @@ export const OCR_MODELS: Record<SourceLang, OcrModelSet> = {
         }
     }
 };
+
+/** 全部會用到的模型檔（同一個檔案只列一次） */
+export function allModelFiles(): ModelFile[] {
+    const files = [DETECTOR_MODEL, ...Object.values(OCR_MODELS).flatMap((set) => [set.detection, set.recognition, set.dictionary])];
+    return files.filter((file, i) => files.findIndex((other) => other.url === file.url) === i);
+}
 
 /** 某個語言第一次使用時要下載的總位元組（偵測模型 + 該語言的 OCR 模型） */
 export function downloadSizeFor(lang: SourceLang): number {

@@ -58,6 +58,18 @@ export async function loadTranslation(key: string): Promise<StoredPage['result']
     return stored && stored.engine === ENGINE_VERSION ? stored.result : null;
 }
 
+/** 存了幾頁（設定頁顯示用） */
+export async function countTranslations(): Promise<number> {
+    const db = await open();
+    return wrap(db.transaction(STORE).objectStore(STORE).count());
+}
+
+/** 刪掉所有存下來的譯文（設定頁的清除按鈕）；只清內容不刪資料庫，背景頁開著的連線不受影響 */
+export async function clearTranslations(): Promise<void> {
+    const db = await open();
+    await wrap(db.transaction(STORE, 'readwrite').objectStore(STORE).clear());
+}
+
 export async function saveTranslation(key: string, result: TranslatedImage): Promise<void> {
     const db = await open();
     const { requestId: _requestId, diagnostics: _diagnostics, ...rest } = result;

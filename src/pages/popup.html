@@ -238,6 +238,23 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- 圖片翻譯資料（IndexedDB 與 Cache Storage，不算在上面的用量裡） -->
+                        <div class="storage-info" style="margin-top: 12px;">
+                            <h4>圖片翻譯資料</h4>
+                            <div class="storage-text">
+                                <div>存下來的譯文：<span id="image-translate-pages">計算中...</span></div>
+                                <div>文字辨識模型：<span id="image-translate-models">計算中...</span></div>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                                <button id="clear-image-translations" class="save-button" style="flex: 1; font-size: 12px;">
+                                    清除圖片譯文
+                                </button>
+                                <button id="clear-image-models" class="save-button" style="flex: 1; font-size: 12px;">
+                                    清除辨識模型
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

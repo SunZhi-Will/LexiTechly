@@ -218,6 +218,7 @@ dist/
   - Clear chat history
   - Clear analysis results
   - Clear all data (preserve settings)
+  - Image translation data is listed separately; clear saved translations or recognition models on their own
 
 ### 7. Immersive Reading Mode 🔍
 - **啟用閱讀模式**：

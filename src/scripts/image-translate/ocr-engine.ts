@@ -11,14 +11,13 @@
 
 import * as ort from 'onnxruntime-web/wasm';
 import { PaddleOcrService, type RecognitionOptions } from 'ppu-paddle-ocr/web';
-import { DETECTOR_MODEL, ModelFile, OCR_MODELS } from './models';
+import { DETECTOR_MODEL, MODEL_CACHE, ModelFile, OCR_MODELS } from './models';
 import { groupLines } from './group';
 import { judge, nextCandidate, type LangVerdict } from './lang-detect';
 import type { Box, ImageAnalysis, OcrLine, Region, RegionLabel, SourceLang } from './protocol';
 import { boxArea, dedupeBoxes, dedupeOverlapping, intersection, planTiles, shiftBox } from './tiles';
 import { inkMask, orientation, verticalColumns, type Column } from './vertical';
 
-const MODEL_CACHE = 'lexitechly-image-translate-models-v1';
 const DETECTOR_INPUT = 640;
 const DETECTOR_THRESHOLD = 0.4;
 const LABELS: RegionLabel[] = ['bubble', 'text_bubble', 'text_free'];
