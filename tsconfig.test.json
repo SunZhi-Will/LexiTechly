@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "CommonJS",
+        "moduleResolution": "node10",
+        "ignoreDeprecations": "5.0",
+        "esModuleInterop": true,
+        "outDir": ".test-build",
+        "rootDir": ".",
+        "noEmit": false,
+        "isolatedModules": false,
+        "types": ["node", "chrome"]
+    },
+    "include": ["tests/**/*.ts"],
+    "exclude": ["node_modules", "dist"]
+}

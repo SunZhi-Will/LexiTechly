@@ -29,7 +29,12 @@ function imageTranslateAssets(): Plugin {
             mode = config.mode;
             outDir = resolve(config.root, config.build.outDir);
         },
-        generateBundle() {
+        generateBundle(_options, bundle) {
+            // ONNX Runtime 的程式碼裡有 new URL('…wasm', import.meta.url)，Vite 會因此多產出一份帶雜湊的 WASM（14 MB）。
+            // 執行時用的是 wasmPaths 指到的 ort/ 那份，多的這份拿掉
+            for (const fileName of Object.keys(bundle)) {
+                if (/^assets\/ort-wasm-simd-threaded\.[^/]+\.wasm$/.test(fileName)) delete bundle[fileName];
+            }
             for (const file of ORT_FILES) {
                 this.emitFile({
                     type: 'asset',

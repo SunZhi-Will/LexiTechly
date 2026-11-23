@@ -464,8 +464,8 @@ export function installImageTranslate(): void {
     });
 
     // 只在非正式版的建置（vite build --mode development）存在：自動化測試按不到原生右鍵選單與快捷鍵，改由這裡走同一條流程。
-    // 正式版建置時 import.meta.env.PROD 是 true，整段會被移除
-    if (!import.meta.env.PROD) {
+    // 正式版建置的 MODE 是 production，整段會被移除
+    if (import.meta.env.MODE !== 'production') {
         const hooks = globalThis as Record<string, unknown>;
         hooks.__lexiTechlyTranslateImageForTest = async (tabId: number, srcUrl: string, lang: LangChoice, frameId = 0) => {
             const tab = await chrome.tabs.get(tabId);

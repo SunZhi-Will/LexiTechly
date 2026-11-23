@@ -6,7 +6,7 @@ const PREFIX = '[LexiTechly 圖片翻譯]';
 
 export const contentLogger = {
     debug(message: string, data?: unknown): void {
-        if (!import.meta.env.PROD) console.debug(PREFIX, message, data ?? '');
+        if (import.meta.env.MODE !== 'production') console.debug(PREFIX, message, data ?? '');
     },
     warn(message: string, data?: unknown): void {
         console.warn(PREFIX, message, data ?? '');

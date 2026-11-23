@@ -51,3 +51,5 @@ coverage/
 # Chrome extension specific
 *.crx
 *.pem 
+# Test build output
+.test-build/
