@@ -30,6 +30,11 @@
   - Hover over any word for 3 seconds to see detailed information
   - Word highlighting effects for visual learning experience
   - Beautiful word cards showing: translation, part of speech, CEFR level, examples
+- 🖼️ **Image Translation**
+  - Right-click an image and choose "Translate this image"; the translation is drawn back in place
+  - Alt+Shift+T auto-translates comic images on the page and follows page turns
+  - Korean, Japanese, and Chinese source text (auto-detected), including vertical text
+  - Text recognition runs on your device; images are not uploaded
 - 🎯 Modern User Interface
   - Beautiful Toast notification system
   - Custom confirmation dialogs
@@ -148,6 +153,7 @@ npm run build        # Full build
 npm run watch        # Watch mode development
 npm run clean        # Clean output
 npm run type-check   # Type checking
+npm test             # Unit tests (image translation)
 ```
 
 ### Built File Structure
@@ -238,6 +244,21 @@ dist/
 - **優雅的視覺回饋**: 拖拽時提供平滑的動畫效果和視覺提示
 - **適應性設計**: logo 會自動限制在視窗範圍內，避免移出可視區域
 
+### 8. Image Translation 🖼️
+- **Translate one image**:
+  - Right-click an image, choose "Translate this image", then pick the source language (auto-detect, Korean, Japanese, Chinese)
+  - The translation is drawn over the original text; use the buttons in the top-right corner to switch between original and translation, or close it
+- **Auto-translate a page**:
+  - Press Alt+Shift+T (change it at `chrome://extensions/shortcuts`) to toggle auto-translate on the current tab
+  - Comic images on the page are translated automatically, including new images after a page turn
+  - The control bar in the bottom-right corner lets you change the source language, turn on "pre-translate next page", run "whole book", or stop
+- **Target language**: follows the browser UI language (Traditional Chinese, Simplified Chinese, Japanese; English otherwise)
+- **First use**:
+  - A notice explains what is sent; translation starts after you press "Continue"
+  - Each source language downloads about 25 to 41 MB of recognition models once
+- **Privacy**: text recognition runs on your device and images are not uploaded; only the recognized text is sent to Google Translate. See the [Privacy Policy](privacy-policy.md)
+- **No Gemini API Key needed**
+
 ## 🎨 User Interface Features
 
 ### Modern Toast System
@@ -273,9 +294,10 @@ dist/
 
 ## ⚠️ Important Notes
 
-- 🌐 English content analysis only
+- 🌐 English content analysis only (image translation is separate and reads Korean, Japanese, and Chinese)
 - 🔑 Valid Gemini API Key required
 - 🌟 Stable internet connection recommended
+- 🖼️ Image translation uses the keyless Google Translate endpoint; translating many pages in a short time may be temporarily blocked, so try again later
 
 - 💾 Recommend setting appropriate storage limits
 
@@ -290,7 +312,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history and update notes.
 
 ## 🔮 Future Development
 
-- [ ] Add unit testing
+- [x] Add unit testing (image translation)
 - [ ] Set up ESLint and Prettier
 - [ ] Performance optimization and caching improvements
 - [ ] Multi-language support
@@ -326,6 +348,14 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history and update notes.
 - Check if browser has sufficient local storage space
 - Try clearing some cached data
 - Adjust storage limit settings
+
+**Q: Image translation does nothing or fails**
+- No "Translate this image" item: make sure you right-clicked an image, then reload the extension
+- Shortcut does nothing: check at `chrome://extensions/shortcuts` that Alt+Shift+T is not taken by another extension
+- "Can't read this image": scroll the image into view and try again
+- "Model download failed": check that huggingface.co is reachable, then try again
+- "Translation service is busy": Google Translate is temporarily blocking requests; try again later
+- Not available on `chrome://` pages or the Chrome Web Store
 
 ### Reinstallation Steps
 If you encounter serious issues, try a complete reinstallation:

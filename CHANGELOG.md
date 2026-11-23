@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- 圖片翻譯（原本在 PostVault，移到 LexiTechly）
+  - 在圖片上按右鍵選「翻譯這張圖片」，可選自動判斷、韓文、日文或中文原文，譯文會貼回圖上原本的位置
+  - 快捷鍵 Alt+Shift+T 自動翻譯目前分頁的漫畫圖片，換頁或新出現的圖也會跟著翻
+  - 整本翻譯、預翻下一頁、看原文與看譯文切換
+  - 支援直排文字與原文語言自動偵測
+  - 文字辨識在本機完成（ppu-paddle-ocr 6.6.1 + onnxruntime-web 1.30.0 的 WASM 版），圖片不上傳；辨識出的文字送 Google 翻譯取得譯文
+  - 每種原文語言第一次使用時下載約 25 到 41 MB 的辨識模型，之後存在瀏覽器裡
+  - 翻過的頁存在本機（最多 3,000 張），下次直接顯示
+  - 譯文語言跟著瀏覽器介面語言：繁體中文、簡體中文、日文，其餘為英文
+- 單元測試：`npm test`（圖片翻譯的 42 個測試）
+
+### Changed
+- 新增 `offscreen` 與 `alarms` 權限，以及 `translate-images` 快捷鍵指令
+- 擴充功能頁面啟用跨來源隔離（COEP `credentialless`、COOP `same-origin`），讓文字辨識可以用多執行緒
+- 背景頁的訊息監聽器不再回應沒有 `action` 欄位的訊息
+- 隱私權政策補上圖片翻譯的資料流向
+
+### Technical
+- TypeScript 4.9.5 升到 5.9.2
+
 ## [1.4.1] - 2025-12-17
 
 ### Fixed

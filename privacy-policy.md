@@ -1,7 +1,7 @@
 # LexiTechly Privacy Policy & 隱私權政策
 
-*Last Updated: March 2024*  
-*最後更新日期：2024年3月*
+*Last Updated: November 2026*  
+*最後更新日期：2026年11月*
 
 [English](#english) | [中文](#中文)
 
@@ -9,7 +9,7 @@
 
 ## Introduction
 
-Welcome to LexiTechly. We value your privacy and are committed to protecting your personal data. This Privacy Policy explains how we handle your information. Important note: This extension is designed as a frontend-only application, all data is stored locally in your browser and will not be uploaded to any servers.
+Welcome to LexiTechly. We value your privacy and are committed to protecting your personal data. This Privacy Policy explains how we handle your information. Important note: This extension is designed as a frontend-only application. We do not run any servers, and your data is stored locally in your browser. Some features send content directly from your browser to third-party services (see "Third-Party Services" and "Image Translation" below).
 
 ## Data Collection and Usage
 
@@ -21,6 +21,7 @@ The following data is stored only in your browser:
 - Your user settings (e.g., API Key, interface preferences)
 - Audio playback cache files
 - Analysis result cache files
+- Image translation: text recognition models, saved translations, and related preferences (see "Image Translation" below)
 
 ### Future Local Storage Possibilities
 If collected in the future, the following data will also be stored only in your browser:
@@ -37,6 +38,17 @@ Your local data is used only for:
 - Providing audio playback functionality
 - Optimizing user interface
 - Supporting dark mode
+- Translating text inside images
+
+## Image Translation
+
+Image translation runs only when you start it: by right-clicking an image and choosing "Translate this image", or by pressing the shortcut (Alt+Shift+T by default) to auto-translate comic images on the current tab. It never runs in the background on pages you have not asked it to translate.
+
+- **Text recognition (OCR) happens on your device.** The image itself is not uploaded. To read the image, the extension fetches it from its original URL without your cookies, or, if that is not possible, captures the visible part of the current tab and crops out the image.
+- **Recognized text is sent to Google Translate.** Only the text found in the image, the source language, and the target language are sent to `translate.googleapis.com` to get the translation. No API key, account, or page address is attached by the extension. As with any web request, Google receives your IP address, and its handling of the request is governed by Google's own privacy policy.
+- **Recognition models are downloaded from Hugging Face.** The first time you use each source language, about 25 to 41 MB of model files are downloaded from `huggingface.co`, verified against a fixed checksum, and cached in your browser. This request does not include any information about the images or pages you translate.
+- **Translations are saved locally.** So that the same page does not need to be translated again, the extension keeps up to 3,000 translated images in your browser (a compressed copy of the image, the recognized text, and the translation), removing the oldest ones first. It also remembers that you accepted the first-use notice, the source language you chose per website, and the "pre-translate next page" switch.
+- **Removing this data.** Saved translations and cached models are removed when you uninstall the extension or clear the extension's site data in your browser. They are not covered by the "clear all stored data" button in settings.
 
 ## User Controls
 
@@ -54,11 +66,15 @@ The extension requests the following permissions:
 - scripting: Executes webpage analysis scripts
 - tabs: Records browsing pages
 - Website access: Provides English content analysis
+- contextMenus: Adds the "look up selection" and "translate this image" right-click items
+- offscreen: Runs on-device text recognition for image translation in a hidden extension page
+- alarms: Closes that hidden page after it has been idle for a few minutes to free memory
 
 ## Data Storage and Security
 
 - All data is stored in your local browser
-- We do not upload your personal data to any servers
+- We do not operate any servers and do not collect your personal data
+- Content is sent to third-party services only as described in "Third-Party Services" and "Image Translation"
 - You can view and clean data through storage management features
 
 ## Third-Party Services
@@ -66,6 +82,8 @@ The extension requests the following permissions:
 - Google Gemini API: For AI analysis and conversation features
 - Google Gemini API: Provides word and sentence audio playback
 - API Keys are provided by users and we do not store or share them
+- Google Translate: Provides word pronunciation audio, and translates the text recognized in images (image translation)
+- Hugging Face: Hosts the text recognition models downloaded on first use of image translation
 
 ## Children's Privacy
 
@@ -89,7 +107,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 
 ## 簡介
 
-歡迎使用 LexiTechly。我們重視您的隱私權，並致力於保護您的個人資料。本隱私權政策說明我們如何收集、使用和保護您的資訊。特別說明：本擴充功能採用純前端設計，所有資料僅儲存於您的本地瀏覽器中，不會上傳至任何伺服器。
+歡迎使用 LexiTechly。我們重視您的隱私權，並致力於保護您的個人資料。本隱私權政策說明我們如何收集、使用和保護您的資訊。特別說明：本擴充功能採用純前端設計，我們沒有自己的伺服器，您的資料儲存於您的本地瀏覽器中。部分功能會由您的瀏覽器直接把內容送到第三方服務（見下方「第三方服務」與「圖片翻譯」）。
 
 ## 資料收集與使用
 
@@ -101,6 +119,7 @@ Using this extension indicates your agreement to this Privacy Policy.
 - 您的使用者設定（如 API Key、介面偏好）
 - 語音播放的暫存檔案
 - 分析結果的暫存檔案
+- 圖片翻譯：文字辨識模型、存下來的譯文與相關偏好設定（見下方「圖片翻譯」）
 
 ### 未來可能在本地儲存的資訊
 以下資料如果收集，也將只會儲存在您的瀏覽器中：
@@ -117,6 +136,17 @@ Using this extension indicates your agreement to this Privacy Policy.
 - 提供語音播放功能
 - 優化使用者介面
 - 提供深色模式支援
+- 翻譯圖片中的文字
+
+## 圖片翻譯
+
+圖片翻譯只在您主動啟動時才會執行：在圖片上按右鍵選「翻譯這張圖片」，或按快捷鍵（預設 Alt+Shift+T）自動翻譯目前分頁的漫畫圖片。您沒有要求翻譯的網頁，它不會在背景執行。
+
+- **文字辨識（OCR）在您的電腦上完成。** 圖片本身不會上傳。為了讀取圖片，擴充功能會在不帶您的 Cookie 的情況下，從圖片原本的網址抓取；抓不到時，改為擷取目前分頁看得到的畫面，再裁出那張圖。
+- **辨識出的文字會送到 Google 翻譯。** 只有圖片中辨識出的文字、原文語言與目標語言會送到 `translate.googleapis.com` 取得譯文。擴充功能不會附上任何 API Key、帳號或網頁網址。和所有網路請求一樣，Google 會收到您的 IP 位址，後續處理依 Google 的隱私權政策。
+- **辨識模型從 Hugging Face 下載。** 每種原文語言第一次使用時，會從 `huggingface.co` 下載約 25 到 41 MB 的模型檔，比對固定的雜湊值後存在您的瀏覽器裡。這個請求不包含您翻譯的圖片或網頁的任何資訊。
+- **譯文存在本機。** 為了讓同一頁不必重翻，擴充功能會在您的瀏覽器中保存最多 3,000 張翻譯過的圖（壓縮後的圖片、辨識出的原文與譯文），超過時先刪最舊的。另外會記住您已看過第一次使用的說明、您為各網站選的原文語言，以及「預翻下一頁」開關。
+- **如何移除這些資料。** 存下來的譯文與模型快取，會在您移除擴充功能或在瀏覽器中清除本擴充功能的網站資料時刪除。設定裡的「清除所有儲存資料」按鈕不包含這兩項。
 
 ## 使用者控制權限
 
@@ -134,11 +164,15 @@ Using this extension indicates your agreement to this Privacy Policy.
 - scripting：執行網頁分析腳本
 - tabs：記錄瀏覽網頁
 - 網站存取權限：提供英文內容分析
+- contextMenus：加入「查詢選取文字」與「翻譯這張圖片」的右鍵選單
+- offscreen：在擴充功能自己的隱藏頁面裡，執行圖片翻譯的本機文字辨識
+- alarms：隱藏頁面閒置幾分鐘後把它關掉，釋放記憶體
 
 ## 資料儲存與安全
 
 - 所有資料都儲存在您的本地瀏覽器中
-- 我們不會將您的個人資料上傳到任何伺服器
+- 我們沒有自己的伺服器，也不收集您的個人資料
+- 只有「第三方服務」與「圖片翻譯」中說明的內容會送到第三方服務
 - 您可以透過儲存空間管理功能檢視和清理資料
 
 ## 第三方服務
@@ -146,6 +180,8 @@ Using this extension indicates your agreement to this Privacy Policy.
 - Google Gemini API：用於 AI 分析與對話功能
 - Google Gemini API：提供單字和例句的語音播放
 - API Key 由用戶自行提供，我們不會存儲或分享該金鑰
+- Google 翻譯：提供單字發音音檔，以及翻譯圖片中辨識出的文字（圖片翻譯）
+- Hugging Face：存放圖片翻譯第一次使用時下載的文字辨識模型
 
 ## 兒童隱私
 
