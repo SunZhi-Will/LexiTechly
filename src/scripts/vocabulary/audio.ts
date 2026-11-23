@@ -54,112 +54,6 @@ function syncButtonStates(text: string, isPlaying: boolean, isLoading: boolean =
     });
 }
 
-const GOOGLE_TTS_MAX_CHARS = 200;
-
-function chunkTextForGoogleTts(text: string): string[] {
-    const t = text.trim();
-    if (!t) return [];
-    if (t.length <= GOOGLE_TTS_MAX_CHARS) return [t];
-    const chunks: string[] = [];
-    let rest = t;
-    while (rest.length > 0) {
-        if (rest.length <= GOOGLE_TTS_MAX_CHARS) {
-            chunks.push(rest);
-            break;
-        }
-        const slice = rest.slice(0, GOOGLE_TTS_MAX_CHARS);
-        const lastSpace = slice.lastIndexOf(' ');
-        const cut = lastSpace > 0 ? lastSpace + 1 : GOOGLE_TTS_MAX_CHARS;
-        chunks.push(rest.slice(0, cut).trim());
-        rest = rest.slice(cut).trim();
-    }
-    return chunks.filter(Boolean);
-}
-
-function fetchGoogleTranslateTtsChunk(chunk: string, lang: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage(
-            { action: 'getGoogleTranslateTts', text: chunk, lang },
-            (response: { success?: boolean; data?: string; contentType?: string; error?: string }) => {
-                if (chrome.runtime.lastError) {
-                    reject(new Error(chrome.runtime.lastError?.message || 'Extension error'));
-                    return;
-                }
-                if (!response?.success || !response.data) {
-                    reject(new Error(response?.error || 'Google TTS failed'));
-                    return;
-                }
-                try {
-                    const binary = atob(response.data);
-                    const bytes = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                    const blob = new Blob([bytes], { type: response.contentType || 'audio/mp3' });
-                    resolve(URL.createObjectURL(blob));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-        );
-    });
-}
-
-async function playGoogleTranslateTts(
-    text: string,
-    displayText: string,
-    speed: 'slow' | 'normal' | 'fast'
-): Promise<void> {
-    const lang = 'en';
-    const chunks = chunkTextForGoogleTts(text);
-    if (chunks.length === 0) {
-        await fallbackSpeak(text, displayText, speed);
-        return;
-    }
-    const urls: string[] = [];
-    try {
-        for (const ch of chunks) {
-            const url = await fetchGoogleTranslateTtsChunk(ch, lang);
-            urls.push(url);
-        }
-        await playAudioUrlSequence(urls, displayText, speed);
-    } finally {
-        urls.forEach(u => URL.revokeObjectURL(u));
-    }
-}
-
-function playAudioUrlSequence(
-    urls: string[],
-    displayText: string,
-    speed: 'slow' | 'normal' | 'fast'
-): Promise<void> {
-    if (urls.length === 0) return Promise.resolve();
-    const playbackRate = speed === 'slow' ? 0.7 : speed === 'fast' ? 1.3 : 1;
-    let index = 0;
-    return new Promise((resolve, reject) => {
-        function playNext() {
-            if (index >= urls.length) {
-                syncButtonStates(displayText, false);
-                currentAudio = null;
-                resolve();
-                return;
-            }
-            const audio = new Audio(urls[index]);
-            currentAudio = audio;
-            audio.playbackRate = playbackRate;
-            audio.onended = () => {
-                index++;
-                playNext();
-            };
-            audio.onerror = () => {
-                syncButtonStates(displayText, false);
-                currentAudio = null;
-                reject(new Error('Google TTS playback failed'));
-            };
-            audio.play().then(() => syncButtonStates(displayText, true)).catch(reject);
-        }
-        playNext();
-    });
-}
-
 /**
  * 語音播放功能 - 使用 Gemini API 優先，失敗時使用瀏覽器內建 TTS
  * @param text 要播放的文字
@@ -190,9 +84,7 @@ export async function speakWord(text: string, button?: HTMLElement): Promise<voi
         syncButtonStates(text, true, true);
 
         // 先檢查快取中是否已有此語音
-        const { ttsProvider } = await chrome.storage.local.get('ttsProvider');
-        const useCache = ttsProvider !== 'google-translate';
-        if (useCache && audioCache[text]) {
+        if (audioCache[text]) {
             currentAudio = new Audio(audioCache[text]);
             await setupAndPlayAudio(currentAudio, speed, text);
             return;
@@ -242,19 +134,8 @@ async function playAudio(text: string, speed: 'slow' | 'normal' | 'fast', button
 
         const apiKey = storageData.apiKey;
         const ttsProvider = storageData.ttsProvider;
-        const useGoogleTranslate = ttsProvider === 'google-translate';
-        const useBrowserOnly = ttsProvider === 'browser';
-
-        if (useGoogleTranslate) {
-            try {
-                await playGoogleTranslateTts(text, text, speed);
-                return;
-            } catch (e) {
-                console.warn('Google 翻譯 TTS 失敗，改用瀏覽器內建:', e);
-                await fallbackSpeak(text, text, speed);
-                return;
-            }
-        }
+        // 舊版的「Google 翻譯」發音走非官方端點，已移除；選過它的人改用瀏覽器內建語音
+        const useBrowserOnly = ttsProvider === 'browser' || ttsProvider === 'google-translate';
 
         if (useBrowserOnly) {
             await fallbackSpeak(text, text, speed);

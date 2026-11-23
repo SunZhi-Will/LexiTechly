@@ -108,39 +108,6 @@ chrome.runtime.onMessage.addListener((
         return true; // 保持訊息通道開啟
     }
 
-    // 由 background 代為請求 Google 翻譯 TTS 音檔（避免 CORS）
-    if (message.action === 'getGoogleTranslateTts') {
-        const text = typeof message.text === 'string' ? message.text.trim() : '';
-        const lang = typeof message.lang === 'string' ? message.lang : 'en';
-        if (!text) {
-            sendResponse({ success: false, error: 'Missing text' });
-            return false;
-        }
-        const MAX_CHARS = 200;
-        const chunk = text.length > MAX_CHARS ? text.slice(0, MAX_CHARS) : text;
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(lang)}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                'Referer': 'https://translate.google.com/',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-        })
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.arrayBuffer();
-            })
-            .then(buf => {
-                const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-                const contentType = 'audio/mp3';
-                sendResponse({ success: true, data: base64, contentType });
-            })
-            .catch(err => {
-                sendResponse({ success: false, error: err instanceof Error ? err.message : 'Fetch failed' });
-            });
-        return true; // 非同步回應
-    }
-
     // 處理其他訊息
     console.log('未處理的訊息類型:', message.action);
     sendResponse({ success: false, error: '未知的訊息類型' });

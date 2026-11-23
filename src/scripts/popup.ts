@@ -284,19 +284,18 @@ function initializeSettingsPage(): void {
     });
 
     chrome.storage.local.get(['ttsProvider']).then((res) => {
-        const v = (res.ttsProvider === 'google-translate' || res.ttsProvider === 'browser') ? res.ttsProvider : 'gemini';
+        // 舊版的「Google 翻譯」發音已移除，選過它的人改顯示為瀏覽器內建語音
+        const v = (res.ttsProvider === 'google-translate' || res.ttsProvider === 'browser') ? 'browser' : 'gemini';
         const g = document.getElementById('tts-provider-gemini') as HTMLInputElement;
-        const t = document.getElementById('tts-provider-google') as HTMLInputElement;
         const b = document.getElementById('tts-provider-browser') as HTMLInputElement;
         if (g) g.checked = (v === 'gemini');
-        if (t) t.checked = (v === 'google-translate');
         if (b) b.checked = (v === 'browser');
     });
     document.querySelectorAll('input[name="tts-provider"]').forEach((r) => {
         r.addEventListener('change', function(this: HTMLInputElement) {
             if (this.checked) {
                 chrome.storage.local.set({ ttsProvider: this.value });
-                const msg = this.value === 'google-translate' ? '發音已切換為 Google 翻譯' : this.value === 'browser' ? '發音已切換為瀏覽器內建' : '發音已切換為 Gemini API';
+                const msg = this.value === 'browser' ? '發音已切換為瀏覽器內建' : '發音已切換為 Gemini API';
                 UI.showToast(msg, false, false, true);
             }
         });
