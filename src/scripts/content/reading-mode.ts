@@ -479,7 +479,7 @@ async function showWordTooltip(word: string, x: number, y: number): Promise<void
         <div class="lexitechly-tooltip-header">
             <span class="lexitechly-tooltip-title">單字查詢</span>
             <div class="lexitechly-tooltip-actions">
-                <button class="lexitechly-tooltip-vocabulary" title="查看單字列表">📚</button>
+                <button class="lexitechly-tooltip-vocabulary" title="查看單字列表"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2V5Zm0 15a2 2 0 0 0 2 2h13M9 8h6"/></svg></button>
                 <button class="lexitechly-tooltip-close" title="關閉字卡">×</button>
             </div>
         </div>
@@ -697,13 +697,13 @@ function showToast(message: string, isLoading: boolean = false, isError: boolean
     toast.className = 'lexitechly-toast';
 
     let iconHtml = '';
-    if (isError) iconHtml = '❌';
-    else if (isSuccess) iconHtml = '✅';
+    if (isError) iconHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3v.01"/></svg>';
+    else if (isSuccess) iconHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
     else if (isLoading) iconHtml = '<div class="lexitechly-spinner-small"></div>';
 
     toast.innerHTML = `
         <div class="lexitechly-toast-content">
-            ${iconHtml ? `<span class="lexitechly-toast-icon">${iconHtml}</span>` : ''}
+            ${iconHtml ? `<span class="lexitechly-toast-icon${isError ? ' is-error' : isSuccess ? ' is-success' : ''}">${iconHtml}</span>` : ''}
             <span>${message}</span>
         </div>
     `;

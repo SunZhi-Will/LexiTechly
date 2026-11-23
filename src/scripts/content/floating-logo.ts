@@ -29,6 +29,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
         logoImg.style.width = '24px'; // 縮小圖示
         logoImg.style.height = '24px'; // 縮小圖示
         logoImg.style.objectFit = 'contain';
+        logoImg.style.borderRadius = '6px';
         logoImg.style.pointerEvents = 'none'; // 防止圖片本身接收點擊事件
 
         // 創建關閉按鈕
@@ -45,8 +46,8 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
             position: 'fixed',
             top: '50%',
             right: '20px',
-            width: '36px', // 縮小容器
-            height: '36px', // 縮小容器
+            width: '40px',
+            height: '40px',
             borderRadius: '50%',
             cursor: 'pointer',
             zIndex: '10000',
@@ -54,10 +55,7 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
             alignItems: 'center',
             justifyContent: 'center',
             userSelect: 'none',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
             backdropFilter: 'blur(8px)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
             opacity: '0.9',
             transform: 'translateY(-50%)', // 只保留初始垂直置中
             transition: 'opacity 0.3s, background-color 0.3s, box-shadow 0.3s' // 只保留顏色和陰影的動畫
@@ -177,8 +175,6 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
             }
             if (floatingLogo && !isDragging) {
                 floatingLogo.style.opacity = '1';
-                floatingLogo.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.25)';
-                floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
             }
         });
 
@@ -188,8 +184,6 @@ export function createFloatingLogo(onToggleReadingMode: () => void): void {
             }
             if (floatingLogo && !isDragging) {
                 floatingLogo.style.opacity = '0.9';
-                floatingLogo.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
-                floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
             }
         });
 
@@ -236,19 +230,8 @@ export function updateLogoAppearance(readingMode: boolean): void {
 
     isReadingMode = readingMode;
 
-    if (isReadingMode) {
-        floatingLogo.classList.add('reading-mode');
-        // 添加綠色發光效果表示啟用
-        floatingLogo.style.boxShadow = '0 2px 12px rgba(16, 185, 129, 0.4)';
-        floatingLogo.style.backgroundColor = 'rgba(16, 185, 129, 0.1)'; // 綠色背景
-        floatingLogo.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-    } else {
-        floatingLogo.classList.remove('reading-mode');
-        // 恢復正常樣式
-        floatingLogo.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-        floatingLogo.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
-        floatingLogo.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-    }
+    // 外觀由樣式表的 .reading-mode 決定
+    floatingLogo.classList.toggle('reading-mode', isReadingMode);
 }
 
 // 顯示Toast通知 - 簡化版本
@@ -263,13 +246,13 @@ function showToast(message: string, isLoading: boolean = false, isError: boolean
     toast.className = 'lexitechly-toast';
 
     let iconHtml = '';
-    if (isError) iconHtml = '❌';
-    else if (isSuccess) iconHtml = '✅';
+    if (isError) iconHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3v.01"/></svg>';
+    else if (isSuccess) iconHtml = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
     else if (isLoading) iconHtml = '<div class="lexitechly-spinner-small"></div>';
 
     toast.innerHTML = `
         <div class="lexitechly-toast-content">
-            ${iconHtml ? `<span class="lexitechly-toast-icon">${iconHtml}</span>` : ''}
+            ${iconHtml ? `<span class="lexitechly-toast-icon${isError ? ' is-error' : isSuccess ? ' is-success' : ''}">${iconHtml}</span>` : ''}
             <span>${message}</span>
         </div>
     `;
